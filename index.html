@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContaControl - Gestión Financiera Personal</title>
+    <meta name="description" content="Sistema profesional de gestión de gastos e ingresos personales con control diario.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-brand">
+                <div class="brand-logo"><span class="material-symbols-outlined">account_balance</span></div>
+                <div>
+                    <h1 class="brand-name">ContaControl</h1>
+                    <span class="brand-sub" id="headerDate">14 de Abril, 2026</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="header-balance">
+                    <span class="material-symbols-outlined bal-icon">account_balance_wallet</span>
+                    <div>
+                        <span class="bal-tag">Saldo</span>
+                        <span class="bal-val" id="currentBalance">S/ 0.00</span>
+                    </div>
+                </div>
+                <div class="header-avatar"><span class="material-symbols-outlined">person</span></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- LEFT SIDEBAR -->
+        <aside class="sidebar-left" id="sidebar">
+            <div class="sl-block">
+                <div class="sl-heading"><span class="material-symbols-outlined">pie_chart</span> Resumen por Rubro</div>
+                <div id="categoryBreakdown" class="sl-cats"></div>
+            </div>
+            <div class="sl-block">
+                <div class="sl-heading"><span class="material-symbols-outlined">label</span> Administrar Rubros</div>
+                <div class="sl-add">
+                    <input type="text" id="newCategoryInput" placeholder="Nuevo rubro..." class="sl-input">
+                    <button id="addCategoryBtn" class="sl-btn-add"><span class="material-symbols-outlined">add</span></button>
+                </div>
+                <ul id="categoryList" class="sl-list"></ul>
+            </div>
+        </aside>
+
+        <!-- CENTER CONTENT -->
+        <main class="center">
+            <!-- KPIs -->
+            <section class="kpis">
+                <div class="kpi kpi--income"><span class="material-symbols-outlined ki">trending_up</span><div><div class="kpi-l">Total Ingresos</div><div class="kpi-v" id="totalIncome">S/ 0.00</div></div></div>
+                <div class="kpi kpi--expense"><span class="material-symbols-outlined ki">trending_down</span><div><div class="kpi-l">Total Gastos</div><div class="kpi-v" id="totalExpenses">S/ 0.00</div></div></div>
+                <div class="kpi kpi--count"><span class="material-symbols-outlined ki">receipt_long</span><div><div class="kpi-l">Depósitos</div><div class="kpi-v" id="totalDeposits">0</div></div></div>
+                <div class="kpi kpi--days"><span class="material-symbols-outlined ki">calendar_month</span><div><div class="kpi-l">Días con Registro</div><div class="kpi-v" id="totalDays">0</div></div></div>
+            </section>
+
+            <!-- TOOLBAR -->
+            <section class="toolbar">
+                <div class="toolbar-l">
+                    <button id="openDepositModal" class="tbtn tbtn--g"><span class="material-symbols-outlined">add_circle</span> Nuevo Depósito</button>
+                    <button id="openExpenseModal" class="tbtn tbtn--r"><span class="material-symbols-outlined">remove_circle</span> Nuevo Gasto</button>
+                </div>
+                <div class="toolbar-r">
+                    <span class="material-symbols-outlined" style="color:#94a3b8;font-size:20px">filter_list</span>
+                    <select id="monthFilter" class="t-sel"><option value="all">Todos los meses</option></select>
+                </div>
+            </section>
+
+            <!-- DAILY FEED -->
+            <section id="dailyView" class="feed">
+                <div class="empty" id="emptyState">
+                    <span class="material-symbols-outlined empty-ic">insert_chart_outlined</span>
+                    <h3>Sin registros</h3>
+                    <p>Agrega un depósito o un gasto para comenzar.</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- RIGHT PANEL -->
+        <aside class="sidebar-right">
+            <!-- CLOCK -->
+            <div class="sr-block sr-clock-block">
+                <div class="sr-clock">
+                    <div class="clock-unit"><span id="clockH" class="clock-num">00</span><span class="clock-label">Horas</span></div>
+                    <div class="clock-sep">:</div>
+                    <div class="clock-unit"><span id="clockM" class="clock-num">00</span><span class="clock-label">Minutos</span></div>
+                    <div class="clock-sep">:</div>
+                    <div class="clock-unit"><span id="clockS" class="clock-num">00</span><span class="clock-label">Segundos</span></div>
+                </div>
+            </div>
+            <!-- CALENDAR -->
+            <div class="sr-block">
+                <div class="cal-header">
+                    <button id="calPrev" class="cal-nav"><span class="material-symbols-outlined">chevron_left</span></button>
+                    <span id="calTitle" class="cal-title">Abril 2026</span>
+                    <button id="calNext" class="cal-nav"><span class="material-symbols-outlined">chevron_right</span></button>
+                </div>
+                <div class="cal-grid">
+                    <span class="cal-dow">DO</span><span class="cal-dow">LU</span><span class="cal-dow">MA</span><span class="cal-dow">MI</span><span class="cal-dow">JU</span><span class="cal-dow">VI</span><span class="cal-dow">SA</span>
+                </div>
+                <div id="calDays" class="cal-grid cal-days"></div>
+            </div>
+            <!-- REMINDERS -->
+            <div class="sr-block">
+                <div class="sr-heading"><span class="material-symbols-outlined">notifications_active</span> Recordatorios</div>
+                <div id="remindersList" class="reminders-list"></div>
+                <button id="addReminderBtn" class="rem-add-btn"><span class="material-symbols-outlined">add</span> Agregar recordatorio</button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- FAB -->
+    <button class="fab" id="sidebarToggle"><span class="material-symbols-outlined">menu</span></button>
+
+    <!-- MODAL: DEPÓSITO -->
+    <div class="modal-bg" id="depositModal">
+        <div class="modal">
+            <div class="modal-hd"><h2><span class="material-symbols-outlined" style="color:#16a34a">savings</span> <span id="depositModalTitle">Nuevo Depósito</span></h2><button class="modal-x" data-close="depositModal"><span class="material-symbols-outlined">close</span></button></div>
+            <div class="modal-bd">
+                <label>Fecha<input type="date" id="depositDate" class="mi"></label>
+                <label>Tipo<select id="depositType" class="mi msel"><option value="quincenal">Quincenal</option><option value="semanal">Semanal</option></select></label>
+                <label>Monto (S/)<input type="number" id="depositAmount" class="mi" placeholder="0.00" step="0.01" min="0"></label>
+                <label>Descripción <small>(opcional)</small><input type="text" id="depositDescription" class="mi" placeholder="Ej: Sueldo abril"></label>
+            </div>
+            <div class="modal-ft"><button class="mb mb--ghost" data-close="depositModal">Cancelar</button><button class="mb mb--green" id="saveDeposit">Guardar</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL: GASTO -->
+    <div class="modal-bg" id="expenseModal">
+        <div class="modal">
+            <div class="modal-hd"><h2><span class="material-symbols-outlined" style="color:#dc2626">shopping_cart</span> <span id="expenseModalTitle">Nuevo Gasto</span></h2><button class="modal-x" data-close="expenseModal"><span class="material-symbols-outlined">close</span></button></div>
+            <div class="modal-bd">
+                <label>Fecha<input type="date" id="expenseDate" class="mi"></label>
+                <label>Categoría / Rubro<select id="expenseCategory" class="mi msel"></select></label>
+                <label>Descripción<input type="text" id="expenseDescription" class="mi" placeholder="¿En qué se gastó?"></label>
+                <label>Monto (S/)<input type="number" id="expenseAmount" class="mi" placeholder="0.00" step="0.01" min="0"></label>
+            </div>
+            <div class="modal-ft"><button class="mb mb--ghost" data-close="expenseModal">Cancelar</button><button class="mb mb--blue" id="saveExpense">Guardar</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRM -->
+    <div class="modal-bg" id="confirmModal">
+        <div class="modal modal--sm">
+            <div class="modal-hd"><h2 id="confirmTitle">Confirmar</h2><button class="modal-x" data-close="confirmModal"><span class="material-symbols-outlined">close</span></button></div>
+            <div class="modal-bd"><p id="confirmMessage" style="text-align:center;color:#5a6a7e;padding:8px 0"></p></div>
+            <div class="modal-ft"><button class="mb mb--ghost" data-close="confirmModal">Cancelar</button><button class="mb mb--red" id="confirmAction">Eliminar</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL: REMINDER -->
+    <div class="modal-bg" id="reminderModal">
+        <div class="modal modal--sm">
+            <div class="modal-hd"><h2><span class="material-symbols-outlined" style="color:#2563eb">alarm</span> <span id="reminderModalTitle">Nuevo Recordatorio</span></h2><button class="modal-x" data-close="reminderModal"><span class="material-symbols-outlined">close</span></button></div>
+            <div class="modal-bd">
+                <label>Descripción<input type="text" id="reminderDesc" class="mi" placeholder="Ej: Pagar banco"></label>
+                <label>Día del mes<input type="number" id="reminderDay" class="mi" placeholder="Ej: 3" min="1" max="31"></label>
+                <label>Repetición<select id="reminderRepeat" class="mi msel"><option value="mensual">Cada mes</option><option value="inicio">Inicio de mes</option><option value="fin">Fin de mes</option></select></label>
+            </div>
+            <div class="modal-ft"><button class="mb mb--ghost" data-close="reminderModal">Cancelar</button><button class="mb mb--blue" id="saveReminder">Guardar</button></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
