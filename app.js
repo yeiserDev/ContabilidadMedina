@@ -315,6 +315,92 @@ document.getElementById('importFile').addEventListener('change', (e) => {
     reader.readAsText(file);e.target.value='';
 });
 
+// ====== REPORTS (PDF) ======
+document.getElementById('openReportModal').addEventListener('click', () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFillColor(30, 41, 59);
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    doc.setFontSize(22);
+    doc.setTextColor(255, 255, 255);
+    doc.text('ContaControl', 14, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(148, 163, 184);
+    const dStr = new Date().toISOString().slice(0,10);
+    doc.text(`Reporte General • Generado el ${fmtDate(dStr)}`, 14, 28);
+    
+    // KPIs
+    let totalD = deposits.reduce((s,d)=>s + +d.amount,0);
+    let totalE = expenses.reduce((s,e)=>s + +e.amount,0);
+    let balance = totalD - totalE;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text('Resumen General:', 14, 52);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(22, 163, 74);
+    doc.text(`Ingresos: S/ ${totalD.toFixed(2)}`, 14, 62);
+    
+    doc.setTextColor(220, 38, 38);
+    doc.text(`Gastos: S/ ${totalE.toFixed(2)}`, 70, 62);
+    
+    doc.setTextColor(37, 99, 235);
+    doc.text(`Balance: S/ ${balance.toFixed(2)}`, 130, 62);
+    
+    // Line separator
+    doc.setDrawColor(226, 232, 240);
+    doc.line(14, 68, 196, 68);
+    
+    // Sort all records descending
+    const allRecs = [...deposits.map(d=>({...d, t:'Depósito'})), ...expenses.map(e=>({...e, t:'Gasto'}))].sort((a,b)=> b.date.localeCompare(a.date));
+    
+    const body = allRecs.map(r => [
+        fmtDate(r.date),
+        r.t,
+        r.category || r.type,
+        r.description || '-',
+        r.t==='Gasto' ? `-S/${Number(r.amount).toFixed(2)}` : `+S/${Number(r.amount).toFixed(2)}`
+    ]);
+    
+    doc.autoTable({
+        startY: 75,
+        head: [['Fecha', 'Tipo', 'Categoría / Rubro', 'Descripción', 'Monto']],
+        body: body,
+        theme: 'striped',
+        styles: { fontSize: 9, cellPadding: 4, textColor: [51, 65, 85] },
+        headStyles: { fillColor: [30, 41, 59], textColor: [255,255,255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        didParseCell: function (data) {
+            if(data.section === 'body' && data.column.index === 4) {
+               if(data.row.raw[1] === 'Gasto') data.cell.styles.textColor = [220,38,38];
+               else data.cell.styles.textColor = [22,163,74];
+               data.cell.styles.fontStyle = 'bold';
+            }
+            if(data.section === 'body' && data.column.index === 1) {
+               if(data.row.raw[1] === 'Gasto') data.cell.styles.textColor = [220,38,38];
+               else data.cell.styles.textColor = [22,163,74];
+            }
+        }
+    });
+    
+    // Footer pages
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+    }
+    
+    doc.save(`ContaControl_Reporte_${dStr}.pdf`);
+    toast('Reporte PDF descargado con éxito');
+});
+
 // ====== INIT ======
 renderAll();
 initFirebase();

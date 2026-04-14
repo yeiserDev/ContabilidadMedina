@@ -359,7 +359,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
     .modal-hd{padding:14px 16px 0}
     .modal-bd{padding:14px 16px}
     .modal-ft{padding:10px 16px 14px}
-    .mi{padding:10px 12px;font-size:.84rem;max-width:100%;box-sizing:border-box}
+    .mi{padding:10px 12px;font-size:16px;max-width:100%;box-sizing:border-box}
+    .msel{font-size:16px}
     .modal-hd h2{font-size:.95rem}
 
     /* FAB position */
