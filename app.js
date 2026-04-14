@@ -279,3 +279,58 @@ renderAll();
 // Header date
 const _now = new Date();
 document.getElementById('headerDate').textContent = `${_now.getDate()} de ${MES[_now.getMonth()]}, ${_now.getFullYear()}`;
+
+// ====== EXPORT / IMPORT ======
+document.getElementById('exportBtn').addEventListener('click', () => {
+    const data = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        deposits,
+        expenses,
+        categories,
+        reminders
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const d = new Date();
+    a.download = `contacontrol_backup_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('Datos exportados correctamente');
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('importFile').click();
+});
+
+document.getElementById('importFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        try {
+            const data = JSON.parse(ev.target.result);
+            if (!data.deposits || !data.expenses || !data.categories) {
+                toast('Archivo no válido', 'err');
+                return;
+            }
+            confirm_('Importar Datos', `Se reemplazarán todos los datos actuales con los del archivo "${file.name}". ¿Continuar?`, () => {
+                deposits = data.deposits || [];
+                expenses = data.expenses || [];
+                categories = data.categories || [];
+                reminders = data.reminders || reminders;
+                persist();
+                renderAll();
+                toast(`Datos importados: ${deposits.length} depósitos, ${expenses.length} gastos`);
+            });
+        } catch (err) {
+            toast('Error al leer el archivo', 'err');
+        }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+});

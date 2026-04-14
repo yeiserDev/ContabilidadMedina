@@ -33,6 +33,9 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .header-avatar{width:34px;height:34px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:50%;display:grid;place-items:center;color:#94a3b8;cursor:pointer;transition:.2s}
 .header-avatar:hover{background:rgba(255,255,255,.15);color:#e2e8f0}
 .header-avatar .material-symbols-outlined{font-size:18px}
+.hdr-btn{width:34px;height:34px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;display:grid;place-items:center;color:#94a3b8;cursor:pointer;transition:.2s}
+.hdr-btn:hover{background:rgba(255,255,255,.15);color:#e2e8f0}
+.hdr-btn .material-symbols-outlined{font-size:18px}
 
 /* LAYOUT — 3 columns */
 .layout{display:flex;min-height:calc(100vh - var(--hh))}
