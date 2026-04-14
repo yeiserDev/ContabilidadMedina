@@ -1,6 +1,6 @@
-/* ContaControl — App Logic with Calendar & Reminders */
+/* ContaControl — App Logic with Firebase + Calendar & Reminders */
 
-// DATA
+// DATA KEYS (localStorage fallback)
 const KEYS = { d:'ct_deposits', e:'ct_expenses', c:'ct_categories', r:'ct_reminders' };
 const DEF_CATS = ['Devolución Dinero Prestado','Gastos Diarios','Petróleo Eduardo','Viático Eduardo'];
 const COLORS = ['#2563eb','#16a34a','#dc2626','#0d9488','#ea580c','#7c3aed','#c026d3','#059669','#d97706','#4f46e5'];
@@ -10,15 +10,69 @@ const DEF_REMINDERS = [
     { id:'r3', desc:'Pagar agua', day:1, repeat:'inicio' }
 ];
 
-const load = (k,fb) => { try { const d=localStorage.getItem(k); return d?JSON.parse(d):fb; } catch{ return fb; } };
-const save = (k,v) => localStorage.setItem(k,JSON.stringify(v));
+const loadLocal = (k,fb) => { try { const d=localStorage.getItem(k); return d?JSON.parse(d):fb; } catch{ return fb; } };
+const saveLocal = (k,v) => localStorage.setItem(k,JSON.stringify(v));
 const uid = () => Date.now().toString(36)+Math.random().toString(36).substr(2,5);
 
-let deposits = load(KEYS.d,[]);
-let expenses = load(KEYS.e,[]);
-let categories = load(KEYS.c,DEF_CATS);
-let reminders = load(KEYS.r,DEF_REMINDERS);
-const persist = () => { save(KEYS.d,deposits); save(KEYS.e,expenses); save(KEYS.c,categories); save(KEYS.r,reminders); };
+let deposits = loadLocal(KEYS.d,[]);
+let expenses = loadLocal(KEYS.e,[]);
+let categories = loadLocal(KEYS.c,DEF_CATS);
+let reminders = loadLocal(KEYS.r,DEF_REMINDERS);
+
+// ====== FIREBASE SYNC ======
+let db = null;
+let firebaseReady = false;
+
+function initFirebase() {
+    if (typeof firebaseConfig === 'undefined' || firebaseConfig.apiKey === 'TU_API_KEY_AQUI') {
+        console.log('⚠️ Firebase no configurado. Usando solo localStorage.');
+        return;
+    }
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        firebaseReady = true;
+        console.log('✅ Firebase conectado');
+
+        // Listen for realtime changes
+        db.ref('contacontrol').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                deposits = data.deposits || [];
+                expenses = data.expenses || [];
+                categories = data.categories || DEF_CATS;
+                reminders = data.reminders || DEF_REMINDERS;
+                // Sync to localStorage
+                saveLocal(KEYS.d, deposits);
+                saveLocal(KEYS.e, expenses);
+                saveLocal(KEYS.c, categories);
+                saveLocal(KEYS.r, reminders);
+                renderAll();
+                console.log('🔄 Datos sincronizados desde Firebase');
+            }
+        });
+    } catch (err) {
+        console.error('❌ Error Firebase:', err);
+    }
+}
+
+function persist() {
+    // Always save to localStorage
+    saveLocal(KEYS.d, deposits);
+    saveLocal(KEYS.e, expenses);
+    saveLocal(KEYS.c, categories);
+    saveLocal(KEYS.r, reminders);
+    // Save to Firebase if available
+    if (firebaseReady && db) {
+        db.ref('contacontrol').set({
+            deposits,
+            expenses,
+            categories,
+            reminders,
+            lastUpdated: new Date().toISOString()
+        }).catch(err => console.error('Error guardando en Firebase:', err));
+    }
+}
 
 // DATE
 const MES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -190,147 +244,80 @@ function renderCalendar(){
     const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
     const daysInPrev=new Date(calYear,calMonth,0).getDate();
     const todayD=new Date(), isCurrentMonth=todayD.getMonth()===calMonth&&todayD.getFullYear()===calYear;
-
-    // Build expense/deposit date sets for this month
     const expDates=new Set(), depDates=new Set();
     expenses.forEach(e=>{const ed=d2(e.date);if(ed.getMonth()===calMonth&&ed.getFullYear()===calYear)expDates.add(ed.getDate());});
     deposits.forEach(d=>{const dd=d2(d.date);if(dd.getMonth()===calMonth&&dd.getFullYear()===calYear)depDates.add(dd.getDate());});
-
-    // Prev month filler
-    for(let i=firstDay-1;i>=0;i--){
-        const span=document.createElement('span');span.className='cal-day other';
-        span.textContent=daysInPrev-i;daysEl.appendChild(span);
-    }
-    // Current month
+    for(let i=firstDay-1;i>=0;i--){const span=document.createElement('span');span.className='cal-day other';span.textContent=daysInPrev-i;daysEl.appendChild(span);}
     for(let d=1;d<=daysInMonth;d++){
-        const span=document.createElement('span');
-        let cls='cal-day';
+        const span=document.createElement('span');let cls='cal-day';
         if(isCurrentMonth&&d===todayD.getDate())cls+=' today';
         const hasE=expDates.has(d),hasD=depDates.has(d);
         if(hasE&&hasD)cls+=' has-both';else if(hasE)cls+=' has-expense';else if(hasD)cls+=' has-deposit';
         span.className=cls;span.textContent=d;daysEl.appendChild(span);
     }
-    // Next month filler
-    const totalCells=firstDay+daysInMonth;
-    const remaining=totalCells%7===0?0:7-totalCells%7;
-    for(let i=1;i<=remaining;i++){
-        const span=document.createElement('span');span.className='cal-day other';
-        span.textContent=i;daysEl.appendChild(span);
-    }
+    const totalCells=firstDay+daysInMonth;const remaining=totalCells%7===0?0:7-totalCells%7;
+    for(let i=1;i<=remaining;i++){const span=document.createElement('span');span.className='cal-day other';span.textContent=i;daysEl.appendChild(span);}
 }
-
 document.getElementById('calPrev').addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();});
 document.getElementById('calNext').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 
 // ====== REMINDERS ======
 function renderReminders(){
-    const list=document.getElementById('remindersList');
-    list.innerHTML='';
+    const list=document.getElementById('remindersList');list.innerHTML='';
     const todayDate=new Date().getDate();
-
     reminders.forEach(rem=>{
         let statusClass='normal',whenText='';
         const diff=rem.day-todayDate;
-
         if(rem.repeat==='inicio')whenText=`Día ${rem.day} — Inicio de mes`;
         else if(rem.repeat==='fin')whenText=`Último día del mes`;
         else whenText=`Cada día ${rem.day} del mes`;
-
         if(diff===0){statusClass='upcoming';whenText+=' — ¡HOY!';}
         else if(diff>0&&diff<=3){statusClass='upcoming';whenText+=` — en ${diff} día${diff>1?'s':''}`;}
         else if(diff<0){statusClass='done';whenText+=' — completado este mes';}
-
         const div=document.createElement('div');div.className='rem-item';
-        div.innerHTML=`
-            <div class="rem-icon ${statusClass}"><span class="material-symbols-outlined">${statusClass==='upcoming'?'warning':statusClass==='done'?'check_circle':'schedule'}</span></div>
-            <div class="rem-info"><div class="rem-desc">${rem.desc}</div><div class="rem-when">${whenText}</div></div>
-            <button class="rem-del" onclick="deleteReminder('${rem.id}')"><span class="material-symbols-outlined">close</span></button>`;
+        div.innerHTML=`<div class="rem-icon ${statusClass}"><span class="material-symbols-outlined">${statusClass==='upcoming'?'warning':statusClass==='done'?'check_circle':'schedule'}</span></div><div class="rem-info"><div class="rem-desc">${rem.desc}</div><div class="rem-when">${whenText}</div></div><button class="rem-del" onclick="deleteReminder('${rem.id}')"><span class="material-symbols-outlined">close</span></button>`;
         list.appendChild(div);
     });
 }
-
-window.deleteReminder=function(id){
-    confirm_('Eliminar Recordatorio','¿Eliminar este recordatorio?',()=>{
-        reminders=reminders.filter(r=>r.id!==id);persist();renderReminders();toast('Recordatorio eliminado');
-    });
-};
-
-// ADD REMINDER
-document.getElementById('addReminderBtn').addEventListener('click',()=>{
-    document.getElementById('reminderModalTitle').textContent='Nuevo Recordatorio';
-    document.getElementById('reminderDesc').value='';
-    document.getElementById('reminderDay').value='';
-    document.getElementById('reminderRepeat').value='mensual';
-    openM('reminderModal');
-    setTimeout(()=>document.getElementById('reminderDesc').focus(),120);
-});
-
+window.deleteReminder=function(id){confirm_('Eliminar Recordatorio','¿Eliminar este recordatorio?',()=>{reminders=reminders.filter(r=>r.id!==id);persist();renderReminders();toast('Recordatorio eliminado');});};
+document.getElementById('addReminderBtn').addEventListener('click',()=>{document.getElementById('reminderModalTitle').textContent='Nuevo Recordatorio';document.getElementById('reminderDesc').value='';document.getElementById('reminderDay').value='';document.getElementById('reminderRepeat').value='mensual';openM('reminderModal');setTimeout(()=>document.getElementById('reminderDesc').focus(),120);});
 document.getElementById('saveReminder').addEventListener('click',()=>{
-    const desc=document.getElementById('reminderDesc').value.trim();
-    const day=parseInt(document.getElementById('reminderDay').value);
-    const repeat=document.getElementById('reminderRepeat').value;
+    const desc=document.getElementById('reminderDesc').value.trim();const day=parseInt(document.getElementById('reminderDay').value);const repeat=document.getElementById('reminderRepeat').value;
     if(!desc||isNaN(day)||day<1||day>31){toast('Completa correctamente','err');return;}
-    reminders.push({id:uid(),desc,day,repeat});
-    persist();closeM('reminderModal');renderReminders();toast('Recordatorio agregado');
+    reminders.push({id:uid(),desc,day,repeat});persist();closeM('reminderModal');renderReminders();toast('Recordatorio agregado');
 });
-
-// ====== INIT ======
-renderAll();
-// Header date
-const _now = new Date();
-document.getElementById('headerDate').textContent = `${_now.getDate()} de ${MES[_now.getMonth()]}, ${_now.getFullYear()}`;
 
 // ====== EXPORT / IMPORT ======
 document.getElementById('exportBtn').addEventListener('click', () => {
-    const data = {
-        version: 1,
-        exportedAt: new Date().toISOString(),
-        deposits,
-        expenses,
-        categories,
-        reminders
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const data = { version:1, exportedAt:new Date().toISOString(), deposits, expenses, categories, reminders };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
+    const a = document.createElement('a');a.href = url;
     const d = new Date();
     a.download = `contacontrol_backup_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast('Datos exportados correctamente');
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+    toast('Datos exportados');
 });
-
-document.getElementById('importBtn').addEventListener('click', () => {
-    document.getElementById('importFile').click();
-});
-
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const file = e.target.files[0]; if(!file)return;
     const reader = new FileReader();
     reader.onload = (ev) => {
         try {
             const data = JSON.parse(ev.target.result);
-            if (!data.deposits || !data.expenses || !data.categories) {
-                toast('Archivo no válido', 'err');
-                return;
-            }
-            confirm_('Importar Datos', `Se reemplazarán todos los datos actuales con los del archivo "${file.name}". ¿Continuar?`, () => {
-                deposits = data.deposits || [];
-                expenses = data.expenses || [];
-                categories = data.categories || [];
-                reminders = data.reminders || reminders;
-                persist();
-                renderAll();
-                toast(`Datos importados: ${deposits.length} depósitos, ${expenses.length} gastos`);
+            if(!data.deposits||!data.expenses||!data.categories){toast('Archivo no válido','err');return;}
+            confirm_('Importar Datos',`Se reemplazarán todos los datos con "${file.name}". ¿Continuar?`,()=>{
+                deposits=data.deposits||[];expenses=data.expenses||[];categories=data.categories||[];reminders=data.reminders||reminders;
+                persist();renderAll();toast(`Importados: ${deposits.length} depósitos, ${expenses.length} gastos`);
             });
-        } catch (err) {
-            toast('Error al leer el archivo', 'err');
-        }
+        } catch(err){toast('Error al leer archivo','err');}
     };
-    reader.readAsText(file);
-    e.target.value = '';
+    reader.readAsText(file);e.target.value='';
 });
+
+// ====== INIT ======
+renderAll();
+initFirebase();
+// Header date
+const _now = new Date();
+document.getElementById('headerDate').textContent = `${_now.getDate()} de ${MES[_now.getMonth()]}, ${_now.getFullYear()}`;
