@@ -24,28 +24,33 @@
     <!-- HEADER -->
     <header class="header">
         <div class="header-inner">
+            <!-- Brand -->
             <div class="header-brand">
-                <div class="brand-logo"><span class="material-symbols-outlined">account_balance</span></div>
-                <div>
-                    <h1 class="brand-name">Conta Medina S.A.C</h1>
-                    <span class="brand-sub" id="headerDate">14 de Abril, 2026</span>
+                <div class="brand-text">
+                    <h1 class="brand-name">Conta <span class="brand-accent">Medina</span></h1>
+                    <span class="brand-sub" id="headerDate">17 de Abril, 2026</span>
                 </div>
             </div>
-            <div class="header-right">
-                <div class="header-balance">
-                    <span class="material-symbols-outlined bal-icon">account_balance_wallet</span>
-                    <div>
-                        <span class="bal-tag">Saldo</span>
-                        <span class="bal-val" id="currentBalance">S/ 0.00</span>
-                    </div>
+            <!-- Balance (center) -->
+            <div class="header-balance">
+                <div class="bal-pill">
+                    <span class="bal-label">Saldo</span>
+                    <span class="bal-val" id="currentBalance">S/ 0.00</span>
                 </div>
-                <button class="hdr-btn" id="exportBtn" title="Exportar datos"><span
-                        class="material-symbols-outlined">download</span></button>
-                <button class="hdr-btn" id="importBtn" title="Importar datos"><span
-                        class="material-symbols-outlined">upload</span></button>
+            </div>
+            <!-- Actions -->
+            <div class="header-actions">
+                <button class="hdr-btn" id="exportBtn" title="Exportar JSON">
+                    <span class="material-symbols-outlined">cloud_download</span>
+                </button>
+                <button class="hdr-btn" id="importBtn" title="Importar JSON">
+                    <span class="material-symbols-outlined">cloud_upload</span>
+                </button>
                 <input type="file" id="importFile" accept=".json" style="display:none">
-                <button class="hdr-btn" id="openReportModal" title="Generar PDF"><span
-                        class="material-symbols-outlined">picture_as_pdf</span></button>
+                <button class="hdr-btn hdr-btn--pdf" id="openReportModal" title="Generar PDF">
+                    <span class="material-symbols-outlined">description</span>
+                    <span class="hdr-btn-txt">PDF</span>
+                </button>
             </div>
         </div>
     </header>

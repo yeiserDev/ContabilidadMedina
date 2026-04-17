@@ -249,8 +249,9 @@ function renderDaily(){
         const deps=dayDeps(dt),exps=dayExps(dt),bb=balBefore(dt),depT=sumDeps(dt),expT=sumExps(dt),ba=bb+depT-expT;
         const dayOfWeek = d2(dt).getDay();
         const dc = DAY_COLORS[dayOfWeek];
-        const card=document.createElement('div');card.className='day-card';card.style.animationDelay=`${idx*.04}s`;
-        let h=`<div class="day-head"><div class="day-left"><div class="day-icon" style="background:${dc.bg};border-color:${dc.border}"><span class="day-num" style="color:${dc.text}">${dayNum(dt)}</span><span class="day-mon">${monShort(dt)}</span></div><div><div class="day-label">${fmtDate(dt)}</div><div class="day-weekday" style="color:${dc.text};font-weight:600">${weekday(dt)}</div></div></div><div class="day-right"><div class="day-bal"><div class="day-bal-tag">Saldo Antes</div><div class="day-bal-val ${bb>=0?'pos':'neg'}">${money(bb)}</div></div><span class="material-symbols-outlined day-arrow">arrow_forward</span><div class="day-bal"><div class="day-bal-tag">Saldo Después</div><div class="day-bal-val ${ba>=0?'pos':'neg'}">${money(ba)}</div></div></div></div><div class="day-body">`;
+        const card=document.createElement('div');card.className='day-card';card.dataset.date=dt;card.style.animationDelay=`${idx*.04}s`;
+        const totalItems = deps.length + exps.length;
+        let h=`<div class="day-head" onclick="toggleDay('${dt}')" style="cursor:pointer"><div class="day-left"><div class="day-icon" style="background:${dc.bg};border-color:${dc.border}"><span class="day-num" style="color:${dc.text}">${dayNum(dt)}</span><span class="day-mon">${monShort(dt)}</span></div><div><div class="day-label">${fmtDate(dt)}</div><div class="day-weekday" style="color:${dc.text};font-weight:600">${weekday(dt)}</div></div></div><div class="day-right"><div class="day-bal"><div class="day-bal-tag">Saldo Antes</div><div class="day-bal-val ${bb>=0?'pos':'neg'}">${money(bb)}</div></div><span class="material-symbols-outlined day-arrow">arrow_forward</span><div class="day-bal"><div class="day-bal-tag">Saldo Después</div><div class="day-bal-val ${ba>=0?'pos':'neg'}">${money(ba)}</div></div><div class="day-toggle-btn"><span class="material-symbols-outlined day-toggle-icon">expand_less</span></div></div></div><div class="day-body day-body-collapsible">`;
         deps.forEach(dep=>{h+=`<div class="row-deposit"><div class="dep-icon"><span class="material-symbols-outlined">arrow_upward</span></div><div class="dep-info"><div class="dep-type">Depósito ${dep.type}</div>${dep.description?`<div class="dep-desc">${dep.description}</div>`:''}</div><div class="dep-amt">+${money(dep.amount)}</div><div class="row-actions"><button class="row-btn row-btn--edit" onclick="editDeposit('${dep.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="deleteDeposit('${dep.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
         if(exps.length){
             h+='<div class="exp-table">';
@@ -260,6 +261,29 @@ function renderDaily(){
         h+='</div>';card.innerHTML=h;container.insertBefore(card,empty);
     });
 }
+window.toggleDay = function(dt) {
+    const card = document.querySelector(`.day-card[data-date="${dt}"]`);
+    if (!card) return;
+    const body = card.querySelector('.day-body-collapsible');
+    const icon = card.querySelector('.day-toggle-icon');
+    if (!body) return;
+    const isOpen = !card.classList.contains('day-collapsed');
+    if (isOpen) {
+        card.classList.add('day-collapsed');
+        body.style.maxHeight = '0';
+        body.style.paddingTop = '0';
+        body.style.paddingBottom = '0';
+        body.style.overflow = 'hidden';
+        if (icon) icon.textContent = 'expand_more';
+    } else {
+        card.classList.remove('day-collapsed');
+        body.style.maxHeight = '2000px';
+        body.style.paddingTop = '';
+        body.style.paddingBottom = '';
+        body.style.overflow = '';
+        if (icon) icon.textContent = 'expand_less';
+    }
+};
 
 // ====== EDIT / DELETE ======
 window.editDeposit=function(id){const dep=deposits.find(d=>d.id===id);if(!dep)return;editDepositId=id;document.getElementById('depositModalTitle').textContent='Editar Depósito';document.getElementById('depositDate').value=dep.date;document.getElementById('depositType').value=dep.type;document.getElementById('depositAmount').value=dep.amount;document.getElementById('depositDescription').value=dep.description||'';openM('depositModal');};
@@ -379,102 +403,198 @@ document.getElementById('importFile').addEventListener('change', (e) => {
     const reader = new FileReader();
     reader.onload = (ev) => {
         try {
-            const data = JSON.parse(ev.target.result);
-            if(!data.deposits||!data.expenses||!data.categories){toast('Archivo no válido','err');return;}
+            const data = JSON.parse(String(ev.target.result || ''));
+            const isValid =
+                data &&
+                typeof data === 'object' &&
+                Array.isArray(data.deposits) &&
+                Array.isArray(data.expenses) &&
+                Array.isArray(data.categories);
+            if(!isValid){toast('Archivo no válido','err');return;}
             confirm_('Importar Datos',`Se reemplazarán todos los datos con "${file.name}". ¿Continuar?`,()=>{
-                deposits=data.deposits||[];expenses=data.expenses||[];categories=data.categories||[];reminders=data.reminders||reminders;
-                persist();renderAll();toast(`Importados: ${deposits.length} depósitos, ${expenses.length} gastos`);
+                deposits = data.deposits;
+                expenses = data.expenses;
+                categories = data.categories;
+                reminders = Array.isArray(data.reminders) ? data.reminders : reminders;
+                persist();
+                renderAll();
+                toast(`Importados: ${deposits.length} depósitos, ${expenses.length} gastos`);
             });
         } catch(err){toast('Error al leer archivo','err');}
     };
-    reader.readAsText(file);e.target.value='';
+    reader.onerror = () => toast('No se pudo leer el archivo','err');
+    reader.readAsText(file);
+    e.target.value = '';
 });
 
-// ====== REPORTS (PDF) ======
+// ====== REPORTS (PDF) — Professional v2 ======
 document.getElementById('openReportModal').addEventListener('click', () => {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // Header
-    doc.setFillColor(30, 41, 59);
-    doc.rect(0, 0, 210, 40, 'F');
-    
-    doc.setFontSize(22);
-    doc.setTextColor(255, 255, 255);
-    doc.text('ContaControl', 14, 20);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(148, 163, 184);
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = 210; // page width
     const dStr = new Date().toISOString().slice(0,10);
-    doc.text(`Reporte General • Generado el ${fmtDate(dStr)}`, 14, 28);
-    
-    // KPIs
-    let totalD = deposits.reduce((s,d)=>s + +d.amount,0);
-    let totalE = expenses.reduce((s,e)=>s + +e.amount,0);
-    let balance = totalD - totalE;
-    
-    doc.setFontSize(11);
-    doc.setTextColor(100);
-    doc.text('Resumen General:', 14, 52);
-    
-    doc.setFontSize(12);
-    doc.setTextColor(22, 163, 74);
-    doc.text(`Ingresos: S/ ${totalD.toFixed(2)}`, 14, 62);
-    
-    doc.setTextColor(220, 38, 38);
-    doc.text(`Gastos: S/ ${totalE.toFixed(2)}`, 70, 62);
-    
-    doc.setTextColor(37, 99, 235);
-    doc.text(`Balance: S/ ${balance.toFixed(2)}`, 130, 62);
-    
-    // Line separator
-    doc.setDrawColor(226, 232, 240);
-    doc.line(14, 68, 196, 68);
-    
-    // Sort all records descending
-    const allRecs = [...deposits.map(d=>({...d, t:'Depósito'})), ...expenses.map(e=>({...e, t:'Gasto'}))].sort((a,b)=> b.date.localeCompare(a.date));
-    
+    const genDate = fmtDate(dStr);
+
+    // ── COVER HEADER ──────────────────────────────────────────────
+    // Dark gradient bar
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, W, 52, 'F');
+    // Accent stripe
+    doc.setFillColor(99, 102, 241);
+    doc.rect(0, 49, W, 3, 'F');
+
+    // Logo circle
+    doc.setFillColor(99, 102, 241);
+    doc.circle(22, 22, 9, 'F');
+    doc.setFontSize(14);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica','bold');
+    doc.text('CM', 22, 26, { align: 'center' });
+
+    // Title
+    doc.setFontSize(20);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica','bold');
+    doc.text('Conta Medina', 36, 19);
+    doc.setFontSize(9);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(148, 163, 184);
+    doc.text('Reporte Financiero General', 36, 26);
+
+    // Generated date (right side)
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Generado: ${genDate}`, W - 14, 19, { align: 'right' });
+    doc.text(`Período: ${allDates().length > 0 ? fmtDate(allDates()[0]) + ' — ' + fmtDate(allDates()[allDates().length-1]) : 'Sin datos'}`, W - 14, 26, { align: 'right' });
+
+    // ── KPI SUMMARY BOXES ─────────────────────────────────────────
+    const totalD = deposits.reduce((s,d)=>s + +d.amount, 0);
+    const totalE = expenses.reduce((s,e)=>s + +e.amount, 0);
+    const balance = totalD - totalE;
+    const kpis = [
+        { label: 'Total Ingresos', value: money(totalD), r:34, g:197, b:94 },
+        { label: 'Total Gastos',   value: money(totalE), r:239, g:68, b:68 },
+        { label: 'Balance Neto',   value: money(balance), r: balance>=0?37:220, g: balance>=0?99:38, b: balance>=0?235:38 },
+        { label: 'Días Registrados', value: String(allDates().length), r:99, g:102, b:241 },
+    ];
+    const boxW = (W - 28 - 9) / 4;
+    kpis.forEach((k, i) => {
+        const bx = 14 + i * (boxW + 3);
+        const by = 58;
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(bx, by, boxW, 22, 2, 2, 'F');
+        doc.setDrawColor(k.r, k.g, k.b);
+        doc.setLineWidth(0.5);
+        doc.line(bx, by, bx + boxW, by);
+        doc.setFontSize(7);
+        doc.setTextColor(100, 116, 139);
+        doc.setFont('helvetica','normal');
+        doc.text(k.label.toUpperCase(), bx + boxW/2, by + 7, { align: 'center' });
+        doc.setFontSize(11);
+        doc.setFont('helvetica','bold');
+        doc.setTextColor(k.r, k.g, k.b);
+        doc.text(k.value, bx + boxW/2, by + 15, { align: 'center' });
+    });
+
+    // ── SECTION: CATEGORY BREAKDOWN ───────────────────────────────
+    let y = 90;
+    doc.setFillColor(241, 245, 249);
+    doc.roundedRect(14, y, W-28, 7, 1, 1, 'F');
+    doc.setFontSize(8);
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('RESUMEN POR RUBRO', 17, y + 5);
+    y += 11;
+
+    const catT = catTotals();
+    const catRows = categories.map(c => [
+        c,
+        money(catT[c] || 0),
+        totalE > 0 ? ((catT[c]||0)/totalE*100).toFixed(1)+'%' : '0%'
+    ]);
+    doc.autoTable({
+        startY: y,
+        head: [['Rubro / Categoría', 'Total Gastado', '% del Total']],
+        body: catRows,
+        theme: 'plain',
+        styles: { fontSize: 9, cellPadding: 3, textColor: [51, 65, 85] },
+        headStyles: { fillColor: [226,232,240], textColor: [71,85,105], fontStyle: 'bold', fontSize: 8 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: { 1: { halign: 'right', fontStyle: 'bold' }, 2: { halign: 'center' } },
+        margin: { left: 14, right: 14 }
+    });
+    y = doc.lastAutoTable.finalY + 8;
+
+    // ── SECTION: TRANSACTION DETAIL ───────────────────────────────
+    doc.setFillColor(241, 245, 249);
+    doc.roundedRect(14, y, W-28, 7, 1, 1, 'F');
+    doc.setFontSize(8);
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(71, 85, 105);
+    doc.text('DETALLE DE MOVIMIENTOS', 17, y + 5);
+    y += 11;
+
+    const allRecs = [
+        ...deposits.map(d => ({ ...d, t: 'Ingreso' })),
+        ...expenses.map(e => ({ ...e, t: 'Gasto' }))
+    ].sort((a,b) => b.date.localeCompare(a.date));
+
     const body = allRecs.map(r => [
         fmtDate(r.date),
+        weekday(r.date),
         r.t,
-        r.category || r.type,
-        r.description || '-',
-        r.t==='Gasto' ? `-S/${Number(r.amount).toFixed(2)}` : `+S/${Number(r.amount).toFixed(2)}`
+        r.category || (r.type === 'quincenal' ? 'Quincenal' : 'Semanal'),
+        r.description || '—',
+        r.t === 'Gasto' ? `-${money(r.amount)}` : `+${money(r.amount)}`
     ]);
-    
+
     doc.autoTable({
-        startY: 75,
-        head: [['Fecha', 'Tipo', 'Categoría / Rubro', 'Descripción', 'Monto']],
+        startY: y,
+        head: [['Fecha', 'Día', 'Tipo', 'Rubro', 'Descripción', 'Monto']],
         body: body,
         theme: 'striped',
-        styles: { fontSize: 9, cellPadding: 4, textColor: [51, 65, 85] },
-        headStyles: { fillColor: [30, 41, 59], textColor: [255,255,255], fontStyle: 'bold' },
+        styles: { fontSize: 8, cellPadding: 3, textColor: [51, 65, 85], overflow: 'ellipsize' },
+        headStyles: { fillColor: [15, 23, 42], textColor: [255,255,255], fontStyle: 'bold', fontSize: 8 },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        didParseCell: function (data) {
-            if(data.section === 'body' && data.column.index === 4) {
-               if(data.row.raw[1] === 'Gasto') data.cell.styles.textColor = [220,38,38];
-               else data.cell.styles.textColor = [22,163,74];
-               data.cell.styles.fontStyle = 'bold';
+        columnStyles: {
+            0: { cellWidth: 28 },
+            1: { cellWidth: 18 },
+            2: { cellWidth: 16 },
+            3: { cellWidth: 30 },
+            4: { cellWidth: 'auto' },
+            5: { cellWidth: 28, halign: 'right', fontStyle: 'bold' }
+        },
+        margin: { left: 14, right: 14 },
+        didParseCell: function(data) {
+            if (data.section === 'body' && data.column.index === 5) {
+                if (data.row.raw[2] === 'Gasto') data.cell.styles.textColor = [220, 38, 38];
+                else data.cell.styles.textColor = [22, 163, 74];
             }
-            if(data.section === 'body' && data.column.index === 1) {
-               if(data.row.raw[1] === 'Gasto') data.cell.styles.textColor = [220,38,38];
-               else data.cell.styles.textColor = [22,163,74];
+            if (data.section === 'body' && data.column.index === 2) {
+                if (data.row.raw[2] === 'Gasto') data.cell.styles.textColor = [220, 38, 38];
+                else data.cell.styles.textColor = [22, 163, 74];
             }
         }
     });
-    
-    // Footer pages
+
+    // ── FOOTER on every page ──────────────────────────────────────
     const pageCount = doc.internal.getNumberOfPages();
-    for(let i = 1; i <= pageCount; i++) {
+    for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
-        doc.setFontSize(8);
+        // Bottom bar
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 285, W, 12, 'F');
+        doc.setFontSize(7);
+        doc.setFont('helvetica','normal');
         doc.setTextColor(148, 163, 184);
-        doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+        doc.text('Conta Medina — Reporte Financiero Confidencial', 14, 292);
+        doc.text(`Pág. ${i} / ${pageCount}`, W - 14, 292, { align: 'right' });
     }
-    
-    doc.save(`ContaControl_Reporte_${dStr}.pdf`);
-    toast('Reporte PDF descargado con éxito');
+
+    doc.save(`ContaMedina_Reporte_${dStr}.pdf`);
+    toast('✅ Reporte PDF generado con éxito');
 });
+
 
 // ====== INIT ======
 renderAll();
