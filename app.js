@@ -85,7 +85,7 @@ const dayNum = s => d2(s).getDate();
 const monShort = s => MES_S[d2(s).getMonth()];
 const monYear = s => { const d=d2(s); return `${MES[d.getMonth()]} ${d.getFullYear()}`; };
 const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-const money = n => `S/ ${Number(n).toFixed(2)}`;
+const money = n => { const num = Number(n); const formatted = num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); return `S/ ${formatted}`; };
 
 // BALANCE
 const allDates = () => [...new Set([...deposits.map(d=>d.date),...expenses.map(e=>e.date)])].sort();
@@ -135,8 +135,72 @@ function renderCatBreakdown(){
     categories.forEach((c,i)=>{
         const col=COLORS[i%COLORS.length],amt=t[c]||0,pct=mx>0?(amt/mx)*100:0;
         el.innerHTML+=`<div class="cat-item"><div class="cat-dot" style="background:${col}"></div><div class="cat-info"><div class="cat-name">${c}</div><div class="cat-amount">${money(amt)}</div><div class="cat-bar-bg"><div class="cat-bar" style="width:${pct}%;background:${col}"></div></div></div></div>`;
+        // AI Analysis for "Gastos Diarios"
+        if(c === 'Gastos Diarios' && amt > 0) {
+            const dailyExpenses = expenses.filter(e => e.category === 'Gastos Diarios');
+            const descTotals = {};
+            dailyExpenses.forEach(e => {
+                const key = (e.description || 'Sin descripción').trim().toLowerCase();
+                const label = (e.description || 'Sin descripción').trim();
+                if(!descTotals[key]) descTotals[key] = { label: label, total: 0, count: 0 };
+                descTotals[key].total += +e.amount;
+                descTotals[key].count++;
+            });
+            const sorted = Object.values(descTotals).sort((a,b) => b.total - a.total);
+            if(sorted.length > 0) {
+                const isOpen = loadLocal('ct_ai_open', false);
+                let analysisHtml = `<div class="ai-analysis">`;
+                analysisHtml += `<div class="ai-header ai-toggle" onclick="toggleAiAnalysis()"><div class="ai-header-left"><span class="material-symbols-outlined ai-icon">psychology</span><span>Análisis Inteligente</span></div><span class="material-symbols-outlined ai-chevron ${isOpen ? 'ai-chevron-open' : ''}">expand_more</span></div>`;
+                analysisHtml += `<div class="ai-body" style="${isOpen ? '' : 'max-height:0;padding-top:0;padding-bottom:0;opacity:0;'}">`;
+                const topItems = sorted.slice(0, 8);
+                const maxItem = topItems[0].total;
+                topItems.forEach((item, idx) => {
+                    const pctItem = (item.total / amt * 100).toFixed(1);
+                    const barW = (item.total / maxItem * 100).toFixed(0);
+                    const rankClass = idx === 0 ? 'ai-rank-1' : idx === 1 ? 'ai-rank-2' : idx === 2 ? 'ai-rank-3' : '';
+                    analysisHtml += `<div class="ai-item ${rankClass}">`;
+                    analysisHtml += `<div class="ai-item-head"><span class="ai-item-name">${item.label}</span><span class="ai-item-pct">${pctItem}%</span></div>`;
+                    analysisHtml += `<div class="ai-item-bar-bg"><div class="ai-item-bar" style="width:${barW}%"></div></div>`;
+                    analysisHtml += `<div class="ai-item-detail"><span>${money(item.total)}</span><span>${item.count} gasto${item.count > 1 ? 's' : ''}</span></div>`;
+                    analysisHtml += `</div>`;
+                });
+                if(sorted.length > 8) {
+                    const othersTotal = sorted.slice(8).reduce((s,i) => s + i.total, 0);
+                    const othersCount = sorted.slice(8).reduce((s,i) => s + i.count, 0);
+                    analysisHtml += `<div class="ai-item ai-others"><div class="ai-item-head"><span class="ai-item-name">Otros (${sorted.length - 8} conceptos)</span></div><div class="ai-item-detail"><span>${money(othersTotal)}</span><span>${othersCount} gastos</span></div></div>`;
+                }
+                // Summary insight
+                if(sorted.length >= 2) {
+                    const topPct = (sorted[0].total / amt * 100).toFixed(0);
+                    analysisHtml += `<div class="ai-insight"><span class="material-symbols-outlined">lightbulb</span><span>"${sorted[0].label}" es tu mayor gasto diario, representando el <strong>${topPct}%</strong> del total.</span></div>`;
+                }
+                analysisHtml += `</div></div>`;
+                el.innerHTML += analysisHtml;
+            }
+        }
     });
 }
+window.toggleAiAnalysis = function() {
+    const body = document.querySelector('.ai-body');
+    const chevron = document.querySelector('.ai-chevron');
+    if (!body || !chevron) return;
+    const isOpen = body.style.maxHeight !== '0px' && body.style.maxHeight !== '';
+    if (isOpen) {
+        body.style.maxHeight = '0px';
+        body.style.paddingTop = '0';
+        body.style.paddingBottom = '0';
+        body.style.opacity = '0';
+        chevron.classList.remove('ai-chevron-open');
+        saveLocal('ct_ai_open', false);
+    } else {
+        body.style.maxHeight = '2000px';
+        body.style.paddingTop = '';
+        body.style.paddingBottom = '';
+        body.style.opacity = '1';
+        chevron.classList.add('ai-chevron-open');
+        saveLocal('ct_ai_open', true);
+    }
+};
 function renderCatList(){
     const ul=document.getElementById('categoryList');ul.innerHTML='';
     categories.forEach((c,i)=>{
@@ -172,10 +236,21 @@ function renderDaily(){
     container.querySelectorAll('.day-card').forEach(c=>c.remove());
     if(!dates.length){empty.style.display='';return;}
     empty.style.display='none';
+    const DAY_COLORS = [
+        {bg:'#fef2f2',border:'#fecaca',text:'#dc2626'}, // Domingo - rojo
+        {bg:'#eff6ff',border:'#bfdbfe',text:'#2563eb'}, // Lunes - azul
+        {bg:'#f0fdfa',border:'#99f6e4',text:'#0d9488'}, // Martes - teal
+        {bg:'#faf5ff',border:'#e9d5ff',text:'#7c3aed'}, // Miércoles - morado
+        {bg:'#fff7ed',border:'#fed7aa',text:'#ea580c'}, // Jueves - naranja
+        {bg:'#eef2ff',border:'#c7d2fe',text:'#4f46e5'}, // Viernes - indigo
+        {bg:'#fdf2f8',border:'#fbcfe8',text:'#db2777'}  // Sábado - rosa
+    ];
     dates.forEach((dt,idx)=>{
         const deps=dayDeps(dt),exps=dayExps(dt),bb=balBefore(dt),depT=sumDeps(dt),expT=sumExps(dt),ba=bb+depT-expT;
+        const dayOfWeek = d2(dt).getDay();
+        const dc = DAY_COLORS[dayOfWeek];
         const card=document.createElement('div');card.className='day-card';card.style.animationDelay=`${idx*.04}s`;
-        let h=`<div class="day-head"><div class="day-left"><div class="day-icon"><span class="day-num">${dayNum(dt)}</span><span class="day-mon">${monShort(dt)}</span></div><div><div class="day-label">${fmtDate(dt)}</div><div class="day-weekday">${weekday(dt)}</div></div></div><div class="day-right"><div class="day-bal"><div class="day-bal-tag">Saldo Antes</div><div class="day-bal-val ${bb>=0?'pos':'neg'}">${money(bb)}</div></div><span class="material-symbols-outlined day-arrow">arrow_forward</span><div class="day-bal"><div class="day-bal-tag">Saldo Después</div><div class="day-bal-val ${ba>=0?'pos':'neg'}">${money(ba)}</div></div></div></div><div class="day-body">`;
+        let h=`<div class="day-head"><div class="day-left"><div class="day-icon" style="background:${dc.bg};border-color:${dc.border}"><span class="day-num" style="color:${dc.text}">${dayNum(dt)}</span><span class="day-mon">${monShort(dt)}</span></div><div><div class="day-label">${fmtDate(dt)}</div><div class="day-weekday" style="color:${dc.text};font-weight:600">${weekday(dt)}</div></div></div><div class="day-right"><div class="day-bal"><div class="day-bal-tag">Saldo Antes</div><div class="day-bal-val ${bb>=0?'pos':'neg'}">${money(bb)}</div></div><span class="material-symbols-outlined day-arrow">arrow_forward</span><div class="day-bal"><div class="day-bal-tag">Saldo Después</div><div class="day-bal-val ${ba>=0?'pos':'neg'}">${money(ba)}</div></div></div></div><div class="day-body">`;
         deps.forEach(dep=>{h+=`<div class="row-deposit"><div class="dep-icon"><span class="material-symbols-outlined">arrow_upward</span></div><div class="dep-info"><div class="dep-type">Depósito ${dep.type}</div>${dep.description?`<div class="dep-desc">${dep.description}</div>`:''}</div><div class="dep-amt">+${money(dep.amount)}</div><div class="row-actions"><button class="row-btn row-btn--edit" onclick="editDeposit('${dep.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="deleteDeposit('${dep.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
         if(exps.length){
             h+='<div class="exp-table">';
