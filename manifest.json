@@ -1,0 +1,35 @@
+{
+  "name": "Conta Medina",
+  "short_name": "ContaMedina",
+  "description": "Sistema de gestión financiera personal",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F3F0EE",
+  "theme_color": "#141413",
+  "orientation": "portrait",
+  "lang": "es",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nuevo Depósito",
+      "short_name": "Depósito",
+      "url": "./index.html?open=deposit",
+      "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Nuevo Gasto",
+      "short_name": "Gasto",
+      "url": "./index.html?open=expense",
+      "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}

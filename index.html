@@ -6,13 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#1e293b">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>ContaControl - Gestión Financiera Personal</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Conta Medina — Gestión Financiera</title>
     <meta name="description"
         content="Sistema profesional de gestión de gastos e ingresos personales con control diario.">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:ital,opsz,wght@0,9..40,400;0,9..40,450;0,9..40,500;0,9..40,700;1,9..40,400&display=swap"
         rel="stylesheet">
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
@@ -24,33 +27,43 @@
     <!-- HEADER -->
     <header class="header">
         <div class="header-inner">
-            <!-- Brand -->
+            <!-- Brand - Left -->
             <div class="header-brand">
                 <div class="brand-text">
                     <h1 class="brand-name">Conta <span class="brand-accent">Medina</span></h1>
-                    <span class="brand-sub" id="headerDate">17 de Abril, 2026</span>
                 </div>
             </div>
-            <!-- Balance (center) -->
+
+            <!-- Actions - Center -->
+            <div class="header-actions">
+                <button class="hdr-btn" id="exportBtn" title="Exportar">
+                    <span class="material-symbols-outlined">cloud_download</span>
+                </button>
+                <button class="hdr-btn" id="importBtn" title="Importar">
+                    <span class="material-symbols-outlined">cloud_upload</span>
+                </button>
+                <input type="file" id="importFile" accept=".json" style="display:none">
+                <button class="hdr-btn" id="openReportModal" title="PDF">
+                    <span class="material-symbols-outlined">description</span>
+                </button>
+                <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+                <button class="hdr-btn" id="loginBtn" title="Iniciar Sesión">
+                    <span class="material-symbols-outlined">login</span>
+                </button>
+                <div id="userProfile" style="display:none; align-items:center; gap:8px;">
+                    <img id="userAvatar" src="" style="width:28px; height:28px; border-radius:50%; border: 2px solid #6366f1;">
+                    <button class="hdr-btn" id="logoutBtn" title="Cerrar Sesión">
+                        <span class="material-symbols-outlined" style="color:#ef4444">logout</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Balance - Right -->
             <div class="header-balance">
                 <div class="bal-pill">
                     <span class="bal-label">Saldo</span>
                     <span class="bal-val" id="currentBalance">S/ 0.00</span>
                 </div>
-            </div>
-            <!-- Actions -->
-            <div class="header-actions">
-                <button class="hdr-btn" id="exportBtn" title="Exportar JSON">
-                    <span class="material-symbols-outlined">cloud_download</span>
-                </button>
-                <button class="hdr-btn" id="importBtn" title="Importar JSON">
-                    <span class="material-symbols-outlined">cloud_upload</span>
-                </button>
-                <input type="file" id="importFile" accept=".json" style="display:none">
-                <button class="hdr-btn hdr-btn--pdf" id="openReportModal" title="Generar PDF">
-                    <span class="material-symbols-outlined">description</span>
-                    <span class="hdr-btn-txt">PDF</span>
-                </button>
             </div>
         </div>
     </header>
@@ -81,12 +94,14 @@
                     <div>
                         <div class="kpi-l">Total Ingresos</div>
                         <div class="kpi-v" id="totalIncome">S/ 0.00</div>
+                        <div class="kpi-delta" id="incomeDelta"></div>
                     </div>
                 </div>
                 <div class="kpi kpi--expense"><span class="material-symbols-outlined ki">trending_down</span>
                     <div>
                         <div class="kpi-l">Total Gastos</div>
                         <div class="kpi-v" id="totalExpenses">S/ 0.00</div>
+                        <div class="kpi-delta" id="expenseDelta"></div>
                     </div>
                 </div>
                 <div class="kpi kpi--count"><span class="material-symbols-outlined ki">receipt_long</span>
@@ -103,6 +118,28 @@
                 </div>
             </section>
 
+            <!-- CHARTS -->
+            <section class="charts-section" id="chartsSection">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <span class="material-symbols-outlined">bar_chart</span>
+                        <span>Ingresos vs Gastos — Últimos 6 meses</span>
+                    </div>
+                    <div class="chart-wrap">
+                        <canvas id="chartBar"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <span class="material-symbols-outlined">donut_large</span>
+                        <span>Distribución por Rubro</span>
+                    </div>
+                    <div class="chart-wrap chart-wrap--donut">
+                        <canvas id="chartDonut"></canvas>
+                    </div>
+                </div>
+            </section>
+
             <!-- TOOLBAR -->
             <section class="toolbar">
                 <div class="toolbar-l">
@@ -112,6 +149,11 @@
                             class="material-symbols-outlined">remove_circle</span> Nuevo Gasto</button>
                 </div>
                 <div class="toolbar-r">
+                    <div class="search-wrap">
+                        <span class="material-symbols-outlined search-ic">search</span>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Buscar...">
+                        <button class="search-clear" id="searchClear" style="display:none"><span class="material-symbols-outlined">close</span></button>
+                    </div>
                     <span class="material-symbols-outlined" style="color:#94a3b8;font-size:20px">filter_list</span>
                     <select id="monthFilter" class="t-sel">
                         <option value="all">Todos los meses</option>
@@ -171,8 +213,33 @@
         </aside>
     </div>
 
-    <!-- FAB -->
-    <button class="fab" id="sidebarToggle"><span class="material-symbols-outlined">menu</span></button>
+    <!-- FAB: Menu toggle bottom left (hidden on mobile, replaced by bottom nav) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <button class="fab-menu" id="sidebarToggle">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
+
+    <!-- BOTTOM NAV (mobile / PWA) — Liquid Glass -->
+    <nav class="bottom-nav" id="bottomNav">
+        <button class="bnav-btn" id="bnavMenu">
+            <span class="material-symbols-outlined">menu</span>
+            <span class="bnav-label">Rubros</span>
+        </button>
+        <div class="bnav-sep"></div>
+        <button class="bnav-btn bnav-btn--deposit" id="bnavDeposit">
+            <span class="material-symbols-outlined">add_circle</span>
+            <span class="bnav-label">Depósito</span>
+        </button>
+        <button class="bnav-btn bnav-btn--expense" id="bnavExpense">
+            <span class="material-symbols-outlined">remove_circle</span>
+            <span class="bnav-label">Gasto</span>
+        </button>
+        <div class="bnav-sep"></div>
+        <button class="bnav-btn" id="bnavFilter">
+            <span class="material-symbols-outlined">filter_list</span>
+            <span class="bnav-label">Filtrar</span>
+        </button>
+    </nav>
 
     <!-- MODAL: DEPÓSITO -->
     <div class="modal-bg" id="depositModal">
@@ -213,6 +280,19 @@
                         placeholder="¿En qué se gastó?"></label>
                 <label>Monto (S/)<input type="number" id="expenseAmount" class="mi" placeholder="0.00" step="0.01"
                         min="0"></label>
+                <label>Comprobante <small>(opcional)</small>
+                    <div class="img-upload-area">
+                        <input type="file" id="expenseImage" accept="image/*" capture="environment" style="display:none">
+                        <button type="button" class="img-upload-btn" id="imgUploadBtn">
+                            <span class="material-symbols-outlined">add_a_photo</span>
+                            <span>Adjuntar foto</span>
+                        </button>
+                        <div class="img-preview-wrap" id="imgPreviewWrap" style="display:none">
+                            <img id="expenseImagePreview" class="img-preview" src="" alt="">
+                            <button type="button" class="img-remove-btn" id="imgRemoveBtn"><span class="material-symbols-outlined">close</span></button>
+                        </div>
+                    </div>
+                </label>
             </div>
             <div class="modal-ft"><button class="mb mb--ghost" data-close="expenseModal">Cancelar</button><button
                     class="mb mb--blue" id="saveExpense">Guardar</button></div>
@@ -257,14 +337,33 @@
         </div>
     </div>
 
+    <!-- MODAL: LIGHTBOX -->
+    <div class="modal-bg" id="lightboxModal">
+        <div class="lightbox">
+            <button class="lightbox-close" data-close="lightboxModal"><span class="material-symbols-outlined">close</span></button>
+            <img id="lightboxImg" src="" alt="Comprobante">
+        </div>
+    </div>
+
     <!-- Firebase SDK (CDN) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <!-- jsPDF para exportar Reporte -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="firebase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('✅ Service Worker registrado'))
+                    .catch((err) => console.warn('SW no disponible:', err));
+            });
+        }
+    </script>
 </body>
 
 </html>
