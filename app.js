@@ -46,24 +46,19 @@ function initFirebase() {
             const loginBtn = document.getElementById('loginBtn');
             const userProfile = document.getElementById('userProfile');
             const userAvatar = document.getElementById('userAvatar');
+            const userNameDisplay = document.getElementById('userNameDisplay');
             
             if (user) {
-                if (user.email === 'yeiseravilamedina48@gmail.com') {
-                    currentUser = user;
-                    loginBtn.style.display = 'none';
-                    userProfile.style.display = 'flex';
-                    userAvatar.src = user.photoURL || '';
-                    document.body.classList.add('is-auth');
-                    toast(`Bienvenido, ${user.displayName.split(' ')[0]}`);
-                } else {
-                    auth.signOut().then(() => {
-                        toast('Acceso denegado: Cuenta no autorizada', 'err');
-                    });
-                }
+                currentUser = user;
+                if(loginBtn) loginBtn.style.display = 'none';
+                if(userProfile) userProfile.style.display = 'flex';
+                if(userAvatar) userAvatar.src = user.photoURL || 'https://ui-avatars.com/api/?name=Admin&background=4f46e5&color=fff';
+                if(userNameDisplay) userNameDisplay.textContent = user.email.split('@')[0];
+                document.body.classList.add('is-auth');
             } else {
                 currentUser = null;
-                loginBtn.style.display = '';
-                userProfile.style.display = 'none';
+                if(loginBtn) loginBtn.style.display = 'flex';
+                if(userProfile) userProfile.style.display = 'none';
                 document.body.classList.remove('is-auth');
             }
         });
@@ -92,10 +87,37 @@ function initFirebase() {
 }
 
 // AUTH HANDLERS
-function loginWithGoogle() {
-    if (!auth) return;
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(err => toast('Error al iniciar sesión', 'err'));
+if (document.getElementById('doLoginBtn')) {
+    document.getElementById('doLoginBtn').addEventListener('click', () => {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        if (!email || !password) {
+            toast('Ingresa tu correo y contraseña', 'err');
+            return;
+        }
+        
+        const btn = document.getElementById('doLoginBtn');
+        btn.textContent = 'Verificando...';
+        btn.disabled = true;
+        
+        auth.signInWithEmailAndPassword(email, password)
+            .then(() => {
+                closeM('loginModal');
+                toast('Sesión iniciada correctamente');
+            })
+            .catch(err => {
+                console.error(err);
+                if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                    toast('Usuario o contraseña incorrectos', 'err');
+                } else {
+                    toast('Error al iniciar sesión', 'err');
+                }
+            })
+            .finally(() => {
+                btn.textContent = 'Entrar';
+                btn.disabled = false;
+            });
+    });
 }
 
 function requireAuth(fn) {
@@ -887,7 +909,14 @@ if (_openAction === 'expense') setTimeout(() => document.getElementById('openExp
 
 // Setup Login/Logout buttons
 if (document.getElementById('loginBtn')) {
-    document.getElementById('loginBtn').addEventListener('click', loginWithGoogle);
+    document.getElementById('loginBtn').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.remove('open');
+        const overlay = document.getElementById('sidebarOverlay');
+        if(overlay) overlay.classList.remove('active');
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+        openM('loginModal');
+    });
 }
 if (document.getElementById('logoutBtn')) {
     document.getElementById('logoutBtn').addEventListener('click', () => {

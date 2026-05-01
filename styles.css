@@ -260,6 +260,8 @@ h1, h2, h3, h4, h5, h6,
     flex-shrink: 0;
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar-left::-webkit-scrollbar {
@@ -1618,11 +1620,13 @@ h1, h2, h3, h4, h5, h6,
 body:not(.is-auth) .row-actions,
 body:not(.is-auth) .cat-del,
 body:not(.is-auth) .rem-del,
-body:not(.is-auth) .sl-add,
 body:not(.is-auth) .rem-add-btn,
 body:not(.is-auth) .img-remove-btn {
     display: none !important;
 }
+
+/* Permitir mostrar el sl-add pero se pedirá login en JS */
+/* Eliminado body:not(.is-auth) .sl-add */
 
 /* Tablets */
 @media (max-width: 900px) {
@@ -3793,6 +3797,126 @@ select:focus-visible {
     font-size: 10px;
     color: #94a3b8;
     white-space: nowrap;
+}
+
+/* Responsive Layout Changes */
+@media (max-width: 1024px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .sidebar-right { display: none; }
+    .layout { padding-right: 0; }
+}
+
+@media (max-width: 768px) {
+    .sidebar-left {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 2000;
+        border-radius: 0;
+        padding-top: 40px; /* Sidebar covers everything, start padding near top */
+        width: 85%;
+        max-width: 320px;
+        transform: translateX(-100%);
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sidebar-left.open {
+        transform: translateX(0);
+    }
+    
+    .sidebar-overlay {
+        z-index: 1999;
+    }
+
+    .center {
+        padding-top: var(--space-3);
+        padding-bottom: 90px;
+    }
+
+    .kpis { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    
+    .charts-section { flex-direction: column; }
+    
+    .fab-menu { display: none; } /* Reemplazado por Bottom Nav */
+    
+    .bottom-nav { 
+        display: flex; 
+        background: rgba(20, 20, 19, 0.65) !important; /* 65% opaco, 35% transparente */
+        backdrop-filter: blur(24px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .bottom-nav .bnav-btn {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .bottom-nav .bnav-btn--deposit {
+        color: #34d399; /* Green vibrant for dark mode */
+    }
+
+    .bottom-nav .bnav-btn--expense {
+        color: #fb923c; /* Orange vibrant for dark mode */
+    }
+
+    .bottom-nav .bnav-btn.active, 
+    .bottom-nav .bnav-btn:active,
+    .bottom-nav .bnav-btn:hover {
+        opacity: 0.8;
+    }
+
+    .bottom-nav .bnav-label {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .toolbar { display: none; } /* Botones movidos al bottom nav */
+}
+
+/* Glassmorphism for Login Modal */
+#loginModal .modal {
+    background: rgba(243, 240, 238, 0.85); /* canvas-cream translucido */
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
+    border-radius: var(--radius-xl);
+}
+
+#loginModal .modal-hd {
+    background: transparent;
+    border-bottom: 1px solid rgba(20, 20, 19, 0.06);
+}
+
+#loginModal .modal-hd h2 {
+    color: var(--ink-black);
+}
+
+#loginModal .modal-hd h2 .material-symbols-outlined {
+    color: var(--signal-orange) !important; /* Adaptado a la paleta */
+}
+
+#loginModal .mi {
+    background: var(--white);
+    border: 1px solid rgba(20, 20, 19, 0.1);
+    color: var(--ink-black);
+}
+#loginModal .mi:focus {
+    background: var(--white);
+    border-color: var(--signal-orange);
+    box-shadow: 0 0 0 2px rgba(207, 69, 0, 0.1);
+}
+
+#doLoginBtn {
+    background: var(--ink-black);
+    color: var(--canvas-cream);
+    border: none;
+    transition: all 0.2s ease;
+}
+#doLoginBtn:hover {
+    background: var(--charcoal);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 /* Responsive charts */
