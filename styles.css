@@ -3828,6 +3828,7 @@ select:focus-visible {
         z-index: 9999;
         border-radius: 0;
         padding-top: 40px; /* Sidebar covers everything, start padding near top */
+        padding-bottom: 40px; /* Añadido para que el botón Iniciar Sesión no se corte en iOS */
         width: 85%;
         max-width: 320px;
         transform: translateX(-100%);
@@ -3858,7 +3859,7 @@ select:focus-visible {
     
     .bottom-nav { 
         display: flex; 
-        background: rgba(20, 20, 19, 0.65) !important; /* 65% opaco, 35% transparente */
+        background: rgba(20, 20, 19, 0.60) !important; /* 60% opaco, 40% transparente */
         backdrop-filter: blur(24px) saturate(180%) !important;
         -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
         border-top: 1px solid rgba(255, 255, 255, 0.1) !important;

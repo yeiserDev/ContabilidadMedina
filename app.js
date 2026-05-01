@@ -888,6 +888,13 @@ if (bnavMenu) bnavMenu.addEventListener('click', () => {
     const ov = document.getElementById('sidebarOverlay');
     sb.classList.toggle('open');
     ov.classList.toggle('active');
+    document.body.style.overflow = sb.classList.contains('open') ? 'hidden' : '';
+});
+const sbOverlay = document.getElementById('sidebarOverlay');
+if (sbOverlay) sbOverlay.addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+    sbOverlay.classList.remove('active');
+    document.body.style.overflow = '';
 });
 if (bnavDeposit) bnavDeposit.addEventListener('click', () => document.getElementById('openDepositModal').click());
 if (bnavExpense) bnavExpense.addEventListener('click', () => document.getElementById('openExpenseModal').click());
@@ -913,6 +920,7 @@ if (document.getElementById('loginBtn')) {
         document.getElementById('sidebar').classList.remove('open');
         const overlay = document.getElementById('sidebarOverlay');
         if(overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
         document.getElementById('loginEmail').value = '';
         const pw = document.getElementById('loginPassword');
         pw.value = '';
