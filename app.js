@@ -169,7 +169,14 @@ const dayExps = dt => expenses.filter(e=>e.date===dt);
 const sumDeps = dt => dayDeps(dt).reduce((s,d)=>s+ +d.amount,0);
 const sumExps = dt => dayExps(dt).reduce((s,e)=>s+ +e.amount,0);
 const totalBal = () => deposits.reduce((s,d)=>s+ +d.amount,0)-expenses.reduce((s,e)=>s+ +e.amount,0);
-const catTotals = () => { const t={}; categories.forEach(c=>t[c]=0); expenses.forEach(e=>{if(t[e.category]!==undefined)t[e.category]+= +e.amount}); return t; };
+const catTotals = () => {
+    const fv = document.getElementById('monthFilter').value;
+    const cycles = typeof getCycles !== 'undefined' ? getCycles() : [];
+    const cycle = cycles.find(c => c.id === fv);
+    let exps = expenses;
+    if(cycle && fv!=='all'){exps=expenses.filter(e=>{const d=d2(e.date);return d>=cycle.start&&d<=cycle.end;});}
+    const t={}; categories.forEach(c=>t[c]=0); exps.forEach(e=>{if(t[e.category]!==undefined)t[e.category]+= +e.amount}); return t;
+};
 
 // TOAST
 function toast(msg,type='ok'){
@@ -200,21 +207,23 @@ function renderKPIs(){
     document.getElementById('totalDeposits').textContent=deposits.length;
     document.getElementById('totalDays').textContent=allDates().length;
     document.getElementById('currentBalance').textContent=money(totalBal());
-    // Delta vs previous month
-    const now=new Date(),curM=now.getMonth(),curY=now.getFullYear();
-    const prevRef=new Date(curY,curM-1,1),prevM=prevRef.getMonth(),prevY=prevRef.getFullYear();
-    const inM=(arr,m,y)=>arr.filter(r=>{const d=d2(r.date);return d.getMonth()===m&&d.getFullYear()===y;});
-    const curInc=inM(deposits,curM,curY).reduce((s,d)=>s+ +d.amount,0);
-    const prevInc=inM(deposits,prevM,prevY).reduce((s,d)=>s+ +d.amount,0);
-    const curExp=inM(expenses,curM,curY).reduce((s,e)=>s+ +e.amount,0);
-    const prevExp=inM(expenses,prevM,prevY).reduce((s,e)=>s+ +e.amount,0);
+    // Delta vs previous cycle
+    const cycles = typeof getCycles !== 'undefined' ? getCycles() : [];
+    const curC = cycles[0];
+    const prevC = cycles[1];
+    const inCycle = (arr, c) => c ? arr.filter(r => { const d = d2(r.date); return d >= c.start && d <= c.end; }) : [];
+    
+    const curInc = inCycle(deposits, curC).reduce((s,d)=>s+ +d.amount,0);
+    const prevInc = inCycle(deposits, prevC).reduce((s,d)=>s+ +d.amount,0);
+    const curExp = inCycle(expenses, curC).reduce((s,e)=>s+ +e.amount,0);
+    const prevExp = inCycle(expenses, prevC).reduce((s,e)=>s+ +e.amount,0);
     const setDelta=(elId,cur,prev)=>{
         const el=document.getElementById(elId);if(!el)return;
         if(prev===0&&cur===0){el.textContent='';el.className='kpi-delta';return;}
-        if(prev===0){el.textContent='Nuevo este mes';el.className='kpi-delta neutral';return;}
+        if(prev===0){el.textContent='Nuevo ciclo';el.className='kpi-delta neutral';return;}
         const pct=Math.abs((cur-prev)/prev*100).toFixed(0);
         const up=cur>=prev;
-        el.textContent=`${up?'▲':'▼'} ${pct}% vs ${MES_S[prevM]}`;
+        el.textContent=`${up?'▲':'▼'} ${pct}% vs Ciclo ant.`;
         el.className=`kpi-delta ${up?'up':'down'}`;
     };
     setDelta('incomeDelta',curInc,prevInc);
@@ -226,14 +235,13 @@ let barChart=null,donutChart=null;
 function renderCharts(){
     if(typeof Chart==='undefined')return;
     const now=new Date();
+    const cycles = typeof getCycles !== 'undefined' ? getCycles().slice(0,6).reverse() : [];
     const labels=[],incData=[],expData=[];
-    for(let i=5;i>=0;i--){
-        const ref=new Date(now.getFullYear(),now.getMonth()-i,1);
-        const m=ref.getMonth(),y=ref.getFullYear();
-        labels.push(MES_S[m]);
-        incData.push(deposits.filter(d=>{const dd=d2(d.date);return dd.getMonth()===m&&dd.getFullYear()===y;}).reduce((s,d)=>s+ +d.amount,0));
-        expData.push(expenses.filter(e=>{const dd=d2(e.date);return dd.getMonth()===m&&dd.getFullYear()===y;}).reduce((s,e)=>s+ +e.amount,0));
-    }
+    cycles.forEach(c => {
+        labels.push(`${c.start.getDate()} ${monShort(c.start.toISOString().split('T')[0])}`);
+        incData.push(deposits.filter(d=>{const dd=d2(d.date);return dd>=c.start&&dd<=c.end;}).reduce((s,d)=>s+ +d.amount,0));
+        expData.push(expenses.filter(e=>{const dd=d2(e.date);return dd>=c.start&&dd<=c.end;}).reduce((s,e)=>s+ +e.amount,0));
+    });
     const barCtx=document.getElementById('chartBar');
     if(barCtx){
         if(barChart)barChart.destroy();
@@ -359,19 +367,45 @@ function populateCatSelect(){
     const sel=document.getElementById('expenseCategory');sel.innerHTML='';
     categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
 }
+// ====== CYCLES ======
+function getCycles() {
+    const sorted = [...deposits].sort((a,b) => d2(a.date) - d2(b.date));
+    let cycles = [];
+    let curCycle = null;
+    sorted.forEach((d) => {
+        if (d.isCycleStart || cycles.length === 0) {
+            if (curCycle) curCycle.end = new Date(d2(d.date).getTime() - 1000);
+            curCycle = { id: d.id, name: `Ciclo: ${fmtDate(d.date)}`, start: d2(d.date), end: new Date('2099-12-31T23:59:59') };
+            cycles.push(curCycle);
+        }
+    });
+    return cycles.reverse();
+}
+
 function renderMonthFilter(){
-    const sel=document.getElementById('monthFilter'),cur=sel.value,months=new Set();
-    allDates().forEach(d=>months.add(monYear(d)));
-    sel.innerHTML='<option value="all">Todos los meses</option>';
-    [...months].reverse().forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
-    sel.value=cur||'all';
+    const sel=document.getElementById('monthFilter'),cur=sel.value;
+    const mobSel=document.getElementById('mobileMonthFilter');
+    const cycles=getCycles();
+    
+    let html = '<option value="all">Todos los ciclos</option>';
+    cycles.forEach(c=>{ html += `<option value="${c.id}">${c.name}</option>`; });
+    
+    sel.innerHTML=html;
+    if(mobSel) mobSel.innerHTML=html;
+    
+    const newVal = (!cur || cur==='all') ? (cycles.length?cycles[0].id:'all') : cur;
+    sel.value = newVal;
+    if(mobSel) mobSel.value = newVal;
 }
 
 // ====== DAILY VIEW ======
 function renderDaily(){
     const container=document.getElementById('dailyView'),empty=document.getElementById('emptyState'),fv=document.getElementById('monthFilter').value;
     let dates=allDates().sort().reverse();
-    if(fv!=='all')dates=dates.filter(d=>monYear(d)===fv);
+    if(fv!=='all'){
+        const cycle = getCycles().find(c=>c.id===fv);
+        if(cycle) dates=dates.filter(dt=>{const d=d2(dt);return d>=cycle.start&&d<=cycle.end;});
+    }
     if(searchQuery){const q=searchQuery.toLowerCase();dates=dates.filter(dt=>dayDeps(dt).some(d=>(d.description||'').toLowerCase().includes(q)||d.type.includes(q)||String(d.amount).includes(q))||dayExps(dt).some(e=>(e.description||'').toLowerCase().includes(q)||(e.category||'').toLowerCase().includes(q)||String(e.amount).includes(q)));}
     container.querySelectorAll('.day-card').forEach(c=>c.remove());
     if(!dates.length){empty.style.display='';return;}
@@ -426,7 +460,7 @@ window.toggleDay = function(dt) {
 };
 
 // ====== EDIT / DELETE ======
-window.editDeposit=requireAuth(function(id){const dep=deposits.find(d=>d.id===id);if(!dep)return;editDepositId=id;document.getElementById('depositModalTitle').textContent='Editar Depósito';document.getElementById('depositDate').value=dep.date;document.getElementById('depositType').value=dep.type;document.getElementById('depositAmount').value=dep.amount;document.getElementById('depositDescription').value=dep.description||'';openM('depositModal');});
+window.editDeposit=requireAuth(function(id){const dep=deposits.find(d=>d.id===id);if(!dep)return;editDepositId=id;document.getElementById('depositModalTitle').textContent='Editar Depósito';document.getElementById('depositDate').value=dep.date;document.getElementById('depositType').value=dep.type;document.getElementById('depositAmount').value=dep.amount;document.getElementById('depositDescription').value=dep.description||'';document.getElementById('depositCycleStart').checked=!!dep.isCycleStart;openM('depositModal');});
 window.editExpense=requireAuth(function(id){const exp=expenses.find(e=>e.id===id);if(!exp)return;editExpenseId=id;document.getElementById('expenseModalTitle').textContent='Editar Gasto';document.getElementById('expenseDate').value=exp.date;populateCatSelect();document.getElementById('expenseCategory').value=exp.category;document.getElementById('expenseDescription').value=exp.description||'';document.getElementById('expenseAmount').value=exp.amount;resetImageUI();if(exp.imageUrl){pendingImageData=exp.imageUrl;document.getElementById('expenseImagePreview').src=exp.imageUrl;document.getElementById('imgPreviewWrap').style.display='';document.getElementById('imgUploadBtn').style.display='none';}openM('expenseModal');});
 window.deleteDeposit=requireAuth(function(id){confirm_('Eliminar Depósito','¿Estás seguro?',()=>{deposits=deposits.filter(d=>d.id!==id);persist();renderAll();toast('Depósito eliminado');});});
 window.deleteExpense=requireAuth(function(id){confirm_('Eliminar Gasto','¿Estás seguro?',()=>{expenses=expenses.filter(e=>e.id!==id);persist();renderAll();toast('Gasto eliminado');});});
@@ -434,12 +468,12 @@ window.deleteExpense=requireAuth(function(id){confirm_('Eliminar Gasto','¿Está
 function renderAll(){renderKPIs();renderCharts();renderCatBreakdown();renderCatList();populateCatSelect();renderMonthFilter();renderDaily();renderCalendar();renderReminders();}
 
 // ====== EVENTS: DEPOSIT ======
-document.getElementById('openDepositModal').addEventListener('click',requireAuth(()=>{editDepositId=null;document.getElementById('depositModalTitle').textContent='Nuevo Depósito';document.getElementById('depositDate').value=today();document.getElementById('depositAmount').value='';document.getElementById('depositDescription').value='';document.getElementById('depositType').value='quincenal';openM('depositModal');setTimeout(()=>document.getElementById('depositAmount').focus(),120);}));
+document.getElementById('openDepositModal').addEventListener('click',requireAuth(()=>{editDepositId=null;document.getElementById('depositModalTitle').textContent='Nuevo Depósito';document.getElementById('depositDate').value=today();document.getElementById('depositAmount').value='';document.getElementById('depositDescription').value='';document.getElementById('depositType').value='quincenal';document.getElementById('depositCycleStart').checked=false;openM('depositModal');setTimeout(()=>document.getElementById('depositAmount').focus(),120);}));
 document.getElementById('saveDeposit').addEventListener('click',()=>{
-    const date=document.getElementById('depositDate').value,type=document.getElementById('depositType').value,amount=parseFloat(document.getElementById('depositAmount').value),description=document.getElementById('depositDescription').value.trim();
+    const date=document.getElementById('depositDate').value,type=document.getElementById('depositType').value,amount=parseFloat(document.getElementById('depositAmount').value),description=document.getElementById('depositDescription').value.trim(),isCycleStart=document.getElementById('depositCycleStart').checked;
     if(!date||isNaN(amount)||amount<=0){toast('Completa correctamente','err');return;}
-    if(editDepositId){const dep=deposits.find(d=>d.id===editDepositId);if(dep){dep.date=date;dep.type=type;dep.amount=amount;dep.description=description;}editDepositId=null;toast('Depósito actualizado');}
-    else{deposits.push({id:uid(),date,type,amount,description});toast(`Depósito de ${money(amount)} registrado`);}
+    if(editDepositId){const dep=deposits.find(d=>d.id===editDepositId);if(dep){dep.date=date;dep.type=type;dep.amount=amount;dep.description=description;dep.isCycleStart=isCycleStart;}editDepositId=null;toast('Depósito actualizado');}
+    else{deposits.push({id:uid(),date,type,amount,description,isCycleStart});toast(`Depósito de ${money(amount)} registrado`);}
     persist();closeM('depositModal');renderAll();
 });
 
@@ -516,7 +550,17 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
 const addCat=requireAuth(()=>{const inp=document.getElementById('newCategoryInput'),nm=inp.value.trim();if(!nm){toast('Escribe un nombre','err');return;}if(categories.includes(nm)){toast('Ya existe','err');return;}categories.push(nm);persist();inp.value='';renderAll();toast(`Rubro "${nm}" agregado`);});
 document.getElementById('addCategoryBtn').addEventListener('click',addCat);
 document.getElementById('newCategoryInput').addEventListener('keydown',e=>{if(e.key==='Enter')addCat();});
-document.getElementById('monthFilter').addEventListener('change',renderDaily);
+document.getElementById('monthFilter').addEventListener('change',(e)=>{ 
+    const mobSel = document.getElementById('mobileMonthFilter');
+    if(mobSel) mobSel.value = e.target.value;
+    renderDaily(); renderKPIs(); renderCharts(); renderCatBreakdown(); 
+});
+const mobSel = document.getElementById('mobileMonthFilter');
+if(mobSel) mobSel.addEventListener('change',(e)=>{ 
+    document.getElementById('monthFilter').value = e.target.value;
+    renderDaily(); renderKPIs(); renderCharts(); renderCatBreakdown(); 
+    setTimeout(()=>closeM('filterModal'), 150);
+});
 document.getElementById('sidebarToggle').addEventListener('click',()=>{
     const sb=document.getElementById('sidebar');
     const ov=document.getElementById('sidebarOverlay');
@@ -899,9 +943,7 @@ if (sbOverlay) sbOverlay.addEventListener('click', () => {
 if (bnavDeposit) bnavDeposit.addEventListener('click', () => document.getElementById('openDepositModal').click());
 if (bnavExpense) bnavExpense.addEventListener('click', () => document.getElementById('openExpenseModal').click());
 if (bnavFilter) bnavFilter.addEventListener('click', () => {
-    const sel = document.getElementById('monthFilter');
-    sel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    setTimeout(() => sel.focus(), 250);
+    openM('filterModal');
 });
 
 // ====== INIT ======

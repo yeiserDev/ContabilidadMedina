@@ -162,8 +162,8 @@
                         <button class="search-clear" id="searchClear" style="display:none"><span class="material-symbols-outlined">close</span></button>
                     </div>
                     <span class="material-symbols-outlined" style="color:#94a3b8;font-size:20px">filter_list</span>
-                    <select id="monthFilter" class="t-sel">
-                        <option value="all">Todos los meses</option>
+                    <select id="monthFilter" class="t-sel msel">
+                        <option value="all">Todos los ciclos</option>
                     </select>
                 </div>
             </section>
@@ -265,7 +265,11 @@
                 <label>Monto (S/)<input type="number" id="depositAmount" class="mi" placeholder="0.00" step="0.01"
                         min="0"></label>
                 <label>Descripción <small>(opcional)</small><input type="text" id="depositDescription" class="mi"
-                        placeholder="Ej: Sueldo abril"></label>
+                        placeholder="Ej: Pago de viáticos"></label>
+                <label style="display:flex; align-items:center; gap:8px; margin-top:16px; cursor:pointer; background: var(--canvas-cream); padding: 12px; border: 1px solid rgba(20,20,19,0.08); border-radius: var(--radius-lg);">
+                    <input type="checkbox" id="depositCycleStart" style="width:16px; height:16px; accent-color:var(--signal-orange);">
+                    <span style="font-size:13px; font-weight:600; color:var(--ink-black); text-transform:none; letter-spacing:0;">Hacer que este depósito inicie un nuevo ciclo</span>
+                </label>
             </div>
             <div class="modal-ft"><button class="mb mb--ghost" data-close="depositModal">Cancelar</button><button
                     class="mb mb--green" id="saveDeposit">Guardar</button></div>
@@ -296,6 +300,10 @@
                         </button>
                         <div class="img-preview-wrap" id="imgPreviewWrap" style="display:none">
                             <img id="expenseImagePreview" class="img-preview" src="" alt="">
+                            <div class="img-preview-info">
+                                <div class="img-preview-title">Comprobante adjunto</div>
+                                <div class="img-preview-sub">Toca la X para eliminar</div>
+                            </div>
                             <button type="button" class="img-remove-btn" id="imgRemoveBtn"><span class="material-symbols-outlined">close</span></button>
                         </div>
                     </div>
@@ -341,6 +349,23 @@
             </div>
             <div class="modal-ft"><button class="mb mb--ghost" data-close="reminderModal">Cancelar</button><button
                     class="mb mb--blue" id="saveReminder">Guardar</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL: FILTRO MÓVIL -->
+    <div class="modal-bg" id="filterModal">
+        <div class="modal modal--sm">
+            <div class="modal-hd">
+                <h2><span class="material-symbols-outlined" style="color:var(--signal-orange)">filter_alt</span> Filtrar Ciclos</h2>
+                <button class="modal-x" data-close="filterModal"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-bd">
+                <label>Selecciona el ciclo a visualizar
+                    <select id="mobileMonthFilter" class="mi msel" style="margin-top:8px;">
+                        <option value="all">Todos los ciclos</option>
+                    </select>
+                </label>
+            </div>
         </div>
     </div>
 
