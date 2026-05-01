@@ -910,19 +910,30 @@ window.openLightbox = function(expId) {
 (function(){
     const inp = document.getElementById('searchInput');
     const clr = document.getElementById('searchClear');
-    if (!inp) return;
-    inp.addEventListener('input', () => {
-        searchQuery = inp.value.trim();
+    const mInp = document.getElementById('mobileSearchInput');
+    const mClr = document.getElementById('mobileSearchClear');
+
+    const handleSearch = (val) => {
+        searchQuery = val.trim();
         if (clr) clr.style.display = searchQuery ? '' : 'none';
+        if (mClr) mClr.style.display = searchQuery ? '' : 'none';
+        if (inp && inp.value !== val) inp.value = val;
+        if (mInp && mInp.value !== val) mInp.value = val;
         renderDaily();
-    });
-    if (clr) clr.addEventListener('click', () => {
-        searchQuery = ''; inp.value = ''; clr.style.display = 'none'; renderDaily();
-    });
+    };
+
+    if (inp) inp.addEventListener('input', (e) => handleSearch(e.target.value));
+    if (mInp) mInp.addEventListener('input', (e) => handleSearch(e.target.value));
+
+    const handleClear = () => { handleSearch(''); };
+
+    if (clr) clr.addEventListener('click', handleClear);
+    if (mClr) mClr.addEventListener('click', handleClear);
 })();
 
 // ====== BOTTOM NAV ======
 const bnavMenu = document.getElementById('bnavMenu');
+const bnavSearch = document.getElementById('bnavSearch');
 const bnavDeposit = document.getElementById('bnavDeposit');
 const bnavExpense = document.getElementById('bnavExpense');
 const bnavFilter = document.getElementById('bnavFilter');
@@ -942,6 +953,13 @@ if (sbOverlay) sbOverlay.addEventListener('click', () => {
 });
 if (bnavDeposit) bnavDeposit.addEventListener('click', () => document.getElementById('openDepositModal').click());
 if (bnavExpense) bnavExpense.addEventListener('click', () => document.getElementById('openExpenseModal').click());
+if (bnavSearch) bnavSearch.addEventListener('click', () => {
+    openM('searchModal');
+    setTimeout(() => {
+        const inp = document.getElementById('mobileSearchInput');
+        if (inp) inp.focus();
+    }, 100);
+});
 if (bnavFilter) bnavFilter.addEventListener('click', () => {
     openM('filterModal');
 });

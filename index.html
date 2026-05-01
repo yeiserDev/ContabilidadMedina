@@ -237,6 +237,10 @@
             <span class="material-symbols-outlined">add_circle</span>
             <span class="bnav-label">Depósito</span>
         </button>
+        <button class="bnav-btn" id="bnavSearch">
+            <span class="material-symbols-outlined">search</span>
+            <span class="bnav-label">Buscar</span>
+        </button>
         <button class="bnav-btn bnav-btn--expense" id="bnavExpense">
             <span class="material-symbols-outlined">remove_circle</span>
             <span class="bnav-label">Gasto</span>
@@ -365,6 +369,25 @@
                         <option value="all">Todos los ciclos</option>
                     </select>
                 </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: BÚSQUEDA MÓVIL -->
+    <div class="modal-bg" id="searchModal">
+        <div class="modal modal--sm">
+            <div class="modal-hd">
+                <h2><span class="material-symbols-outlined" style="color:var(--signal-orange)">search</span> Buscar</h2>
+                <button class="modal-x" data-close="searchModal"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-bd">
+                <label>Palabra clave, monto o categoría
+                    <input type="text" id="mobileSearchInput" class="mi" placeholder="Ej: supermercado..." style="margin-top:8px;">
+                </label>
+            </div>
+            <div class="modal-ft">
+                <button class="mb mb--ghost" id="mobileSearchClear" style="display:none; color:var(--slate-gray);">Limpiar</button>
+                <button class="mb mb--blue" data-close="searchModal" style="background:var(--ink-black);">Ver Resultados</button>
             </div>
         </div>
     </div>
