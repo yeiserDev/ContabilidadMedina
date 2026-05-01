@@ -914,8 +914,25 @@ if (document.getElementById('loginBtn')) {
         const overlay = document.getElementById('sidebarOverlay');
         if(overlay) overlay.classList.remove('active');
         document.getElementById('loginEmail').value = '';
-        document.getElementById('loginPassword').value = '';
+        const pw = document.getElementById('loginPassword');
+        pw.value = '';
+        pw.type = 'password';
+        const icon = document.getElementById('togglePasswordIcon');
+        if(icon) icon.textContent = 'visibility_off';
         openM('loginModal');
+    });
+}
+if (document.getElementById('togglePasswordBtn')) {
+    document.getElementById('togglePasswordBtn').addEventListener('click', () => {
+        const input = document.getElementById('loginPassword');
+        const icon = document.getElementById('togglePasswordIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = 'visibility';
+        } else {
+            input.type = 'password';
+            icon.textContent = 'visibility_off';
+        }
     });
 }
 if (document.getElementById('logoutBtn')) {

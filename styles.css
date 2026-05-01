@@ -1727,11 +1727,11 @@ body:not(.is-auth) .img-remove-btn {
     .layout {
         flex-direction: column;
         width: 100%;
-        padding-top: calc(var(--header-h) + 16px + 8px);
+        padding-top: 72px; /* 12px top + 48px header + 12px gap = 72px */
     }
 
     .header {
-        top: 12px;
+        top: 20px;
         width: calc(100% - 16px);
         height: 48px;
     }
@@ -1772,8 +1772,12 @@ body:not(.is-auth) .img-remove-btn {
     }
 
     .bal-pill {
-        padding: 4px 10px;
-    }
+    display: inline-flex;
+    width: auto !important;
+    min-width: 120px;        /* ← nunca será más angosto que esto */
+    padding: 4px 16px;
+    justify-content: center;  /* centra el texto dentro */
+}
 
     .bal-label {
         font-size: 9px;
@@ -2169,7 +2173,15 @@ body:not(.is-auth) .img-remove-btn {
 
     .mi {
         padding: 10px 12px;
-        font-size: 14px;
+        font-size: 16px !important;
+    }
+
+    .msel {
+        font-size: 16px !important;
+    }
+    
+    .search-input {
+        font-size: 16px !important;
     }
 
     .msel {
@@ -3834,7 +3846,7 @@ select:focus-visible {
         padding-bottom: 90px;
     }
 
-    .kpis { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .kpis { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     
     .charts-section { flex-direction: column; }
     

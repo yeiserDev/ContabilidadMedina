@@ -353,7 +353,14 @@
             </div>
             <div class="modal-bd">
                 <label>Correo Electrónico<input type="email" id="loginEmail" class="mi" placeholder="ejemplo@correo.com"></label>
-                <label>Contraseña<input type="password" id="loginPassword" class="mi" placeholder="••••••••"></label>
+                <label>Contraseña
+                    <div style="position:relative;">
+                        <input type="password" id="loginPassword" class="mi" placeholder="••••••••" style="padding-right: 40px; width: 100%; box-sizing: border-box;">
+                        <button type="button" id="togglePasswordBtn" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--slate-gray); padding:4px; display:flex;">
+                            <span class="material-symbols-outlined" style="font-size:20px;" id="togglePasswordIcon">visibility_off</span>
+                        </button>
+                    </div>
+                </label>
             </div>
             <div class="modal-ft">
                 <button class="mb mb--ghost" data-close="loginModal">Cancelar</button>
