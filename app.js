@@ -426,10 +426,10 @@ function renderDaily(){
         const card=document.createElement('div');card.className='day-card';card.dataset.date=dt;card.style.animationDelay=`${idx*.04}s`;
         const totalItems = deps.length + exps.length;
         let h=`<div class="day-head" onclick="toggleDay('${dt}')" style="cursor:pointer"><div class="day-left"><div class="day-icon" style="background:${dc.bg};border-color:${dc.border}"><span class="day-num" style="color:${dc.text}">${dayNum(dt)}</span><span class="day-mon">${monShort(dt)}</span></div><div><div class="day-label">${fmtDate(dt)}</div><div class="day-weekday" style="color:${dc.text};font-weight:600">${weekday(dt)}</div></div></div><div class="day-right"><div class="day-bal"><div class="day-bal-tag">Saldo Antes</div><div class="day-bal-val ${bb>=0?'pos':'neg'}">${money(bb)}</div></div><span class="material-symbols-outlined day-arrow">arrow_forward</span><div class="day-bal"><div class="day-bal-tag">Saldo Después</div><div class="day-bal-val ${ba>=0?'pos':'neg'}">${money(ba)}</div></div><div class="day-toggle-btn"><span class="material-symbols-outlined day-toggle-icon">expand_less</span></div></div></div><div class="day-body day-body-collapsible">`;
-        deps.forEach(dep=>{h+=`<div class="row-deposit"><div class="dep-icon"><span class="material-symbols-outlined">arrow_upward</span></div><div class="dep-info"><div class="dep-type">Depósito ${dep.type}</div>${dep.description?`<div class="dep-desc">${dep.description}</div>`:''}</div><div class="dep-amt">+${money(dep.amount)}</div><div class="row-actions"><button class="row-btn row-btn--edit" onclick="editDeposit('${dep.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="deleteDeposit('${dep.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
+        deps.forEach(dep=>{h+=`<div class="row-deposit"><div class="dep-icon"><span class="material-symbols-outlined">arrow_upward</span></div><div class="dep-info"><div class="dep-type">Depósito ${dep.type}</div>${dep.description?`<div class="dep-desc">${dep.description}</div>`:''}</div><div class="dep-amt">+${money(dep.amount)}</div><div class="row-actions"><button class="row-btn" style="color:var(--link-blue);" onclick="viewRecord('deposit','${dep.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="editDeposit('${dep.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="deleteDeposit('${dep.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
         if(exps.length){
             h+='<div class="exp-table">';
-            exps.forEach(exp=>{const ci=categories.indexOf(exp.category),col=COLORS[(ci>=0?ci:0)%COLORS.length];const imgBtn=exp.imageUrl?`<button class="exp-img-btn" onclick="openLightbox('${exp.id}')"><span class="material-symbols-outlined">image</span></button>`:'';h+=`<div class="row-expense"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span><span class="exp-desc">${exp.description||'—'}</span>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span><div class="row-actions"><button class="row-btn row-btn--edit" onclick="editExpense('${exp.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="deleteExpense('${exp.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
+            exps.forEach(exp=>{const ci=categories.indexOf(exp.category),col=COLORS[(ci>=0?ci:0)%COLORS.length];const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);const imgBtn=imgs.length?`<button class="exp-img-btn" onclick="openLightbox('${imgs[0]}')"><span class="material-symbols-outlined">${imgs.length>1?'photo_library':'image'}</span></button>`:'';h+=`<div class="row-expense"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span><span class="exp-desc">${exp.description||'—'}</span>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span><div class="row-actions"><button class="row-btn" style="color:var(--link-blue);" onclick="viewRecord('expense','${exp.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="editExpense('${exp.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="deleteExpense('${exp.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
             h+=`<div class="day-foot"><span class="day-foot-lbl">Total del día</span><span class="day-foot-val">-${money(expT)}</span></div></div>`;
         }
         h+='</div>';card.innerHTML=h;container.insertBefore(card,empty);
@@ -461,9 +461,70 @@ window.toggleDay = function(dt) {
 
 // ====== EDIT / DELETE ======
 window.editDeposit=requireAuth(function(id){const dep=deposits.find(d=>d.id===id);if(!dep)return;editDepositId=id;document.getElementById('depositModalTitle').textContent='Editar Depósito';document.getElementById('depositDate').value=dep.date;document.getElementById('depositType').value=dep.type;document.getElementById('depositAmount').value=dep.amount;document.getElementById('depositDescription').value=dep.description||'';document.getElementById('depositCycleStart').checked=!!dep.isCycleStart;openM('depositModal');});
-window.editExpense=requireAuth(function(id){const exp=expenses.find(e=>e.id===id);if(!exp)return;editExpenseId=id;document.getElementById('expenseModalTitle').textContent='Editar Gasto';document.getElementById('expenseDate').value=exp.date;populateCatSelect();document.getElementById('expenseCategory').value=exp.category;document.getElementById('expenseDescription').value=exp.description||'';document.getElementById('expenseAmount').value=exp.amount;resetImageUI();if(exp.imageUrl){pendingImageData=exp.imageUrl;document.getElementById('expenseImagePreview').src=exp.imageUrl;document.getElementById('imgPreviewWrap').style.display='';document.getElementById('imgUploadBtn').style.display='none';}openM('expenseModal');});
+window.editExpense=requireAuth(function(id){const exp=expenses.find(e=>e.id===id);if(!exp)return;editExpenseId=id;document.getElementById('expenseModalTitle').textContent='Editar Gasto';document.getElementById('expenseDate').value=exp.date;populateCatSelect();document.getElementById('expenseCategory').value=exp.category;document.getElementById('expenseDescription').value=exp.description||'';document.getElementById('expenseAmount').value=exp.amount;resetImageUI();const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);if(imgs.length){pendingImagesData=[...imgs];renderPendingImages();document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent='Adjuntar fotos';}openM('expenseModal');});
 window.deleteDeposit=requireAuth(function(id){confirm_('Eliminar Depósito','¿Estás seguro?',()=>{deposits=deposits.filter(d=>d.id!==id);persist();renderAll();toast('Depósito eliminado');});});
 window.deleteExpense=requireAuth(function(id){confirm_('Eliminar Gasto','¿Estás seguro?',()=>{expenses=expenses.filter(e=>e.id!==id);persist();renderAll();toast('Gasto eliminado');});});
+
+window.viewRecord = function(type, id) {
+    let rec = type === 'deposit' ? deposits.find(d => d.id === id) : expenses.find(e => e.id === id);
+    if(!rec) return;
+    
+    document.getElementById('viewRecordTitle').textContent = type === 'deposit' ? 'Detalle de Ingreso' : 'Detalle de Gasto';
+    document.getElementById('viewRecordAmount').textContent = (type === 'deposit' ? '+' : '-') + money(rec.amount);
+    document.getElementById('viewRecordAmount').style.color = type === 'deposit' ? 'var(--link-blue)' : 'var(--signal-orange)';
+    
+    let badge = document.getElementById('viewRecordBadge');
+    if(type === 'deposit') {
+        badge.textContent = `Depósito ${rec.type || ''}`;
+        badge.style.background = '#eff6ff';
+        badge.style.color = '#2563eb';
+    } else {
+        badge.textContent = rec.category;
+        const ci = categories.indexOf(rec.category);
+        const col = COLORS[(ci>=0?ci:0)%COLORS.length];
+        badge.style.background = col + '20';
+        badge.style.color = col;
+    }
+    
+    document.getElementById('viewRecordDate').textContent = fmtDate(rec.date);
+    document.getElementById('viewRecordDesc').textContent = rec.description || 'Sin descripción adicional.';
+    
+    let imgWrap = document.getElementById('viewRecordImageWrap');
+    let multiWrap = document.getElementById('viewRecordMultiImages');
+    
+    if(type === 'expense') {
+        const imgs = rec.imageUrls || (rec.imageUrl ? [rec.imageUrl] : []);
+        if (imgs.length > 0) {
+            multiWrap.innerHTML = '';
+            imgs.forEach(url => {
+                const imgEl = document.createElement('img');
+                imgEl.src = url;
+                imgEl.style.height = '150px';
+                imgEl.style.minWidth = '100px';
+                imgEl.style.objectFit = 'cover';
+                imgEl.style.borderRadius = 'var(--radius-md)';
+                imgEl.style.border = '1px solid rgba(20,20,19,0.05)';
+                imgEl.style.cursor = 'pointer';
+                imgEl.onclick = () => window.openLightbox(url);
+                multiWrap.appendChild(imgEl);
+            });
+            imgWrap.style.display = '';
+        } else {
+            imgWrap.style.display = 'none';
+        }
+    } else {
+        imgWrap.style.display = 'none';
+    }
+    
+    openM('viewRecordModal');
+};
+
+window.openLightboxFromView = function() {
+    if(window.currentLightboxUrl) {
+        document.getElementById('lightboxImg').src = window.currentLightboxUrl;
+        openM('lightboxModal');
+    }
+};
 
 function renderAll(){renderKPIs();renderCharts();renderCatBreakdown();renderCatList();populateCatSelect();renderMonthFilter();renderDaily();renderCalendar();renderReminders();}
 
@@ -489,53 +550,58 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
     btn.disabled = true;
 
     try {
-        let finalImageUrl = null;
-        if (editExpenseId) {
-            const currentExp = expenses.find(e => e.id === editExpenseId);
-            if (currentExp && currentExp.imageUrl) finalImageUrl = currentExp.imageUrl;
-        }
-
-        if (pendingImageData && pendingImageData.startsWith('data:image')) {
-            if (GOOGLE_APPS_SCRIPT_URL.includes('PEGA_AQUI')) {
-                console.warn('URL de Google Apps Script no configurada. Guardando como Base64.');
-                finalImageUrl = pendingImageData;
-            } else {
-                toast('Subiendo foto a Google Drive...');
-                try {
-                    const res = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ base64: pendingImageData })
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        finalImageUrl = data.url;
-                        toast('Foto subida con éxito');
+        let finalImageUrls = [];
+        
+        if (pendingImagesData && pendingImagesData.length > 0) {
+            let hasNew = pendingImagesData.some(img => img.startsWith('data:image'));
+            if (hasNew) toast('Subiendo foto(s) a Google Drive...');
+            
+            for (let img of pendingImagesData) {
+                if (img.startsWith('data:image')) {
+                    if (GOOGLE_APPS_SCRIPT_URL.includes('PEGA_AQUI')) {
+                        console.warn('URL de Google Apps Script no configurada. Guardando como Base64.');
+                        finalImageUrls.push(img);
                     } else {
-                        console.error('Error Drive:', data.error);
-                        finalImageUrl = pendingImageData; // Fallback
+                        try {
+                            const res = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                                method: 'POST',
+                                body: JSON.stringify({ base64: img })
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                                finalImageUrls.push(data.url);
+                            } else {
+                                console.error('Error Drive:', data.error);
+                                finalImageUrls.push(img); // Fallback
+                            }
+                        } catch(e) {
+                            console.error('Error de red al subir a Drive:', e);
+                            finalImageUrls.push(img); // Fallback
+                        }
                     }
-                } catch(e) {
-                    console.error('Error de red al subir a Drive:', e);
-                    finalImageUrl = pendingImageData; // Fallback
+                } else {
+                    finalImageUrls.push(img); // Ya era URL
                 }
             }
-        } else if (pendingImageData) {
-            finalImageUrl = pendingImageData; // Si ya era una URL existente
-        } else if (!pendingImageData) {
-            finalImageUrl = null; // Si se eliminó la foto
+            if (hasNew) toast('Fotos subidas con éxito');
         }
 
         if(editExpenseId){
             const exp=expenses.find(e=>e.id===editExpenseId);
             if(exp){
                 exp.date=date;exp.category=category;exp.description=description;exp.amount=amount;
-                if(finalImageUrl) exp.imageUrl=finalImageUrl; else delete exp.imageUrl;
+                if(finalImageUrls.length > 0) {
+                    exp.imageUrls = finalImageUrls;
+                } else {
+                    delete exp.imageUrls;
+                }
+                delete exp.imageUrl; // migrate old field
             }
             editExpenseId=null;toast('Gasto actualizado');
         }
         else{
             const nx={id:uid(),date,category,description,amount};
-            if(finalImageUrl) nx.imageUrl=finalImageUrl;
+            if(finalImageUrls.length > 0) nx.imageUrls = finalImageUrls;
             expenses.push(nx);
             toast(`Gasto de ${money(amount)} registrado`);
         }
@@ -853,7 +919,7 @@ document.getElementById('openReportModal').addEventListener('click', () => {
 
 
 // ====== IMAGE HANDLING ======
-let pendingImageData = null;
+let pendingImagesData = [];
 
 function resizeToThumb(file) {
     return new Promise(resolve => {
@@ -877,32 +943,75 @@ function resizeToThumb(file) {
 }
 
 function resetImageUI() {
-    pendingImageData = null;
-    const prev = document.getElementById('expenseImagePreview');
-    const wrap = document.getElementById('imgPreviewWrap');
-    const btn  = document.getElementById('imgUploadBtn');
-    const inp  = document.getElementById('expenseImage');
-    if (prev) prev.src = '';
-    if (wrap) wrap.style.display = 'none';
-    if (btn)  btn.style.display  = '';
-    if (inp)  inp.value = '';
+    pendingImagesData = [];
+    const container = document.getElementById('multiImgPreviewContainer');
+    const inp = document.getElementById('expenseImage');
+    if (container) container.innerHTML = '';
+    if (inp) inp.value = '';
+}
+
+function renderPendingImages() {
+    const container = document.getElementById('multiImgPreviewContainer');
+    if(!container) return;
+    container.innerHTML = '';
+    pendingImagesData.forEach((data, index) => {
+        const wrap = document.createElement('div');
+        wrap.style.position = 'relative';
+        wrap.style.width = '64px';
+        wrap.style.height = '64px';
+        
+        const img = document.createElement('img');
+        img.src = data;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = 'var(--radius-md)';
+        img.style.border = '1px solid rgba(20,20,19,0.1)';
+        
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">close</span>';
+        rm.style.position = 'absolute';
+        rm.style.top = '-6px';
+        rm.style.right = '-6px';
+        rm.style.background = 'var(--signal-orange)';
+        rm.style.color = '#fff';
+        rm.style.border = 'none';
+        rm.style.borderRadius = '50%';
+        rm.style.width = '20px';
+        rm.style.height = '20px';
+        rm.style.display = 'flex';
+        rm.style.alignItems = 'center';
+        rm.style.justifyContent = 'center';
+        rm.style.cursor = 'pointer';
+        
+        rm.onclick = () => {
+            pendingImagesData.splice(index, 1);
+            renderPendingImages();
+        };
+        
+        wrap.appendChild(img);
+        wrap.appendChild(rm);
+        container.appendChild(wrap);
+    });
 }
 
 document.getElementById('imgUploadBtn').addEventListener('click', () => document.getElementById('expenseImage').click());
 document.getElementById('expenseImage').addEventListener('change', async e => {
-    const file = e.target.files[0]; if (!file) return;
-    const data = await resizeToThumb(file);
-    pendingImageData = data;
-    document.getElementById('expenseImagePreview').src = data;
-    document.getElementById('imgPreviewWrap').style.display = '';
-    document.getElementById('imgUploadBtn').style.display = 'none';
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent = 'Adjuntando...';
+    for(let file of files) {
+        const data = await resizeToThumb(file);
+        pendingImagesData.push(data);
+    }
+    document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent = 'Adjuntar fotos';
+    renderPendingImages();
 });
-document.getElementById('imgRemoveBtn').addEventListener('click', resetImageUI);
 
-window.openLightbox = function(expId) {
-    const exp = expenses.find(e => e.id === expId);
-    if (!exp || !exp.imageUrl) return;
-    document.getElementById('lightboxImg').src = exp.imageUrl;
+window.openLightbox = function(url) {
+    if (!url) return;
+    document.getElementById('lightboxImg').src = url;
     openM('lightboxModal');
 };
 

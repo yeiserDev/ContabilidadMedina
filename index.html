@@ -295,21 +295,14 @@
                         placeholder="¿En qué se gastó?"></label>
                 <label>Monto (S/)<input type="number" id="expenseAmount" class="mi" placeholder="0.00" step="0.01"
                         min="0"></label>
-                <label>Comprobante <small>(opcional)</small>
-                    <div class="img-upload-area">
-                        <input type="file" id="expenseImage" accept="image/*" style="display:none">
-                        <button type="button" class="img-upload-btn" id="imgUploadBtn">
+                <label>Comprobantes <small>(opcional)</small>
+                    <div class="img-upload-area" id="multiImgUploadArea">
+                        <input type="file" id="expenseImage" accept="image/*" multiple style="display:none">
+                        <button type="button" class="img-upload-btn" id="imgUploadBtn" style="margin-bottom:8px">
                             <span class="material-symbols-outlined">add_a_photo</span>
-                            <span>Adjuntar foto</span>
+                            <span>Adjuntar fotos</span>
                         </button>
-                        <div class="img-preview-wrap" id="imgPreviewWrap" style="display:none">
-                            <img id="expenseImagePreview" class="img-preview" src="" alt="">
-                            <div class="img-preview-info">
-                                <div class="img-preview-title">Comprobante adjunto</div>
-                                <div class="img-preview-sub">Toca la X para eliminar</div>
-                            </div>
-                            <button type="button" class="img-remove-btn" id="imgRemoveBtn"><span class="material-symbols-outlined">close</span></button>
-                        </div>
+                        <div id="multiImgPreviewContainer" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
                     </div>
                 </label>
             </div>
@@ -388,6 +381,35 @@
             <div class="modal-ft">
                 <button class="mb mb--ghost" id="mobileSearchClear" style="display:none; color:var(--slate-gray);">Limpiar</button>
                 <button class="mb mb--blue" data-close="searchModal" style="background:var(--ink-black);">Ver Resultados</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VIEW RECORD -->
+    <div class="modal-bg" id="viewRecordModal">
+        <div class="modal modal--sm" style="overflow: hidden;">
+            <div class="modal-hd" style="border-bottom: none; padding-bottom: 0;">
+                <h2 id="viewRecordTitle" style="font-size: 24px; color: var(--ink-black);">Gasto</h2>
+                <button class="modal-x" data-close="viewRecordModal"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-bd" style="padding-top: 16px;">
+                <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 24px;">
+                    <div id="viewRecordAmount" style="font-size: 36px; font-weight: 700; color: var(--ink-black); margin-bottom: 8px;">-S/ 0.00</div>
+                    <div id="viewRecordBadge" style="display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;">Categoría</div>
+                </div>
+                
+                <div style="background: var(--canvas-cream); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px;">
+                    <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Fecha</div>
+                    <div id="viewRecordDate" style="font-size: 15px; font-weight: 500; color: var(--ink-black); margin-bottom: 12px;">--</div>
+                    
+                    <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Descripción</div>
+                    <div id="viewRecordDesc" style="font-size: 15px; font-weight: 500; color: var(--ink-black); line-height: 1.4;">--</div>
+                </div>
+
+                <div id="viewRecordImageWrap" style="display: none; width:100%;">
+                    <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Comprobantes adjuntos</div>
+                    <div id="viewRecordMultiImages" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:8px;"></div>
+                </div>
             </div>
         </div>
     </div>
