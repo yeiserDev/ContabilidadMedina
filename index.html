@@ -293,8 +293,16 @@
                 <label>Categoría / Rubro<select id="expenseCategory" class="mi msel"></select></label>
                 <label>Descripción<input type="text" id="expenseDescription" class="mi"
                         placeholder="¿En qué se gastó?"></label>
-                <label>Monto (S/)<input type="number" id="expenseAmount" class="mi" placeholder="0.00" step="0.01"
-                        min="0"></label>
+                <div style="display:flex; gap:12px;">
+                    <label style="flex:1;">Monto (S/)<input type="number" id="expenseAmount" class="mi" placeholder="0.00" step="0.01" min="0"></label>
+                    <label style="flex:1;">Método
+                        <select id="expenseWallet" class="mi msel">
+                            <option value="bcp">BCP</option>
+                            <option value="yape">Yape</option>
+                            <option value="efectivo">Efectivo</option>
+                        </select>
+                    </label>
+                </div>
                 <label>Comprobantes <small>(opcional)</small>
                     <div class="img-upload-area" id="multiImgUploadArea">
                         <input type="file" id="expenseImage" accept="image/*" multiple style="display:none">
@@ -409,6 +417,11 @@
                 <div id="viewRecordImageWrap" style="display: none; width:100%;">
                     <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Comprobantes adjuntos</div>
                     <div id="viewRecordMultiImages" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:8px;"></div>
+                </div>
+
+                <div id="viewRecordActions" style="display: flex; gap: 8px; margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(20,20,19,0.05);">
+                    <button class="mb mb--ghost" id="viewRecordEditBtn" style="flex: 1; border: 1px solid rgba(20,20,19,0.1); display: flex; align-items: center; justify-content: center; gap: 6px;"><span class="material-symbols-outlined" style="font-size: 18px;">edit</span> Editar</button>
+                    <button class="mb mb--ghost" id="viewRecordDelBtn" style="flex: 1; border: 1px solid rgba(20,20,19,0.1); color: var(--signal-orange); display: flex; align-items: center; justify-content: center; gap: 6px;"><span class="material-symbols-outlined" style="font-size: 18px;">delete</span> Eliminar</button>
                 </div>
             </div>
         </div>

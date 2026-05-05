@@ -271,7 +271,29 @@ function renderCatBreakdown(){
         const bgtPct=bgt>0?(amt/bgt*100):0;
         const bgtCls=bgtPct>=100?'over':bgtPct>=80?'warn':'ok';
         const bgtBar=bgt>0?`<div class="cat-budget-row"><span class="cat-budget-label">Presup. ${money(bgt)}</span><div class="cat-budget-bar-bg"><div class="cat-budget-bar ${bgtCls}" style="width:${Math.min(bgtPct,100).toFixed(0)}%"></div></div><span class="cat-budget-pct ${bgtCls}">${bgtPct.toFixed(0)}%</span></div>`:'';
-        el.innerHTML+=`<div class="cat-item"><div class="cat-accent" style="background:${col}"></div><div class="cat-info"><div class="cat-top"><span class="cat-name">${c}</span>${amt>0?`<span class="cat-pct">${pctOfTotal}%</span>`:''}</div><div class="cat-bar-bg"><div class="cat-bar" style="width:${pct}%;background:${col}"></div></div><span class="cat-amount">${amt>0?money(amt):'<span class="cat-empty">Sin gastos</span>'}</span>${bgtBar}</div></div>`;
+        
+        // Sparkline 14 days
+        const sparkDays = 14;
+        const now = new Date();
+        let maxAmt = 1;
+        const sparkData = [];
+        for(let j=sparkDays-1; j>=0; j--){
+            const d = new Date(now.getTime() - j*86400000);
+            const dtStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const ex = expenses.filter(x => x.date === dtStr && x.category === c).reduce((s,x)=>s+x.amount, 0);
+            sparkData.push(ex);
+            if(ex>maxAmt) maxAmt=ex;
+        }
+        let pathD = "";
+        const w = 40, h = 14;
+        sparkData.forEach((val, idx) => {
+            const x = (idx / (sparkDays-1)) * w;
+            const y = h - (val / maxAmt * h);
+            pathD += (idx===0?'M':'L') + `${x.toFixed(1)},${y.toFixed(1)} `;
+        });
+        const sparkHtml = `<svg width="${w}" height="${h}" style="margin-left:auto; opacity:0.8; flex-shrink:0;"><path d="${pathD}" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        
+        el.innerHTML+=`<div class="cat-item"><div class="cat-accent" style="background:${col}"></div><div class="cat-info"><div class="cat-top" style="display:flex;align-items:center;"><span class="cat-name">${c}</span>${sparkHtml}${amt>0?`<span class="cat-pct" style="margin-left:8px;">${pctOfTotal}%</span>`:''}</div><div class="cat-bar-bg"><div class="cat-bar" style="width:${pct}%;background:${col}"></div></div><span class="cat-amount">${amt>0?money(amt):'<span class="cat-empty">Sin gastos</span>'}</span>${bgtBar}</div></div>`;
         // AI Analysis for "Gastos Diarios"
         if(c === 'Gastos Diarios' && amt > 0) {
             const dailyExpenses = expenses.filter(e => e.category === 'Gastos Diarios');
@@ -426,10 +448,20 @@ function renderDaily(){
         const card=document.createElement('div');card.className='day-card';card.dataset.date=dt;card.style.animationDelay=`${idx*.04}s`;
         const totalItems = deps.length + exps.length;
         let h=`<div class="day-head" onclick="toggleDay('${dt}')" style="cursor:pointer"><div class="day-left"><div class="day-icon" style="background:${dc.bg};border-color:${dc.border}"><span class="day-num" style="color:${dc.text}">${dayNum(dt)}</span><span class="day-mon">${monShort(dt)}</span></div><div><div class="day-label">${fmtDate(dt)}</div><div class="day-weekday" style="color:${dc.text};font-weight:600">${weekday(dt)}</div></div></div><div class="day-right"><div class="day-bal"><div class="day-bal-tag">Saldo Antes</div><div class="day-bal-val ${bb>=0?'pos':'neg'}">${money(bb)}</div></div><span class="material-symbols-outlined day-arrow">arrow_forward</span><div class="day-bal"><div class="day-bal-tag">Saldo Después</div><div class="day-bal-val ${ba>=0?'pos':'neg'}">${money(ba)}</div></div><div class="day-toggle-btn"><span class="material-symbols-outlined day-toggle-icon">expand_less</span></div></div></div><div class="day-body day-body-collapsible">`;
-        deps.forEach(dep=>{h+=`<div class="row-deposit"><div class="dep-icon"><span class="material-symbols-outlined">arrow_upward</span></div><div class="dep-info"><div class="dep-type">Depósito ${dep.type}</div>${dep.description?`<div class="dep-desc">${dep.description}</div>`:''}</div><div class="dep-amt">+${money(dep.amount)}</div><div class="row-actions"><button class="row-btn" style="color:var(--link-blue);" onclick="viewRecord('deposit','${dep.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="editDeposit('${dep.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="deleteDeposit('${dep.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
+        deps.forEach(dep=>{h+=`<div class="row-deposit" onclick="viewRecord('deposit','${dep.id}')" style="cursor:pointer"><div class="dep-icon"><span class="material-symbols-outlined">arrow_upward</span></div><div class="dep-info"><div class="dep-type">Depósito ${dep.type}</div>${dep.description?`<div class="dep-desc">${dep.description}</div>`:''}</div><div class="dep-amt">+${money(dep.amount)}</div><div class="row-actions"><button class="row-btn" style="color:var(--link-blue);" onclick="event.stopPropagation(); viewRecord('deposit','${dep.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="event.stopPropagation(); editDeposit('${dep.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="event.stopPropagation(); deleteDeposit('${dep.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
         if(exps.length){
             h+='<div class="exp-table">';
-            exps.forEach(exp=>{const ci=categories.indexOf(exp.category),col=COLORS[(ci>=0?ci:0)%COLORS.length];const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);const imgBtn=imgs.length?`<button class="exp-img-btn" onclick="openLightbox('${imgs[0]}')"><span class="material-symbols-outlined">${imgs.length>1?'photo_library':'image'}</span></button>`:'';h+=`<div class="row-expense"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span><span class="exp-desc">${exp.description||'—'}</span>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span><div class="row-actions"><button class="row-btn" style="color:var(--link-blue);" onclick="viewRecord('expense','${exp.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="editExpense('${exp.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="deleteExpense('${exp.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
+            exps.forEach(exp=>{
+                const ci=categories.indexOf(exp.category),col=COLORS[(ci>=0?ci:0)%COLORS.length];
+                const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);
+                const imgBtn=imgs.length?`<button class="exp-img-btn" onclick="event.stopPropagation(); openLightbox('${imgs[0]}')"><span class="material-symbols-outlined">${imgs.length>1?'photo_library':'image'}</span></button>`:'';
+                let styledDesc = (exp.description||'—').replace(/(#[a-zA-Z0-9_]+)/g, '<span style="display:inline-block; background:var(--canvas-cream); color:var(--ink-black); border:1px solid rgba(20,20,19,0.1); border-radius:4px; padding:0 4px; font-size:11px; margin-left:4px; font-weight:600;">$1</span>');
+                let walletHtml = '';
+                if(exp.wallet === 'yape') walletHtml = '<svg width="20" height="20" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="wallet-icon" style="margin-right:6px; border-radius:4px; flex-shrink: 0;" title="Yape"><rect width="40" height="40" fill="#742384"/><path d="M14 11L20 21L26 11H31L22 25V31H18V25L9 11H14Z" fill="#00E5C0"/></svg>';
+                else if(exp.wallet === 'bcp') walletHtml = '<svg width="20" height="20" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="wallet-icon" style="margin-right:6px; border-radius:4px; flex-shrink: 0;" title="BCP"><rect width="40" height="40" fill="#002A8D"/><text x="20" y="22" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-style="italic" font-size="20" fill="#FF7A00" text-anchor="middle" dominant-baseline="middle">BCP</text></svg>';
+                else walletHtml = '<span class="material-symbols-outlined wallet-icon" style="font-size:16px;color:#16a34a;margin-right:6px;" title="Efectivo">payments</span>';
+                h+=`<div class="row-expense" onclick="viewRecord('expense','${exp.id}')" style="cursor:pointer"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span>${walletHtml}<div class="exp-desc"><span>${styledDesc}</span></div>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span><div class="row-actions"><button class="row-btn" style="color:var(--link-blue);" onclick="event.stopPropagation(); viewRecord('expense','${exp.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="event.stopPropagation(); editExpense('${exp.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="event.stopPropagation(); deleteExpense('${exp.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;
+            });
             h+=`<div class="day-foot"><span class="day-foot-lbl">Total del día</span><span class="day-foot-val">-${money(expT)}</span></div></div>`;
         }
         h+='</div>';card.innerHTML=h;container.insertBefore(card,empty);
@@ -461,7 +493,7 @@ window.toggleDay = function(dt) {
 
 // ====== EDIT / DELETE ======
 window.editDeposit=requireAuth(function(id){const dep=deposits.find(d=>d.id===id);if(!dep)return;editDepositId=id;document.getElementById('depositModalTitle').textContent='Editar Depósito';document.getElementById('depositDate').value=dep.date;document.getElementById('depositType').value=dep.type;document.getElementById('depositAmount').value=dep.amount;document.getElementById('depositDescription').value=dep.description||'';document.getElementById('depositCycleStart').checked=!!dep.isCycleStart;openM('depositModal');});
-window.editExpense=requireAuth(function(id){const exp=expenses.find(e=>e.id===id);if(!exp)return;editExpenseId=id;document.getElementById('expenseModalTitle').textContent='Editar Gasto';document.getElementById('expenseDate').value=exp.date;populateCatSelect();document.getElementById('expenseCategory').value=exp.category;document.getElementById('expenseDescription').value=exp.description||'';document.getElementById('expenseAmount').value=exp.amount;resetImageUI();const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);if(imgs.length){pendingImagesData=[...imgs];renderPendingImages();document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent='Adjuntar fotos';}openM('expenseModal');});
+window.editExpense=requireAuth(function(id){const exp=expenses.find(e=>e.id===id);if(!exp)return;editExpenseId=id;document.getElementById('expenseModalTitle').textContent='Editar Gasto';document.getElementById('expenseDate').value=exp.date;populateCatSelect();document.getElementById('expenseCategory').value=exp.category;document.getElementById('expenseDescription').value=exp.description||'';document.getElementById('expenseAmount').value=exp.amount;document.getElementById('expenseWallet').value=exp.wallet||'efectivo';resetImageUI();const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);if(imgs.length){pendingImagesData=[...imgs];renderPendingImages();document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent='Adjuntar fotos';}openM('expenseModal');});
 window.deleteDeposit=requireAuth(function(id){confirm_('Eliminar Depósito','¿Estás seguro?',()=>{deposits=deposits.filter(d=>d.id!==id);persist();renderAll();toast('Depósito eliminado');});});
 window.deleteExpense=requireAuth(function(id){confirm_('Eliminar Gasto','¿Estás seguro?',()=>{expenses=expenses.filter(e=>e.id!==id);persist();renderAll();toast('Gasto eliminado');});});
 
@@ -516,6 +548,18 @@ window.viewRecord = function(type, id) {
         imgWrap.style.display = 'none';
     }
     
+    document.getElementById('viewRecordEditBtn').onclick = () => {
+        closeM('viewRecordModal');
+        if (type === 'deposit') editDeposit(id);
+        else editExpense(id);
+    };
+    
+    document.getElementById('viewRecordDelBtn').onclick = () => {
+        closeM('viewRecordModal');
+        if (type === 'deposit') deleteDeposit(id);
+        else deleteExpense(id);
+    };
+
     openM('viewRecordModal');
 };
 
@@ -539,9 +583,9 @@ document.getElementById('saveDeposit').addEventListener('click',()=>{
 });
 
 // ====== EVENTS: EXPENSE ======
-document.getElementById('openExpenseModal').addEventListener('click',requireAuth(()=>{editExpenseId=null;document.getElementById('expenseModalTitle').textContent='Nuevo Gasto';document.getElementById('expenseDate').value=today();document.getElementById('expenseAmount').value='';document.getElementById('expenseDescription').value='';populateCatSelect();resetImageUI();openM('expenseModal');setTimeout(()=>document.getElementById('expenseDescription').focus(),120);}));
+document.getElementById('openExpenseModal').addEventListener('click',requireAuth(()=>{editExpenseId=null;document.getElementById('expenseModalTitle').textContent='Nuevo Gasto';document.getElementById('expenseDate').value=today();document.getElementById('expenseAmount').value='';document.getElementById('expenseDescription').value='';document.getElementById('expenseWallet').value='bcp';populateCatSelect();resetImageUI();openM('expenseModal');setTimeout(()=>document.getElementById('expenseDescription').focus(),120);}));
 document.getElementById('saveExpense').addEventListener('click', async ()=>{
-    const date=document.getElementById('expenseDate').value,category=document.getElementById('expenseCategory').value,description=document.getElementById('expenseDescription').value.trim(),amount=parseFloat(document.getElementById('expenseAmount').value);
+    const date=document.getElementById('expenseDate').value,category=document.getElementById('expenseCategory').value,description=document.getElementById('expenseDescription').value.trim(),amount=parseFloat(document.getElementById('expenseAmount').value),wallet=document.getElementById('expenseWallet').value;
     if(!date||!category||isNaN(amount)||amount<=0){toast('Completa correctamente','err');return;}
     
     const btn = document.getElementById('saveExpense');
@@ -589,7 +633,7 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
         if(editExpenseId){
             const exp=expenses.find(e=>e.id===editExpenseId);
             if(exp){
-                exp.date=date;exp.category=category;exp.description=description;exp.amount=amount;
+                exp.date=date;exp.category=category;exp.description=description;exp.amount=amount;exp.wallet=wallet;
                 if(finalImageUrls.length > 0) {
                     exp.imageUrls = finalImageUrls;
                 } else {
@@ -600,7 +644,7 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
             editExpenseId=null;toast('Gasto actualizado');
         }
         else{
-            const nx={id:uid(),date,category,description,amount};
+            const nx={id:uid(),date,category,description,amount,wallet};
             if(finalImageUrls.length > 0) nx.imageUrls = finalImageUrls;
             expenses.push(nx);
             toast(`Gasto de ${money(amount)} registrado`);
@@ -609,6 +653,25 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
     } finally {
         btn.textContent = originalText;
         btn.disabled = false;
+    }
+});
+
+document.getElementById('expenseDescription').addEventListener('input', (e) => {
+    const text = e.target.value.trim().toLowerCase();
+    if (!text || text.length < 3) return;
+    
+    // Find the most recent expense matching this description substring
+    const match = [...expenses].reverse().find(exp => (exp.description || '').toLowerCase().includes(text));
+    
+    if (match && match.category) {
+        const catSelect = document.getElementById('expenseCategory');
+        // Only update if it actually changes, to avoid jitter
+        if (catSelect.value !== match.category && categories.includes(match.category)) {
+            catSelect.value = match.category;
+            catSelect.style.transition = 'all 0.3s';
+            catSelect.style.boxShadow = '0 0 0 2px var(--signal-orange)';
+            setTimeout(() => { catSelect.style.boxShadow = 'none'; }, 600);
+        }
     }
 });
 
@@ -665,16 +728,48 @@ function renderCalendar(){
     const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
     const daysInPrev=new Date(calYear,calMonth,0).getDate();
     const todayD=new Date(), isCurrentMonth=todayD.getMonth()===calMonth&&todayD.getFullYear()===calYear;
-    const expDates=new Set(), depDates=new Set();
-    expenses.forEach(e=>{const ed=d2(e.date);if(ed.getMonth()===calMonth&&ed.getFullYear()===calYear)expDates.add(ed.getDate());});
-    deposits.forEach(d=>{const dd=d2(d.date);if(dd.getMonth()===calMonth&&dd.getFullYear()===calYear)depDates.add(dd.getDate());});
+    
+    // Heatmap data
+    const dailyData = {};
+    let maxDailyExp = 1;
+    expenses.forEach(e=>{
+        const ed=d2(e.date);
+        if(ed.getMonth()===calMonth&&ed.getFullYear()===calYear){
+            const d=ed.getDate();
+            if(!dailyData[d]) dailyData[d] = {exp:0, dep:0};
+            dailyData[d].exp += +e.amount;
+            if(dailyData[d].exp > maxDailyExp) maxDailyExp = dailyData[d].exp;
+        }
+    });
+    deposits.forEach(d=>{
+        const dd=d2(d.date);
+        if(dd.getMonth()===calMonth&&dd.getFullYear()===calYear){
+            const d=dd.getDate();
+            if(!dailyData[d]) dailyData[d] = {exp:0, dep:0};
+            dailyData[d].dep += +d.amount;
+        }
+    });
+
     for(let i=firstDay-1;i>=0;i--){const span=document.createElement('span');span.className='cal-day other';span.textContent=daysInPrev-i;daysEl.appendChild(span);}
     for(let d=1;d<=daysInMonth;d++){
-        const span=document.createElement('span');let cls='cal-day';
+        const span=document.createElement('span');
+        let cls='cal-day heatmap-cell';
         if(isCurrentMonth&&d===todayD.getDate())cls+=' today';
-        const hasE=expDates.has(d),hasD=depDates.has(d);
-        if(hasE&&hasD)cls+=' has-both';else if(hasE)cls+=' has-expense';else if(hasD)cls+=' has-deposit';
-        span.className=cls;span.textContent=d;daysEl.appendChild(span);
+        
+        let styleStr = '';
+        if(dailyData[d]){
+            if(dailyData[d].exp > 0){
+                const opacity = Math.max(0.15, dailyData[d].exp / maxDailyExp);
+                styleStr = `background-color: rgba(220, 38, 38, ${opacity}); color: ${opacity > 0.5 ? '#fff' : 'var(--ink-black)'}; border: none; font-weight: ${opacity > 0.5 ? '700' : '500'};`;
+            } else if(dailyData[d].dep > 0){
+                styleStr = `background-color: rgba(22, 163, 74, 0.2); color: #16a34a; border: none; font-weight: 700;`;
+            }
+        }
+        
+        span.className=cls;
+        span.textContent=d;
+        if(styleStr) span.style.cssText = styleStr;
+        daysEl.appendChild(span);
     }
     const totalCells=firstDay+daysInMonth;const remaining=totalCells%7===0?0:7-totalCells%7;
     for(let i=1;i<=remaining;i++){const span=document.createElement('span');span.className='cal-day other';span.textContent=i;daysEl.appendChild(span);}

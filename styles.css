@@ -834,6 +834,8 @@ h1, h2, h3, h4, h5, h6,
     font-weight: 700;
     color: #166534;
     white-space: nowrap;
+    text-align: right;
+    min-width: 90px;
 }
 
 .exp-table {
@@ -879,6 +881,8 @@ h1, h2, h3, h4, h5, h6,
     font-weight: 700;
     color: var(--signal-orange);
     white-space: nowrap;
+    text-align: right;
+    min-width: 90px;
 }
 
 .row-actions {
@@ -1842,13 +1846,55 @@ body:not(.is-auth) .img-remove-btn {
         gap: 6px;
     }
 
+    .row-deposit .row-actions {
+        display: none !important;
+    }
+
     .row-expense {
-        padding: 5px 6px;
-        gap: 4px;
+        display: grid;
+        grid-template-columns: auto 1fr auto auto;
+        grid-template-areas: 
+            "wallet desc desc amt"
+            "wallet badge img amt";
+        gap: 2px 8px;
+        padding: 10px 8px;
+        align-items: center;
+    }
+
+    .wallet-icon {
+        grid-area: wallet;
+        margin-right: 0 !important;
+    }
+
+    .exp-desc {
+        grid-area: desc;
+        font-size: 14px;
+        line-height: 1.3;
+        white-space: normal; /* allow wrapping on mobile */
     }
 
     .exp-badge {
-        max-width: 80px;
+        grid-area: badge;
+        justify-self: start;
+        font-size: 9px;
+        padding: 0;
+        background: transparent !important;
+        border: none !important;
+        color: var(--slate-gray) !important;
+    }
+
+    .exp-img-btn {
+        grid-area: img;
+        justify-self: start;
+        margin-left: -4px;
+    }
+
+    .exp-amt {
+        grid-area: amt;
+    }
+
+    .row-actions {
+        display: none !important;
     }
 
     .modal {
