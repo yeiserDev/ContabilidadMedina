@@ -3921,7 +3921,17 @@ select:focus-visible {
         padding-bottom: 90px;
     }
 
-    .kpis { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    padding: 8px;
+}
+
+@media (max-width: 600px) {
+    .center .kpis { display: none; }
+    .sidebar-left .kpis { display: grid; }
+}
     
     .charts-section { flex-direction: column; }
     
