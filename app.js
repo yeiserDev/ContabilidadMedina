@@ -161,6 +161,13 @@ const monYear = s => { const d=d2(s); return `${MES[d.getMonth()]} ${d.getFullYe
 const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const money = n => { const num = Number(n); const formatted = num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); return `S/ ${formatted}`; };
 
+window.getWalletIcon = (w, size=22) => {
+    if(w==='yape') return `<svg width="${size*1.6}" height="${size}" viewBox="0 0 40 25" fill="none" xmlns="http://www.w3.org/2000/svg" class="wallet-icon" style="margin-right:6px; flex-shrink:0; vertical-align:middle;" title="Yape"><path d="M22 3 C 27 3 30 5 30 9 C 30 13 27 15 22 15 C 21 15 20 14.8 19 14.5 L 16 17 L 17 13.5 C 15.5 12.5 15 11 15 9 C 15 5 18 3 22 3 Z" fill="#00E5C0"/><text x="22.5" y="10" font-family="Arial, sans-serif" font-weight="bold" font-size="6" fill="#ffffff" text-anchor="middle">S/</text><text x="20" y="22" font-family="'Comic Sans MS', 'Brush Script MT', cursive, sans-serif" font-weight="bold" font-size="14" fill="#742384" text-anchor="middle">yape</text></svg>`;
+    if(w==='bcp') return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="wallet-icon" style="margin-right:6px; flex-shrink:0; vertical-align:middle;" title="BCP"><path d="M12.5 3.5 C 19 3.5 22 9.5 19.5 16.5 C 17 21.5 10 22 7.5 19 C 12.5 19 14.5 14 14.5 10 C 14.5 7.5 11.5 5.5 8.5 5.5 C 10.5 4 11.5 3.5 12.5 3.5 Z" fill="#FF7A00"/><path d="M8.5 5.5 C 11.5 5.5 14.5 7.5 14.5 10 C 13.5 10 12 11 10.5 13 C 7 13 4 8 8.5 5.5 Z" fill="#002A8D"/></svg>`;
+    return `<span class="material-symbols-outlined wallet-icon" style="font-size:${size}px;color:#16a34a;margin-right:6px;flex-shrink:0;vertical-align:middle;" title="Efectivo">payments</span>`;
+};
+window.getWalletName = (w) => w==='yape'?'Yape':w==='bcp'?'BCP':'Efectivo';
+
 // BALANCE
 const allDates = () => [...new Set([...deposits.map(d=>d.date),...expenses.map(e=>e.date)])].sort();
 const balBefore = dt => { let b=0; deposits.forEach(d=>{if(d.date<dt)b+=+d.amount}); expenses.forEach(e=>{if(e.date<dt)b-=+e.amount}); return b; };
@@ -456,10 +463,7 @@ function renderDaily(){
                 const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);
                 const imgBtn=imgs.length?`<button class="exp-img-btn" onclick="event.stopPropagation(); openLightbox('${imgs[0]}')"><span class="material-symbols-outlined">${imgs.length>1?'photo_library':'image'}</span></button>`:'';
                 let styledDesc = (exp.description||'—').replace(/(#[a-zA-Z0-9_]+)/g, '<span style="display:inline-block; background:var(--canvas-cream); color:var(--ink-black); border:1px solid rgba(20,20,19,0.1); border-radius:4px; padding:0 4px; font-size:11px; margin-left:4px; font-weight:600;">$1</span>');
-                let walletHtml = '';
-                if(exp.wallet === 'yape') walletHtml = '<svg width="20" height="20" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="wallet-icon" style="margin-right:6px; border-radius:4px; flex-shrink: 0;" title="Yape"><rect width="40" height="40" fill="#742384"/><path d="M14 11L20 21L26 11H31L22 25V31H18V25L9 11H14Z" fill="#00E5C0"/></svg>';
-                else if(exp.wallet === 'bcp') walletHtml = '<svg width="20" height="20" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="wallet-icon" style="margin-right:6px; border-radius:4px; flex-shrink: 0;" title="BCP"><rect width="40" height="40" fill="#002A8D"/><text x="20" y="22" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-style="italic" font-size="20" fill="#FF7A00" text-anchor="middle" dominant-baseline="middle">BCP</text></svg>';
-                else walletHtml = '<span class="material-symbols-outlined wallet-icon" style="font-size:16px;color:#16a34a;margin-right:6px;" title="Efectivo">payments</span>';
+                let walletHtml = window.getWalletIcon(exp.wallet, 20);
                 h+=`<div class="row-expense" onclick="viewRecord('expense','${exp.id}')" style="cursor:pointer"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span>${walletHtml}<div class="exp-desc"><span>${styledDesc}</span></div>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span><div class="row-actions"><button class="row-btn" style="color:var(--link-blue);" onclick="event.stopPropagation(); viewRecord('expense','${exp.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="event.stopPropagation(); editExpense('${exp.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="event.stopPropagation(); deleteExpense('${exp.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;
             });
             h+=`<div class="day-foot"><span class="day-foot-lbl">Total del día</span><span class="day-foot-val">-${money(expT)}</span></div></div>`;
@@ -520,6 +524,15 @@ window.viewRecord = function(type, id) {
     
     document.getElementById('viewRecordDate').textContent = fmtDate(rec.date);
     document.getElementById('viewRecordDesc').textContent = rec.description || 'Sin descripción adicional.';
+    
+    let walletWrap = document.getElementById('viewRecordWalletWrap');
+    let walletDiv = document.getElementById('viewRecordWallet');
+    if (type === 'expense' && rec.wallet) {
+        walletDiv.innerHTML = window.getWalletIcon(rec.wallet, 24) + ' <span>' + window.getWalletName(rec.wallet) + '</span>';
+        if (walletWrap) walletWrap.style.display = 'block';
+    } else {
+        if (walletWrap) walletWrap.style.display = 'none';
+    }
     
     let imgWrap = document.getElementById('viewRecordImageWrap');
     let multiWrap = document.getElementById('viewRecordMultiImages');
