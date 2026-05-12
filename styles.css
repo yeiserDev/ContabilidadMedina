@@ -1125,15 +1125,20 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .cal-day {
-    font-size: 12px;
-    font-weight: 450;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--slate-gray);
     text-align: center;
-    padding: 6px 0;
-    border-radius: var(--radius-lg);
-    cursor: default;
+    padding: 0;
+    border-radius: var(--radius-circle);
+    cursor: pointer;
     transition: all 0.15s ease;
     position: relative;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }
 
 .cal-day.other {
@@ -4210,4 +4215,10 @@ select:focus-visible {
     0% { opacity: 0; transform: translateY(20px) scale(0.9); text-shadow: 0 10px 30px rgba(0,0,0,0.15); filter: blur(4px); }
     40% { opacity: 1; transform: translateY(-4px) scale(1.05); text-shadow: 0 8px 24px rgba(0,0,0,0.12); filter: blur(0); }
     100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.show-on-mobile { display: none; }
+@media (max-width: 900px) {
+    .hide-on-mobile { display: none !important; }
+    .show-on-mobile { display: flex !important; }
 }

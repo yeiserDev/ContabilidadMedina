@@ -36,13 +36,16 @@
 
             <!-- Actions - Center -->
             <div class="header-actions">
-                <button class="hdr-btn" id="exportBtn" title="Exportar">
+                <button class="hdr-btn hide-on-mobile" id="exportBtn" title="Exportar">
                     <span class="material-symbols-outlined">cloud_download</span>
                 </button>
-                <button class="hdr-btn" id="importBtn" title="Importar">
+                <button class="hdr-btn hide-on-mobile" id="importBtn" title="Importar">
                     <span class="material-symbols-outlined">cloud_upload</span>
                 </button>
                 <input type="file" id="importFile" accept=".json" style="display:none">
+                <button class="hdr-btn show-on-mobile" id="hdrSearchBtn" title="Buscar" onclick="document.getElementById('searchModal').classList.add('active'); setTimeout(()=>document.getElementById('mobileSearchInput').focus(), 100);">
+                    <span class="material-symbols-outlined">search</span>
+                </button>
                 <button class="hdr-btn" id="openReportModal" title="PDF">
                     <span class="material-symbols-outlined">description</span>
                 </button>
@@ -224,18 +227,14 @@
             <!-- CALENDAR -->
             <div class="sr-block">
                 <div class="cal-header">
-                    <button id="calPrev" class="cal-nav"><span
-                            class="material-symbols-outlined">chevron_left</span></button>
-                    <span id="calTitle" class="cal-title">Abril 2026</span>
-                    <button id="calNext" class="cal-nav"><span
-                            class="material-symbols-outlined">chevron_right</span></button>
+                    <button class="cal-nav cal-nav-prev"><span class="material-symbols-outlined">chevron_left</span></button>
+                    <span class="cal-title cal-title-sync">Abril 2026</span>
+                    <button class="cal-nav cal-nav-next"><span class="material-symbols-outlined">chevron_right</span></button>
                 </div>
                 <div class="cal-grid">
-                    <span class="cal-dow">DO</span><span class="cal-dow">LU</span><span class="cal-dow">MA</span><span
-                        class="cal-dow">MI</span><span class="cal-dow">JU</span><span class="cal-dow">VI</span><span
-                        class="cal-dow">SA</span>
+                    <span class="cal-dow">DO</span><span class="cal-dow">LU</span><span class="cal-dow">MA</span><span class="cal-dow">MI</span><span class="cal-dow">JU</span><span class="cal-dow">VI</span><span class="cal-dow">SA</span>
                 </div>
-                <div id="calDays" class="cal-grid cal-days"></div>
+                <div class="cal-grid cal-days cal-days-sync"></div>
             </div>
             <!-- REMINDERS -->
             <div class="sr-block">
@@ -265,9 +264,9 @@
             <span class="material-symbols-outlined">add_circle</span>
             <span class="bnav-label">Depósito</span>
         </button>
-        <button class="bnav-btn" id="bnavSearch">
-            <span class="material-symbols-outlined">search</span>
-            <span class="bnav-label">Buscar</span>
+        <button class="bnav-btn" id="bnavCalendar" onclick="document.getElementById('calendarModal').classList.add('active');">
+            <span class="material-symbols-outlined">calendar_month</span>
+            <span class="bnav-label">Calendario</span>
         </button>
         <button class="bnav-btn bnav-btn--expense" id="bnavExpense">
             <span class="material-symbols-outlined">remove_circle</span>
@@ -398,6 +397,27 @@
                         <option value="all">Todos los ciclos</option>
                     </select>
                 </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CALENDARIO MÓVIL -->
+    <div class="modal-bg" id="calendarModal">
+        <div class="modal modal--sm">
+            <div class="modal-hd">
+                <h2><span class="material-symbols-outlined" style="color:var(--signal-orange)">calendar_month</span> Calendario</h2>
+                <button class="modal-x" data-close="calendarModal"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-bd">
+                <div class="cal-header" style="margin-bottom:12px;">
+                    <button class="cal-nav cal-nav-prev"><span class="material-symbols-outlined">chevron_left</span></button>
+                    <span class="cal-title cal-title-sync" style="font-weight:bold; font-size:16px;">Mes Año</span>
+                    <button class="cal-nav cal-nav-next"><span class="material-symbols-outlined">chevron_right</span></button>
+                </div>
+                <div class="cal-grid" style="margin-bottom:6px;">
+                    <span class="cal-dow">DO</span><span class="cal-dow">LU</span><span class="cal-dow">MA</span><span class="cal-dow">MI</span><span class="cal-dow">JU</span><span class="cal-dow">VI</span><span class="cal-dow">SA</span>
+                </div>
+                <div class="cal-grid cal-days cal-days-sync"></div>
             </div>
         </div>
     </div>

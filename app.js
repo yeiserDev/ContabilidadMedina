@@ -256,14 +256,14 @@ function renderCharts(){
         barChart=new Chart(barCtx,{type:'bar',data:{labels,datasets:[
             {label:'Ingresos',data:incData,backgroundColor:'rgba(22,163,74,0.72)',borderColor:'rgba(22,163,74,1)',borderWidth:1.5,borderRadius:4,borderSkipped:false},
             {label:'Gastos',data:expData,backgroundColor:'rgba(220,38,38,0.62)',borderColor:'rgba(220,38,38,0.9)',borderWidth:1.5,borderRadius:4,borderSkipped:false}
-        ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10,family:'Sofia Sans, Arial'},color:'#64748b'},boxWidth:10,padding:10},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${money(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#94a3b8',font:{size:10},callback:v=>v>=1000?`S/${(v/1000).toFixed(0)}k`:`S/${v}`}}}}});
+        ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1200,easing:'easeOutQuart',delay:c=>c.type==='data'?c.dataIndex*100+c.datasetIndex*100:0},plugins:{legend:{labels:{font:{size:10,family:'Sofia Sans, Arial'},color:'#64748b'},boxWidth:10,padding:10},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${money(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#94a3b8',font:{size:10},callback:v=>v>=1000?`S/${(v/1000).toFixed(0)}k`:`S/${v}`}}}}});
     }
     const donutCtx=document.getElementById('chartDonut');
     if(donutCtx){
         const ct=catTotals(),cats=categories.filter(c=>(ct[c]||0)>0);
         if(donutChart)donutChart.destroy();
         if(!cats.length){donutChart=null;return;}
-        donutChart=new Chart(donutCtx,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>ct[c]),backgroundColor:cats.map((_,i)=>COLORS[i%COLORS.length]+'CC'),borderColor:cats.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{font:{size:10,family:'Sofia Sans, Arial'},color:'#64748b',boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${money(c.raw)}`}}}}});
+        donutChart=new Chart(donutCtx,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>ct[c]),backgroundColor:cats.map((_,i)=>COLORS[i%COLORS.length]+'CC'),borderColor:cats.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',animation:{animateScale:true,animateRotate:true,duration:1200,easing:'easeOutQuart'},plugins:{legend:{position:'bottom',labels:{font:{size:10,family:'Sofia Sans, Arial'},color:'#64748b',boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${money(c.raw)}`}}}}});
     }
 }
 
@@ -598,6 +598,11 @@ window.viewRecord = function(type, id) {
         else deleteExpense(id);
     };
 
+    const actionsWrap = document.getElementById('viewRecordActions');
+    if (actionsWrap) {
+        actionsWrap.style.display = currentUser ? 'flex' : 'none';
+    }
+
     openM('viewRecordModal');
 };
 
@@ -758,16 +763,14 @@ updateClock();
 let calMonth=new Date().getMonth(), calYear=new Date().getFullYear();
 
 function renderCalendar(){
-    const titleEl=document.getElementById('calTitle');
-    titleEl.textContent=`${MES[calMonth]} ${calYear}`;
-    const daysEl=document.getElementById('calDays');
-    daysEl.innerHTML='';
+    const titleEls=document.querySelectorAll('.cal-title-sync');
+    titleEls.forEach(t=>t.textContent=`${MES[calMonth]} ${calYear}`);
+    const daysEls=document.querySelectorAll('.cal-days-sync');
     const firstDay=new Date(calYear,calMonth,1).getDay();
     const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
     const daysInPrev=new Date(calYear,calMonth,0).getDate();
     const todayD=new Date(), isCurrentMonth=todayD.getMonth()===calMonth&&todayD.getFullYear()===calYear;
     
-    // Heatmap data
     const dailyData = {};
     let maxDailyExp = 1;
     expenses.forEach(e=>{
@@ -788,12 +791,11 @@ function renderCalendar(){
         }
     });
 
-    for(let i=firstDay-1;i>=0;i--){const span=document.createElement('span');span.className='cal-day other';span.textContent=daysInPrev-i;daysEl.appendChild(span);}
+    let html = '';
+    for(let i=firstDay-1;i>=0;i--){html+=`<span class="cal-day" style="opacity:0; pointer-events:none;"></span>`;}
     for(let d=1;d<=daysInMonth;d++){
-        const span=document.createElement('span');
         let cls='cal-day heatmap-cell';
         if(isCurrentMonth&&d===todayD.getDate())cls+=' today';
-        
         let styleStr = '';
         if(dailyData[d]){
             if(dailyData[d].exp > 0){
@@ -803,17 +805,31 @@ function renderCalendar(){
                 styleStr = `background-color: rgba(22, 163, 74, 0.2); color: #16a34a; border: none; font-weight: 700;`;
             }
         }
-        
-        span.className=cls;
-        span.textContent=d;
-        if(styleStr) span.style.cssText = styleStr;
-        daysEl.appendChild(span);
+        const dtStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        html+=`<span class="${cls}"${styleStr?` style="${styleStr}"`:''} onclick="window.scrollToDate('${dtStr}')">${d}</span>`;
     }
     const totalCells=firstDay+daysInMonth;const remaining=totalCells%7===0?0:7-totalCells%7;
-    for(let i=1;i<=remaining;i++){const span=document.createElement('span');span.className='cal-day other';span.textContent=i;daysEl.appendChild(span);}
+    for(let i=1;i<=remaining;i++){html+=`<span class="cal-day" style="opacity:0; pointer-events:none;"></span>`;}
+    
+    daysEls.forEach(el=>el.innerHTML=html);
 }
-document.getElementById('calPrev').addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();});
-document.getElementById('calNext').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
+document.querySelectorAll('.cal-nav-prev').forEach(b=>b.addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}));
+document.querySelectorAll('.cal-nav-next').forEach(b=>b.addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}));
+
+window.scrollToDate = function(dt) {
+    const card = document.querySelector(`.day-card[data-date="${dt}"]`);
+    if (card) {
+        closeM('calendarModal');
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        card.style.transition = 'background-color 0.5s ease';
+        card.style.backgroundColor = 'var(--signal-orange)';
+        setTimeout(() => {
+            card.style.backgroundColor = '';
+        }, 800);
+    } else {
+        toast('No hay registros para este día', 'err');
+    }
+};
 
 // ====== REMINDERS ======
 function renderReminders(){
