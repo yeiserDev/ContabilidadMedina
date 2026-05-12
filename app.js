@@ -267,6 +267,65 @@ function renderCharts(){
     }
 }
 
+let lineChart = null;
+function renderLineChart() {
+    const ctx = document.getElementById('chartLine');
+    if (!ctx || typeof Chart === 'undefined') return;
+    const now = new Date();
+    const year = now.getFullYear(), month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const labels = [], balData = [];
+    let runBal = 0;
+    // Pre-calculate balance before this month
+    deposits.forEach(d => { const dd = d2(d.date); if(dd.getFullYear() < year || (dd.getFullYear() === year && dd.getMonth() < month)) runBal += +d.amount; });
+    expenses.forEach(e => { const dd = d2(e.date); if(dd.getFullYear() < year || (dd.getFullYear() === year && dd.getMonth() < month)) runBal -= +e.amount; });
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dtStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        deposits.filter(d => d.date === dtStr).forEach(d => runBal += +d.amount);
+        expenses.filter(e => e.date === dtStr).forEach(e => runBal -= +e.amount);
+        labels.push(day === 1 || day % 5 === 0 || day === daysInMonth ? `${day}` : '');
+        balData.push(runBal);
+    }
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const gridCol = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+    const tickCol = isDark ? '#9b9bba' : '#94a3b8';
+    const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 200);
+    gradient.addColorStop(0, 'rgba(207,69,0,0.3)');
+    gradient.addColorStop(1, 'rgba(207,69,0,0)');
+    if (lineChart) lineChart.destroy();
+    lineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Saldo acumulado',
+                data: balData,
+                borderColor: '#CF4500',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: '#CF4500',
+                fill: true,
+                backgroundColor: gradient,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 1400, easing: 'easeOutQuart' },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: c => money(c.raw) } }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: tickCol, font: { size: 10 } } },
+                y: { grid: { color: gridCol }, ticks: { color: tickCol, font: { size: 10 }, callback: v => v >= 1000 ? `S/${(v/1000).toFixed(1)}k` : `S/${v}` } }
+            }
+        }
+    });
+}
+
 // ====== SIDEBAR ======
 function renderCatBreakdown(){
     const el=document.getElementById('categoryBreakdown'),t=catTotals(),mx=Math.max(...Object.values(t),1);
@@ -438,7 +497,9 @@ function renderDaily(){
     }
     if(searchQuery){const q=searchQuery.toLowerCase();dates=dates.filter(dt=>dayDeps(dt).some(d=>(d.description||'').toLowerCase().includes(q)||d.type.includes(q)||String(d.amount).includes(q))||dayExps(dt).some(e=>(e.description||'').toLowerCase().includes(q)||(e.category||'').toLowerCase().includes(q)||String(e.amount).includes(q)));}
     container.querySelectorAll('.day-card').forEach(c=>c.remove());
-    if(!dates.length){empty.style.display='';return;}
+    const skeleton = document.getElementById('skeletonFeed');
+    if(skeleton) skeleton.style.display = 'none';
+    if(!dates.length){empty.style.display='flex';return;}
     empty.style.display='none';
     const DAY_COLORS = [
         {bg:'#fef2f2',border:'#fecaca',text:'#dc2626'}, // Domingo - rojo
@@ -456,16 +517,19 @@ function renderDaily(){
         const card=document.createElement('div');card.className='day-card';card.dataset.date=dt;card.style.animationDelay=`${idx*.04}s`;
         const totalItems = deps.length + exps.length;
         let h=`<div class="day-head" onclick="toggleDay('${dt}')" style="cursor:pointer"><div class="day-left"><div class="day-icon" style="background:${dc.bg};border-color:${dc.border}"><span class="day-num" style="color:${dc.text}">${dayNum(dt)}</span><span class="day-mon">${monShort(dt)}</span></div><div><div class="day-label">${fmtDate(dt)}</div><div class="day-weekday" style="color:${dc.text};font-weight:600">${weekday(dt)}</div></div></div><div class="day-right"><div class="day-bal"><div class="day-bal-tag">Saldo Antes</div><div class="day-bal-val ${bb>=0?'pos':'neg'}">${money(bb)}</div></div><span class="material-symbols-outlined day-arrow">arrow_forward</span><div class="day-bal"><div class="day-bal-tag">Saldo Después</div><div class="day-bal-val ${ba>=0?'pos':'neg'}">${money(ba)}</div></div><div class="day-toggle-btn"><span class="material-symbols-outlined day-toggle-icon">expand_less</span></div></div></div><div class="day-body day-body-collapsible">`;
-        deps.forEach(dep=>{h+=`<div class="row-deposit" onclick="viewRecord('deposit','${dep.id}')" style="cursor:pointer"><div class="dep-icon"><span class="material-symbols-outlined">arrow_upward</span></div><div class="dep-info"><div class="dep-type">Depósito ${dep.type}</div>${dep.description?`<div class="dep-desc">${dep.description}</div>`:''}</div><div class="dep-amt">+${money(dep.amount)}</div><div class="row-actions"><button class="row-btn" style="color:var(--link-blue);" onclick="event.stopPropagation(); viewRecord('deposit','${dep.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="event.stopPropagation(); editDeposit('${dep.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="event.stopPropagation(); deleteDeposit('${dep.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
+        deps.forEach(dep=>{h+=`<div class="row-deposit" onclick="viewRecord('deposit','${dep.id}')" style="cursor:pointer"><div class="dep-icon"><span class="material-symbols-outlined">arrow_upward</span></div><div class="dep-info"><div class="dep-type">Depósito ${dep.type}</div>${dep.description?`<div class="dep-desc">${dep.description}</div>`:''}</div><div class="dep-amt">+${money(dep.amount)}</div><div class="row-actions"><button class="row-btn" style="color:var(--signal-orange);" onclick="event.stopPropagation(); viewRecord('deposit','${dep.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="event.stopPropagation(); editDeposit('${dep.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="event.stopPropagation(); deleteDeposit('${dep.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
         if(exps.length){
             h+='<div class="exp-table">';
             exps.forEach(exp=>{
                 const ci=categories.indexOf(exp.category),col=COLORS[(ci>=0?ci:0)%COLORS.length];
                 const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);
-                const imgBtn=imgs.length?`<button class="exp-img-btn" onclick="event.stopPropagation(); openLightbox('${imgs[0]}')"><span class="material-symbols-outlined">${imgs.length>1?'photo_library':'image'}</span></button>`:'';
+                const imgBtn=`<button class="exp-img-btn" onclick="event.stopPropagation(); if(window.innerWidth <= 900) viewRecord('expense','${exp.id}'); else { ${imgs.length ? `openLightbox('${imgs[0]}')` : `viewRecord('expense','${exp.id}')`} }">
+                    <span class="material-symbols-outlined hide-on-mobile" ${imgs.length?'':'style="display:none;"'}>${imgs.length>1?'photo_library':'image'}</span>
+                    <span class="material-symbols-outlined show-on-mobile" style="color:var(--signal-orange); font-size:18px;">visibility</span>
+                </button>`;
                 let styledDesc = (exp.description||'—').replace(/(#[a-zA-Z0-9_]+)/g, '<span style="display:inline-block; background:var(--canvas-cream); color:var(--ink-black); border:1px solid rgba(20,20,19,0.1); border-radius:4px; padding:0 4px; font-size:11px; margin-left:4px; font-weight:600;">$1</span>');
                 let walletHtml = window.getWalletIcon(exp.wallet, 20);
-                h+=`<div class="row-expense" onclick="viewRecord('expense','${exp.id}')" style="cursor:pointer"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span>${walletHtml}<div class="exp-desc"><span>${styledDesc}</span></div>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span><div class="row-actions"><button class="row-btn" style="color:var(--link-blue);" onclick="event.stopPropagation(); viewRecord('expense','${exp.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="event.stopPropagation(); editExpense('${exp.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="event.stopPropagation(); deleteExpense('${exp.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;
+                h+=`<div class="row-expense" onclick="viewRecord('expense','${exp.id}')" style="cursor:pointer"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span>${walletHtml}<div class="exp-desc"><span>${styledDesc}</span></div>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span><div class="row-actions"><button class="row-btn" style="color:var(--signal-orange);" onclick="event.stopPropagation(); viewRecord('expense','${exp.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="event.stopPropagation(); editExpense('${exp.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="event.stopPropagation(); deleteExpense('${exp.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;
             });
             h+=`<div class="day-foot"><span class="day-foot-lbl">Total del día</span><span class="day-foot-val">-${money(expT)}</span></div></div>`;
         }
@@ -613,7 +677,7 @@ window.openLightboxFromView = function() {
     }
 };
 
-function renderAll(){renderKPIs();renderCharts();renderCatBreakdown();renderCatList();populateCatSelect();renderMonthFilter();renderDaily();renderCalendar();renderReminders();}
+function renderAll(){renderKPIs();renderCharts();renderLineChart();renderCatBreakdown();renderCatList();populateCatSelect();renderMonthFilter();renderDaily();renderCalendar();renderReminders();}
 
 // ====== EVENTS: DEPOSIT ======
 document.getElementById('openDepositModal').addEventListener('click',requireAuth(()=>{editDepositId=null;document.getElementById('depositModalTitle').textContent='Nuevo Depósito';document.getElementById('depositDate').value=today();document.getElementById('depositAmount').value='';document.getElementById('depositDescription').value='';document.getElementById('depositType').value='quincenal';document.getElementById('depositCycleStart').checked=false;openM('depositModal');setTimeout(()=>document.getElementById('depositAmount').focus(),120);}));
@@ -1266,3 +1330,34 @@ if (document.getElementById('logoutBtn')) {
         if (auth) auth.signOut();
     });
 }
+
+// ====== DARK MODE TOGGLE ======
+(function(){
+    const btn = document.getElementById('themeToggleBtn');
+    const icon = document.getElementById('themeIcon');
+    const root = document.documentElement;
+    // Restore saved preference
+    const saved = localStorage.getItem('ct_theme') || 'light';
+    if (saved === 'dark') {
+        root.setAttribute('data-theme', 'dark');
+        if (icon) icon.textContent = 'light_mode';
+    }
+    if (btn) {
+        btn.addEventListener('click', () => {
+            const isDark = root.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                root.removeAttribute('data-theme');
+                localStorage.setItem('ct_theme', 'light');
+                if (icon) icon.textContent = 'dark_mode';
+                btn.title = 'Modo Oscuro';
+            } else {
+                root.setAttribute('data-theme', 'dark');
+                localStorage.setItem('ct_theme', 'dark');
+                if (icon) icon.textContent = 'light_mode';
+                btn.title = 'Modo Claro';
+            }
+            // Re-render line chart so grid colors update
+            setTimeout(() => renderLineChart(), 50);
+        });
+    }
+})();

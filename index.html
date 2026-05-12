@@ -12,7 +12,8 @@
     <meta name="description"
         content="Sistema profesional de gestión de gastos e ingresos personales con control diario.">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:ital,opsz,wght@0,9..40,400;0,9..40,450;0,9..40,500;0,9..40,700;1,9..40,400&display=swap"
@@ -45,6 +46,9 @@
                 <input type="file" id="importFile" accept=".json" style="display:none">
                 <button class="hdr-btn show-on-mobile" id="hdrSearchBtn" title="Buscar" onclick="document.getElementById('searchModal').classList.add('active'); setTimeout(()=>document.getElementById('mobileSearchInput').focus(), 100);">
                     <span class="material-symbols-outlined">search</span>
+                </button>
+                <button class="hdr-btn" id="themeToggleBtn" title="Modo Oscuro">
+                    <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
                 </button>
                 <button class="hdr-btn" id="openReportModal" title="PDF">
                     <span class="material-symbols-outlined">description</span>
@@ -176,6 +180,15 @@
                         <canvas id="chartDonut"></canvas>
                     </div>
                 </div>
+                <div class="chart-card" style="grid-column: 1 / -1; display:none;">
+                    <div class="chart-header">
+                        <span class="material-symbols-outlined">show_chart</span>
+                        <span>Evolución de Saldo (Mes Actual)</span>
+                    </div>
+                    <div class="chart-wrap" style="height:200px;">
+                        <canvas id="chartLine"></canvas>
+                    </div>
+                </div>
             </section>
 
             <!-- TOOLBAR -->
@@ -201,7 +214,14 @@
 
             <!-- DAILY FEED -->
             <section id="dailyView" class="feed">
-                <div class="empty" id="emptyState">
+                <!-- SKELETON LOADERS -->
+                <div id="skeletonFeed">
+                    <div class="skeleton-card"><div class="sk-head"></div><div class="sk-row"></div><div class="sk-row"></div></div>
+                    <div class="skeleton-card"><div class="sk-head"></div><div class="sk-row"></div></div>
+                    <div class="skeleton-card"><div class="sk-head"></div><div class="sk-row"></div></div>
+                </div>
+
+                <div class="empty" id="emptyState" style="display:none;">
                     <span class="material-symbols-outlined empty-ic">insert_chart_outlined</span>
                     <h3>Sin registros</h3>
                     <p>Agrega un depósito o un gasto para comenzar.</p>
@@ -538,7 +558,26 @@
                     .catch((err) => console.warn('SW no disponible:', err));
             });
         }
+        // Offline/Online banner
+        const offlineBanner = document.getElementById('offlineBanner');
+        function updateOnlineStatus() {
+            if (!navigator.onLine) {
+                offlineBanner.classList.add('show');
+            } else {
+                offlineBanner.classList.remove('show');
+            }
+        }
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
     </script>
+
+<!-- OFFLINE BANNER -->
+<div id="offlineBanner">
+    <span class="material-symbols-outlined">wifi_off</span>
+    Sin conexión — Modo Metro activo
+</div>
+
 </body>
 
 </html>
