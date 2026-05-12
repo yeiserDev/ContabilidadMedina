@@ -162,9 +162,10 @@ const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.
 const money = n => { const num = Number(n); const formatted = num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); return `S/ ${formatted}`; };
 
 window.getWalletIcon = (w, size=22) => {
-    if(w==='yape') return `<svg width="${size*1.6}" height="${size}" viewBox="0 0 40 25" fill="none" xmlns="http://www.w3.org/2000/svg" class="wallet-icon" style="margin-right:6px; flex-shrink:0; vertical-align:middle;" title="Yape"><path d="M22 3 C 27 3 30 5 30 9 C 30 13 27 15 22 15 C 21 15 20 14.8 19 14.5 L 16 17 L 17 13.5 C 15.5 12.5 15 11 15 9 C 15 5 18 3 22 3 Z" fill="#00E5C0"/><text x="22.5" y="10" font-family="Arial, sans-serif" font-weight="bold" font-size="6" fill="#ffffff" text-anchor="middle">S/</text><text x="20" y="22" font-family="'Comic Sans MS', 'Brush Script MT', cursive, sans-serif" font-weight="bold" font-size="14" fill="#742384" text-anchor="middle">yape</text></svg>`;
+    if(w==='yape') return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="wallet-icon" style="margin-right:6px; flex-shrink:0; vertical-align:middle; box-shadow: 0 1px 3px rgba(0,0,0,0.15); border-radius: 22%;" title="Yape"><defs><linearGradient id="yg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#91139e"/><stop offset="100%" stop-color="#55006b"/></linearGradient></defs><rect width="100" height="100" rx="22" fill="url(#yg)"/><path d="M50 14 C 64 14 74 22 74 33 C 74 44 64 52 50 52 C 47 52 44 51.5 41 50 L 32 58 L 35 46 C 29 42 26 38 26 33 C 26 22 36 14 50 14 Z" fill="#00E5C0"/><text x="51" y="41" font-family="Arial, sans-serif" font-weight="bold" font-size="22" fill="#55006b" text-anchor="middle">S/</text><text x="50" y="86" font-family="'Brush Script MT', 'Comic Sans MS', cursive, sans-serif" font-weight="bold" font-size="44" fill="#ffffff" text-anchor="middle" transform="rotate(-6 50 86)">yape</text></svg>`;
     if(w==='bcp') return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="wallet-icon" style="margin-right:6px; flex-shrink:0; vertical-align:middle;" title="BCP"><path d="M12.5 3.5 C 19 3.5 22 9.5 19.5 16.5 C 17 21.5 10 22 7.5 19 C 12.5 19 14.5 14 14.5 10 C 14.5 7.5 11.5 5.5 8.5 5.5 C 10.5 4 11.5 3.5 12.5 3.5 Z" fill="#FF7A00"/><path d="M8.5 5.5 C 11.5 5.5 14.5 7.5 14.5 10 C 13.5 10 12 11 10.5 13 C 7 13 4 8 8.5 5.5 Z" fill="#002A8D"/></svg>`;
-    return `<span class="material-symbols-outlined wallet-icon" style="font-size:${size}px;color:#16a34a;margin-right:6px;flex-shrink:0;vertical-align:middle;" title="Efectivo">payments</span>`;
+    const efSize = size * 0.85;
+    return `<svg width="${efSize*1.8}" height="${efSize}" viewBox="0 0 90 50" fill="none" xmlns="http://www.w3.org/2000/svg" class="wallet-icon" style="margin-right:6px; flex-shrink:0; vertical-align:middle; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.12));" title="Efectivo"><rect width="90" height="50" fill="#91BED4"/><rect x="5" y="5" width="80" height="40" fill="#E8ECEB"/><rect x="62" y="5" width="18" height="40" fill="#586E9A"/><path d="M45 45 L 72 45 L 68 32 C 68 24 62 20 57 20 C 51 20 48 24 50 32 C 50 37 45 40 45 45 Z" fill="#505469"/><path d="M48 45 L 70 45 L 65 33 C 65 26 60 23 57 23 C 53 23 51 26 53 33 C 53 38 48 41 48 45 Z" fill="#9DA2B1"/><circle cx="53" cy="27" r="2.5" fill="#9DA2B1"/><path d="M57 32 Q 60 30 63 32 Q 60 34 57 32 Z" fill="#505469"/><path d="M55 20 Q 57 15 62 17 Q 60 21 55 20 Z" fill="#505469"/><text x="8" y="40" font-family="'Arial Black', sans-serif" font-weight="900" font-size="18" fill="#3670A0">100</text><text x="64" y="20" font-family="'Arial Black', sans-serif" font-weight="900" font-size="12" fill="#E8ECEB">100</text><path d="M70 33 L 80 33 L 83 40 L 70 40 Z" fill="#9C4C82"/><rect x="8" y="7" width="2" height="4" fill="#505469"/><rect x="12" y="7" width="2" height="4" fill="#505469"/><rect x="16" y="7" width="2" height="4" fill="#505469"/><rect x="20" y="7" width="2" height="4" fill="#505469"/><rect x="24" y="7" width="2" height="4" fill="#505469"/></svg>`;
 };
 window.getWalletName = (w) => w==='yape'?'Yape':w==='bcp'?'BCP':'Efectivo';
 
@@ -506,8 +507,31 @@ window.viewRecord = function(type, id) {
     if(!rec) return;
     
     document.getElementById('viewRecordTitle').textContent = type === 'deposit' ? 'Detalle de Ingreso' : 'Detalle de Gasto';
-    document.getElementById('viewRecordAmount').textContent = (type === 'deposit' ? '+' : '-') + money(rec.amount);
-    document.getElementById('viewRecordAmount').style.color = type === 'deposit' ? 'var(--link-blue)' : 'var(--signal-orange)';
+    const amtEl = document.getElementById('viewRecordAmount');
+    const isDep = type === 'deposit';
+    amtEl.style.color = isDep ? 'var(--link-blue)' : 'var(--signal-orange)';
+    
+    amtEl.classList.remove('price-anim');
+    void amtEl.offsetWidth; 
+    amtEl.classList.add('price-anim');
+    
+    const targetAmt = Number(rec.amount);
+    const prefix = isDep ? '+' : '-';
+    let startTs = null;
+    const dur = 700; 
+    
+    const step = (ts) => {
+        if (!startTs) startTs = ts;
+        const progress = Math.min((ts - startTs) / dur, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 4); 
+        amtEl.textContent = prefix + money(easeOut * targetAmt);
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        } else {
+            amtEl.textContent = prefix + money(targetAmt);
+        }
+    };
+    window.requestAnimationFrame(step);
     
     let badge = document.getElementById('viewRecordBadge');
     if(type === 'deposit') {
@@ -527,8 +551,9 @@ window.viewRecord = function(type, id) {
     
     let walletWrap = document.getElementById('viewRecordWalletWrap');
     let walletDiv = document.getElementById('viewRecordWallet');
-    if (type === 'expense' && rec.wallet) {
-        walletDiv.innerHTML = window.getWalletIcon(rec.wallet, 24) + ' <span>' + window.getWalletName(rec.wallet) + '</span>';
+    if (type === 'expense') {
+        const w = rec.wallet || 'efectivo';
+        walletDiv.innerHTML = window.getWalletIcon(w, 24) + ' <span>' + window.getWalletName(w) + '</span>';
         if (walletWrap) walletWrap.style.display = 'block';
     } else {
         if (walletWrap) walletWrap.style.display = 'none';

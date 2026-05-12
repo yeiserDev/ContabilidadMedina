@@ -929,20 +929,23 @@ h1, h2, h3, h4, h5, h6,
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 20px 8px;
-    margin-top: var(--space-sm);
-    border-top: 1px solid rgba(20, 20, 19, 0.06);
-    font-size: 13px;
-    font-weight: 600;
+    padding: 12px 20px;
+    margin-top: 8px;
+    background: rgba(207, 69, 0, 0.04);
+    border-top: 1px solid rgba(207, 69, 0, 0.1);
+    font-weight: 700;
 }
 
 .day-foot-lbl {
-    color: var(--slate-gray);
+    color: var(--signal-orange);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 11px;
 }
 
 .day-foot-val {
     color: var(--signal-orange);
-    font-size: 14px;
+    font-size: 16px;
 }
 
 /* ===== EMPTY STATE ===== */
@@ -4197,4 +4200,14 @@ select:focus-visible {
         padding: 0 0 12px;
         gap: 12px;
     }
+}
+
+.price-anim {
+    animation: pricePop 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pricePop {
+    0% { opacity: 0; transform: translateY(20px) scale(0.9); text-shadow: 0 10px 30px rgba(0,0,0,0.15); filter: blur(4px); }
+    40% { opacity: 1; transform: translateY(-4px) scale(1.05); text-shadow: 0 8px 24px rgba(0,0,0,0.12); filter: blur(0); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
 }
