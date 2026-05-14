@@ -38,49 +38,31 @@ function initFirebase() {
         firebase.initializeApp(firebaseConfig);
         db = firebase.database();
         auth = firebase.auth();
-        firebaseReady = true;
-        console.log('✅ Firebase conectado');
+        console.log('✅ Firebase conectado, autenticando...');
 
-        // Auth Listener
-        auth.onAuthStateChanged(user => {
-            const loginBtn = document.getElementById('loginBtn');
-            const userProfile = document.getElementById('userProfile');
-            const userAvatar = document.getElementById('userAvatar');
-            const userNameDisplay = document.getElementById('userNameDisplay');
-            
-            if (user) {
-                currentUser = user;
-                if(loginBtn) loginBtn.style.display = 'none';
-                if(userProfile) userProfile.style.display = 'flex';
-                if(userAvatar) userAvatar.src = user.photoURL || 'https://ui-avatars.com/api/?name=Admin&background=4f46e5&color=fff';
-                if(userNameDisplay) userNameDisplay.textContent = user.email.split('@')[0];
-                document.body.classList.add('is-auth');
-            } else {
-                currentUser = null;
-                if(loginBtn) loginBtn.style.display = 'flex';
-                if(userProfile) userProfile.style.display = 'none';
-                document.body.classList.remove('is-auth');
-            }
-        });
-
-        // Listen for realtime changes
-        db.ref('contacontrol').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                deposits = data.deposits || [];
-                expenses = data.expenses || [];
-                categories = data.categories || DEF_CATS;
-                reminders = data.reminders || DEF_REMINDERS;
-                budgets   = data.budgets   || {};
-                saveLocal(KEYS.d, deposits);
-                saveLocal(KEYS.e, expenses);
-                saveLocal(KEYS.c, categories);
-                saveLocal(KEYS.r, reminders);
-                saveLocal(KEYS.b, budgets);
-                renderAll();
-                console.log('🔄 Datos sincronizados desde Firebase');
-            }
-        });
+        auth.signInAnonymously()
+            .then(() => {
+                firebaseReady = true;
+                console.log('🔐 Auth anónimo OK — escuchando datos');
+                db.ref('contacontrol').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        deposits   = data.deposits   || [];
+                        expenses   = data.expenses   || [];
+                        categories = data.categories || DEF_CATS;
+                        reminders  = data.reminders  || DEF_REMINDERS;
+                        budgets    = data.budgets     || {};
+                        saveLocal(KEYS.d, deposits);
+                        saveLocal(KEYS.e, expenses);
+                        saveLocal(KEYS.c, categories);
+                        saveLocal(KEYS.r, reminders);
+                        saveLocal(KEYS.b, budgets);
+                        renderAll();
+                        console.log('🔄 Datos sincronizados desde Firebase');
+                    }
+                });
+            })
+            .catch(err => console.error('❌ Auth error:', err));
     } catch (err) {
         console.error('❌ Error Firebase:', err);
     }
