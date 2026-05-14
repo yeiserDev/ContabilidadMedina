@@ -29,6 +29,46 @@ let auth = null;
 let firebaseReady = false;
 let currentUser = null;
 
+let dbListenerActive = false;
+
+function startDbListener() {
+    if (dbListenerActive) return;
+    dbListenerActive = true;
+    db.ref('contacontrol').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            deposits   = data.deposits   || [];
+            expenses   = data.expenses   || [];
+            categories = data.categories || DEF_CATS;
+            reminders  = data.reminders  || DEF_REMINDERS;
+            budgets    = data.budgets     || {};
+            saveLocal(KEYS.d, deposits);
+            saveLocal(KEYS.e, expenses);
+            saveLocal(KEYS.c, categories);
+            saveLocal(KEYS.r, reminders);
+            saveLocal(KEYS.b, budgets);
+            renderAll();
+            console.log('🔄 Datos sincronizados desde Firebase');
+        }
+    });
+}
+
+function updateAuthUI(user) {
+    const loginBtn    = document.getElementById('loginBtn');
+    const userProfile = document.getElementById('userProfile');
+    const userAvatar  = document.getElementById('userAvatar');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    if (user && !user.isAnonymous) {
+        if (loginBtn)    loginBtn.style.display    = 'none';
+        if (userProfile) userProfile.style.display = 'flex';
+        if (userAvatar)  userAvatar.src = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email.split('@')[0])}&background=4f46e5&color=fff`;
+        if (userNameDisplay) userNameDisplay.textContent = user.email.split('@')[0];
+    } else {
+        if (loginBtn)    loginBtn.style.display    = 'flex';
+        if (userProfile) userProfile.style.display = 'none';
+    }
+}
+
 function initFirebase() {
     if (typeof firebaseConfig === 'undefined' || firebaseConfig.apiKey === 'TU_API_KEY_AQUI') {
         console.log('⚠️ Firebase no configurado. Usando solo localStorage.');
@@ -36,33 +76,24 @@ function initFirebase() {
     }
     try {
         firebase.initializeApp(firebaseConfig);
-        db = firebase.database();
+        db   = firebase.database();
         auth = firebase.auth();
-        console.log('✅ Firebase conectado, autenticando...');
+        console.log('✅ Firebase conectado');
 
-        auth.signInAnonymously()
-            .then(() => {
-                firebaseReady = true;
-                console.log('🔐 Auth anónimo OK — escuchando datos');
-                db.ref('contacontrol').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        deposits   = data.deposits   || [];
-                        expenses   = data.expenses   || [];
-                        categories = data.categories || DEF_CATS;
-                        reminders  = data.reminders  || DEF_REMINDERS;
-                        budgets    = data.budgets     || {};
-                        saveLocal(KEYS.d, deposits);
-                        saveLocal(KEYS.e, expenses);
-                        saveLocal(KEYS.c, categories);
-                        saveLocal(KEYS.r, reminders);
-                        saveLocal(KEYS.b, budgets);
-                        renderAll();
-                        console.log('🔄 Datos sincronizados desde Firebase');
-                    }
-                });
-            })
-            .catch(err => console.error('❌ Auth error:', err));
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                // Nadie autenticado → entrar como anónimo para leer datos
+                auth.signInAnonymously().catch(err => console.error('❌ Auth anónimo:', err));
+                return;
+            }
+            // Usuario autenticado (anónimo o email)
+            firebaseReady = true;
+            currentUser = user.isAnonymous ? null : user; // solo email = acceso de escritura
+            updateAuthUI(user);
+            startDbListener();
+            console.log(user.isAnonymous ? '👁 Modo lectura (anónimo)' : `🔐 Sesión activa: ${user.email}`);
+        });
+
     } catch (err) {
         console.error('❌ Error Firebase:', err);
     }
