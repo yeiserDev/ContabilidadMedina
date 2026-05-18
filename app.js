@@ -253,6 +253,32 @@ function renderKPIs(){
 
 // ====== CHARTS ======
 let barChart=null,donutChart=null;
+if(typeof Chart!=='undefined'&&!Chart.registry.plugins.get('donutPct')){
+    Chart.register({
+        id:'donutPct',
+        afterDraw(chart){
+            if(!chart.config.type||chart.config.type.indexOf('doughnut')===-1)return;
+            if(chart.tooltip&&chart.tooltip._active&&chart.tooltip._active.length)return;
+            const{ctx,chartArea:{left,right,top,bottom},data}=chart;
+            const ds=data.datasets[0],total=ds.data.reduce((a,b)=>a+b,0);
+            if(!total)return;
+            const meta=chart.getDatasetMeta(0),cx=(left+right)/2,cy=(top+bottom)/2;
+            const r=Math.min(right-left,bottom-top)/2*0.82;
+            ctx.save();
+            ctx.textAlign='center';
+            ctx.textBaseline='middle';
+            ctx.font='bold 12px Sofia Sans, Arial';
+            ctx.fillStyle='#fff';
+            meta.data.forEach((el,i)=>{
+                const v=ds.data[i],p=Math.round(v/total*100);
+                if(p<4)return;
+                const mid=(el.startAngle+el.endAngle)/2;
+                ctx.fillText(p+'%',cx+Math.cos(mid)*r,cy+Math.sin(mid)*r);
+            });
+            ctx.restore();
+        }
+    });
+}
 function renderCharts(){
     if(typeof Chart==='undefined')return;
     const now=new Date();
@@ -717,37 +743,53 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
         let finalImageUrls = [];
         
         if (pendingImagesData && pendingImagesData.length > 0) {
-            let hasNew = pendingImagesData.some(img => img.startsWith('data:image'));
-            if (hasNew) toast('Subiendo foto(s) a Google Drive...');
+            const newImgs = pendingImagesData.filter(img => img.startsWith('data:image'));
+            const oldUrls = pendingImagesData.filter(img => !img.startsWith('data:image'));
             
-            for (let img of pendingImagesData) {
-                if (img.startsWith('data:image')) {
+            // Keep existing URLs as-is
+            finalImageUrls.push(...oldUrls);
+            
+            if (newImgs.length > 0) {
+                if (!GOOGLE_APPS_SCRIPT_URL.includes('PEGA_AQUI')) {
+                    toast('Subiendo foto(s) a Google Drive...');
+                }
+                
+                for (let img of newImgs) {
                     if (GOOGLE_APPS_SCRIPT_URL.includes('PEGA_AQUI')) {
                         console.warn('URL de Google Apps Script no configurada. Guardando como Base64.');
                         finalImageUrls.push(img);
                     } else {
                         try {
+                            // Timeout de 15 segundos para no bloquear la pantalla
+                            const controller = new AbortController();
+                            const timeoutId = setTimeout(() => controller.abort(), 15000);
+                            
                             const res = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                                 method: 'POST',
-                                body: JSON.stringify({ base64: img })
+                                body: JSON.stringify({ base64: img }),
+                                signal: controller.signal
                             });
+                            clearTimeout(timeoutId);
+                            
                             const data = await res.json();
                             if (data.success) {
                                 finalImageUrls.push(data.url);
                             } else {
                                 console.error('Error Drive:', data.error);
-                                finalImageUrls.push(img); // Fallback
+                                finalImageUrls.push(img); // Fallback base64
                             }
                         } catch(e) {
-                            console.error('Error de red al subir a Drive:', e);
-                            finalImageUrls.push(img); // Fallback
+                            if (e.name === 'AbortError') {
+                                console.warn('Timeout al subir a Drive. Guardando localmente.');
+                                toast('Tiempo agotado. Foto guardada localmente.', 'err');
+                            } else {
+                                console.error('Error de red al subir a Drive:', e);
+                            }
+                            finalImageUrls.push(img); // Fallback base64
                         }
                     }
-                } else {
-                    finalImageUrls.push(img); // Ya era URL
                 }
             }
-            if (hasNew) toast('Fotos subidas con éxito');
         }
 
         if(editExpenseId){
@@ -761,15 +803,17 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
                 }
                 delete exp.imageUrl; // migrate old field
             }
-            editExpenseId=null;toast('Gasto actualizado');
+            editExpenseId=null;
+            persist();closeM('expenseModal');renderAll();
+            toast('Gasto actualizado');
         }
         else{
             const nx={id:uid(),date,category,description,amount,wallet};
             if(finalImageUrls.length > 0) nx.imageUrls = finalImageUrls;
             expenses.push(nx);
+            persist();closeM('expenseModal');renderAll();
             toast(`Gasto de ${money(amount)} registrado`);
         }
-        persist();closeM('expenseModal');renderAll();
     } finally {
         btn.textContent = originalText;
         btn.disabled = false;
