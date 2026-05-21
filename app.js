@@ -13,6 +13,21 @@ const DEF_REMINDERS = [
 const loadLocal = (k,fb) => { try { const d=localStorage.getItem(k); return d?JSON.parse(d):fb; } catch{ return fb; } };
 const saveLocal = (k,v) => localStorage.setItem(k,JSON.stringify(v));
 const uid = () => Date.now().toString(36)+Math.random().toString(36).substr(2,5);
+const stripBase64 = arr => arr.map(e => ({ ...e, imageUrls: (e.imageUrls||[]).filter(u=>!u.startsWith('data:')) }));
+
+// Limpia base64 acumulado en localStorage al arrancar
+(function cleanupStorage() {
+    try {
+        const raw = localStorage.getItem(KEYS.e);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            const hasBase64 = parsed.some(e => (e.imageUrls||[]).some(u => u.startsWith('data:')));
+            if (hasBase64) localStorage.setItem(KEYS.e, JSON.stringify(stripBase64(parsed)));
+        }
+    } catch(e) {
+        try { localStorage.removeItem(KEYS.e); } catch(_) {}
+    }
+})();
 
 let deposits = loadLocal(KEYS.d,[]);
 let expenses = loadLocal(KEYS.e,[]);
@@ -145,11 +160,6 @@ function requireAuth(fn) {
     };
 }
 
-// Quita base64 de gastos antes de guardar (solo guarda URLs reales)
-const stripBase64 = arr => arr.map(e => ({
-    ...e,
-    imageUrls: (e.imageUrls || []).filter(u => !u.startsWith('data:'))
-}));
 
 function persist() {
     const expensesSafe = stripBase64(expenses);
