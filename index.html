@@ -561,6 +561,7 @@
         // Offline/Online banner
         const offlineBanner = document.getElementById('offlineBanner');
         function updateOnlineStatus() {
+            if (!offlineBanner) return;
             if (!navigator.onLine) {
                 offlineBanner.classList.add('show');
             } else {
