@@ -30,11 +30,13 @@ let firebaseReady = false;
 let currentUser = null;
 
 let dbListenerActive = false;
+let _isSaving = false;
 
 function startDbListener() {
     if (dbListenerActive) return;
     dbListenerActive = true;
     db.ref('contacontrol').on('value', (snapshot) => {
+        if (_isSaving) return;
         const data = snapshot.val();
         if (data) {
             deposits   = data.deposits   || [];
@@ -143,21 +145,38 @@ function requireAuth(fn) {
     };
 }
 
+// Quita base64 de gastos antes de guardar (solo guarda URLs reales)
+const stripBase64 = arr => arr.map(e => ({
+    ...e,
+    imageUrls: (e.imageUrls || []).filter(u => !u.startsWith('data:'))
+}));
+
 function persist() {
-    saveLocal(KEYS.d, deposits);
-    saveLocal(KEYS.e, expenses);
-    saveLocal(KEYS.c, categories);
-    saveLocal(KEYS.r, reminders);
-    saveLocal(KEYS.b, budgets);
+    const expensesSafe = stripBase64(expenses);
+    try {
+        saveLocal(KEYS.d, deposits);
+        saveLocal(KEYS.e, expensesSafe);
+        saveLocal(KEYS.c, categories);
+        saveLocal(KEYS.r, reminders);
+        saveLocal(KEYS.b, budgets);
+    } catch(e) {
+        console.error('Error guardando en localStorage:', e);
+    }
     if (firebaseReady && db) {
+        _isSaving = true;
         db.ref('contacontrol').set({
             deposits,
-            expenses,
+            expenses: expensesSafe,
             categories,
             reminders,
             budgets,
             lastUpdated: new Date().toISOString()
-        }).catch(err => console.error('Error guardando en Firebase:', err));
+        }).then(() => {
+            _isSaving = false;
+        }).catch(err => {
+            _isSaving = false;
+            console.error('Error guardando en Firebase:', err);
+        });
     }
 }
 
@@ -211,7 +230,13 @@ function toast(msg,type='ok'){
 
 // MODALS
 const openM = id => document.getElementById(id).classList.add('active');
-const closeM = id => document.getElementById(id).classList.remove('active');
+const closeM = id => {
+    document.getElementById(id).classList.remove('active');
+    if (id === 'expenseModal' || id === 'depositModal') {
+        const dl = document.getElementById('dailyView');
+        if (dl) { dl.style.pointerEvents = 'none'; setTimeout(() => { dl.style.pointerEvents = ''; }, 300); }
+    }
+};
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>closeM(b.dataset.close)));
 document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)closeM(bg.id);}));
 let pendingConfirm=null;
@@ -750,45 +775,38 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
             finalImageUrls.push(...oldUrls);
             
             if (newImgs.length > 0) {
-                if (!GOOGLE_APPS_SCRIPT_URL.includes('PEGA_AQUI')) {
-                    toast('Subiendo foto(s) a Google Drive...');
-                }
-                
+                btn.textContent = 'Subiendo foto(s)...';
                 for (let img of newImgs) {
-                    if (GOOGLE_APPS_SCRIPT_URL.includes('PEGA_AQUI')) {
-                        console.warn('URL de Google Apps Script no configurada. Guardando como Base64.');
-                        finalImageUrls.push(img);
-                    } else {
-                        try {
-                            // Timeout de 15 segundos para no bloquear la pantalla
-                            const controller = new AbortController();
-                            const timeoutId = setTimeout(() => controller.abort(), 15000);
-                            
-                            const res = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                                method: 'POST',
-                                body: JSON.stringify({ base64: img }),
-                                signal: controller.signal
-                            });
-                            clearTimeout(timeoutId);
-                            
-                            const data = await res.json();
-                            if (data.success) {
-                                finalImageUrls.push(data.url);
-                            } else {
-                                console.error('Error Drive:', data.error);
-                                finalImageUrls.push(img); // Fallback base64
-                            }
-                        } catch(e) {
-                            if (e.name === 'AbortError') {
-                                console.warn('Timeout al subir a Drive. Guardando localmente.');
-                                toast('Tiempo agotado. Foto guardada localmente.', 'err');
-                            } else {
-                                console.error('Error de red al subir a Drive:', e);
-                            }
-                            finalImageUrls.push(img); // Fallback base64
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+                        const res = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain' },
+                            body: JSON.stringify({ base64: img }),
+                            redirect: 'follow',
+                            signal: controller.signal
+                        });
+                        clearTimeout(timeoutId);
+
+                        const data = await res.json();
+                        if (data.success) {
+                            finalImageUrls.push(data.url);
+                        } else {
+                            console.error('❌ Error Drive:', data.error);
+                            toast('Error al subir foto a Drive.', 'err');
+                        }
+                    } catch(e) {
+                        if (e.name === 'AbortError') {
+                            toast('Tiempo agotado al subir foto.', 'err');
+                        } else {
+                            console.error('❌ Error subiendo foto:', e.message);
+                            toast('Error al subir foto. Verifica tu conexión.', 'err');
                         }
                     }
                 }
+                btn.textContent = 'Guardando...';
             }
         }
 
@@ -1255,7 +1273,8 @@ function renderPendingImages() {
         rm.style.justifyContent = 'center';
         rm.style.cursor = 'pointer';
         
-        rm.onclick = () => {
+        rm.onclick = (e) => {
+            e.stopPropagation(); // Prevent label from triggering file input on remove
             pendingImagesData.splice(index, 1);
             renderPendingImages();
         };
@@ -1266,7 +1285,10 @@ function renderPendingImages() {
     });
 }
 
-document.getElementById('imgUploadBtn').addEventListener('click', () => document.getElementById('expenseImage').click());
+document.getElementById('imgUploadBtn').addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent label from double-triggering the file input
+    document.getElementById('expenseImage').click();
+});
 document.getElementById('expenseImage').addEventListener('change', async e => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -1275,6 +1297,7 @@ document.getElementById('expenseImage').addEventListener('change', async e => {
         const data = await resizeToThumb(file);
         pendingImagesData.push(data);
     }
+    e.target.value = ''; // Reset so the same file can be re-selected after removal
     document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent = 'Adjuntar fotos';
     renderPendingImages();
 });

@@ -1,6 +1,6 @@
 // ====== CONTA MEDINA — SERVICE WORKER (Modo Metro) ======
 // Versión: bump this string to force a cache refresh after updates
-const CACHE_NAME = 'contamedina-v3';
+const CACHE_NAME = 'contamedina-v4';
 
 // All app shell files to pre-cache on install
 const SHELL = [
