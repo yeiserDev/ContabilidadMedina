@@ -36,7 +36,7 @@ let reminders = loadLocal(KEYS.r,DEF_REMINDERS);
 let budgets   = loadLocal(KEYS.b,{});
 let searchQuery = '';
 
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzda_bfUwOLG0eHFRt8WDqlp6V2V8Ql0GJMvXhQ-3reRMaWuNy95Swcsdq6wywC_SbjLA/exec';
+const IMGBB_API_KEY = '026f7f3c9d1761c7403633dcb627f8f3';
 
 // ====== FIREBASE SYNC ======
 let db = null;
@@ -788,24 +788,25 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
                 btn.textContent = 'Subiendo foto(s)...';
                 for (let img of newImgs) {
                     try {
+                        const form = new FormData();
+                        form.append('key', IMGBB_API_KEY);
+                        form.append('image', img.split(',')[1]);
+
                         const controller = new AbortController();
                         const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-                        const res = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        const res = await fetch('https://api.imgbb.com/1/upload', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'text/plain' },
-                            body: JSON.stringify({ base64: img }),
-                            redirect: 'follow',
+                            body: form,
                             signal: controller.signal
                         });
                         clearTimeout(timeoutId);
 
                         const data = await res.json();
                         if (data.success) {
-                            finalImageUrls.push(data.url);
+                            finalImageUrls.push(data.data.url);
                         } else {
-                            console.error('❌ Error Drive:', data.error);
-                            toast('Error al subir foto a Drive.', 'err');
+                            throw new Error(data.error?.message || 'Error ImgBB');
                         }
                     } catch(e) {
                         if (e.name === 'AbortError') {
