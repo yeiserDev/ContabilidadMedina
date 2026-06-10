@@ -198,6 +198,8 @@
                             class="material-symbols-outlined">add_circle</span> Nuevo Depósito</button>
                     <button id="openExpenseModal" class="tbtn tbtn--r"><span
                             class="material-symbols-outlined">remove_circle</span> Nuevo Gasto</button>
+                    <button id="openLoansModal" class="tbtn tbtn--debt"><span
+                            class="material-symbols-outlined">account_balance_wallet</span><span id="loansBtnText">Préstamos</span></button>
                 </div>
                 <div class="toolbar-r">
                     <div class="search-wrap">
@@ -284,9 +286,9 @@
             <span class="material-symbols-outlined">add_circle</span>
             <span class="bnav-label">Depósito</span>
         </button>
-        <button class="bnav-btn" id="bnavCalendar" onclick="document.getElementById('calendarModal').classList.add('active');">
-            <span class="material-symbols-outlined">calendar_month</span>
-            <span class="bnav-label">Calendario</span>
+        <button class="bnav-btn" id="bnavLoans" onclick="openM('loansModal')">
+            <span class="material-symbols-outlined">account_balance_wallet</span>
+            <span class="bnav-label" id="bnavLoansBadge">Préstamos</span>
         </button>
         <button class="bnav-btn bnav-btn--expense" id="bnavExpense">
             <span class="material-symbols-outlined">remove_circle</span>
@@ -363,6 +365,76 @@
             </div>
             <div class="modal-ft"><button class="mb mb--ghost" data-close="expenseModal">Cancelar</button><button
                     class="mb mb--blue" id="saveExpense">Guardar</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL: GESTIÓN DE PRÉSTAMOS -->
+    <div class="modal-bg" id="loansModal">
+        <div class="modal">
+            <div class="modal-hd">
+                <h2><span class="material-symbols-outlined" style="color:#dc2626">account_balance_wallet</span> Préstamos Recibidos</h2>
+                <button class="modal-x" data-close="loansModal"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-bd" id="loansModalBody" style="max-height:60vh; overflow-y:auto; padding-top:8px;"></div>
+            <div class="modal-ft">
+                <button class="mb mb--ghost" data-close="loansModal">Cerrar</button>
+                <button class="mb mb--ghost" id="openLendersModal" style="display:flex;align-items:center;gap:5px;border:1px solid rgba(20,20,19,0.12);"><span class="material-symbols-outlined" style="font-size:16px;">group</span> Prestadores</button>
+                <button class="mb mb--red" id="addLoanBtn" style="display:flex;align-items:center;gap:6px;"><span class="material-symbols-outlined" style="font-size:16px;">add</span> Nuevo Préstamo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PRESTADORES -->
+    <div class="modal-bg" id="lendersModal">
+        <div class="modal modal--sm">
+            <div class="modal-hd">
+                <h2><span class="material-symbols-outlined" style="color:#7c3aed">group</span> Gestionar Prestadores</h2>
+                <button class="modal-x" data-close="lendersModal"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-bd" id="lendersModalBody"></div>
+            <div class="modal-ft">
+                <button class="mb mb--ghost" data-close="lendersModal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DEVOLUCIÓN -->
+    <div class="modal-bg" id="devolutionModal">
+        <div class="modal modal--sm">
+            <div class="modal-hd">
+                <h2><span class="material-symbols-outlined" style="color:#16a34a">payments</span> Registrar Devolución</h2>
+                <button class="modal-x" data-close="devolutionModal"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-bd">
+                <div id="devLoanInfo" style="background:var(--canvas-cream);border:1px solid rgba(20,20,19,0.06);border-radius:var(--radius-md);padding:10px;margin-bottom:14px;font-size:13px;color:var(--ink-black);"></div>
+                <label>Fecha<input type="date" id="devDate" class="mi"></label>
+                <label>Monto devuelto (S/)<input type="number" id="devAmount" class="mi" placeholder="0.00" step="0.01" min="0"></label>
+                <label>Descripción <small>(opcional)</small><input type="text" id="devDesc" class="mi" placeholder="Ej: Pago parcial"></label>
+            </div>
+            <div class="modal-ft">
+                <button class="mb mb--ghost" data-close="devolutionModal">Cancelar</button>
+                <button class="mb mb--green" id="saveDevolution">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PRÉSTAMO RECIBIDO -->
+    <div class="modal-bg" id="loanModal">
+        <div class="modal modal--sm">
+            <div class="modal-hd">
+                <h2><span class="material-symbols-outlined" style="color:#dc2626">account_balance_wallet</span> <span id="loanModalTitle">Registrar Préstamo</span></h2>
+                <button class="modal-x" data-close="loanModal"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-bd">
+                <label>Fecha<input type="date" id="loanDate" class="mi"></label>
+                <label>¿Quién prestó?<select id="loanPerson" class="mi msel"></select></label>
+                <label>Monto (S/)<input type="number" id="loanAmount" class="mi" placeholder="0.00" step="0.01" min="0"></label>
+                <label>Descripción <small>(opcional)</small><input type="text" id="loanDesc" class="mi" placeholder="¿Para qué fue el préstamo?"></label>
+            </div>
+            <div class="modal-ft">
+                <button class="mb mb--ghost" data-close="loanModal">Cancelar</button>
+                <button class="mb mb--red" id="saveLoan">Guardar</button>
+            </div>
         </div>
     </div>
 

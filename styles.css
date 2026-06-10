@@ -585,6 +585,18 @@ h1, h2, h3, h4, h5, h6,
     box-shadow: var(--shadow-nav);
 }
 
+.tbtn--debt {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.tbtn--debt:hover {
+    background: #fee2e2;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-nav);
+}
+
 .t-sel {
     padding: 9px 28px 9px 12px;
     background: var(--white);
@@ -4307,6 +4319,7 @@ select:focus-visible {
 }
 [data-theme="dark"] .tbtn--g { background: #16a34a; }
 [data-theme="dark"] .tbtn--r { background: #dc2626; }
+[data-theme="dark"] .tbtn--debt { background: #991b1b; color: #fca5a5; border-color: #7f1d1d; }
 [data-theme="dark"] .search-wrap {
     background: rgba(255,255,255,0.06);
     border-color: rgba(255,255,255,0.1);
@@ -4395,3 +4408,58 @@ body, .header, .day-card, .kpi, .chart-card, .modal, .sidebar-left, .bottom-nav 
 #offlineBanner.show { display: flex; }
 #offlineBanner .material-symbols-outlined { font-size: 18px; color: var(--signal-orange); }
 
+/* ===== UI ANIMATIONS ===== */
+
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.88); }
+    60%  { transform: scale(1.04); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes balancePop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.06); }
+    100% { transform: scale(1); }
+}
+
+/* Staggered loan group cards */
+.loan-group {
+    animation: fadeSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--i, 0) * 75ms);
+}
+
+/* Summary chips in loans modal */
+.loan-chip {
+    animation: popIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--i, 0) * 55ms);
+}
+
+/* Generic fade-slide for modal body content */
+.anim-fade-up {
+    animation: fadeSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Button press feedback */
+.tbtn:active {
+    transform: scale(0.93) translateY(0) !important;
+    box-shadow: none !important;
+    transition: transform 0.08s ease !important;
+}
+.mb:active {
+    transform: scale(0.95) !important;
+    transition: transform 0.08s ease !important;
+}
+.bnav-btn:active .material-symbols-outlined {
+    transform: scale(0.85);
+    transition: transform 0.08s ease;
+}
+
+/* Balance value pulse when it updates */
+.bal-val.updated {
+    animation: balancePop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}

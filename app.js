@@ -1,8 +1,9 @@
 /* ContaControl — App Logic with Firebase + Calendar & Reminders */
 
 // DATA KEYS (localStorage fallback)
-const KEYS = { d:'ct_deposits', e:'ct_expenses', c:'ct_categories', r:'ct_reminders', b:'ct_budgets' };
-const DEF_CATS = ['Devolución Dinero Prestado','Gastos Diarios','Petróleo Eduardo','Viático Eduardo'];
+const KEYS = { d:'ct_deposits', e:'ct_expenses', c:'ct_categories', r:'ct_reminders', b:'ct_budgets', l:'ct_loans', p:'ct_lenders' };
+const DEF_CATS    = ['Devolución Dinero Prestado','Gastos Diarios','Petróleo Eduardo','Viático Eduardo'];
+const DEF_LENDERS = ['Mirtha', 'Yeiser'];
 const COLORS = ['#2563eb','#16a34a','#dc2626','#0d9488','#ea580c','#7c3aed','#c026d3','#059669','#d97706','#4f46e5'];
 const DEF_REMINDERS = [
     { id:'r1', desc:'Pagar banco', day:3, repeat:'mensual' },
@@ -34,6 +35,8 @@ let expenses = loadLocal(KEYS.e,[]);
 let categories = loadLocal(KEYS.c,DEF_CATS);
 let reminders = loadLocal(KEYS.r,DEF_REMINDERS);
 let budgets   = loadLocal(KEYS.b,{});
+let loans     = loadLocal(KEYS.l,[]);
+let lenders   = loadLocal(KEYS.p, DEF_LENDERS);
 let searchQuery = '';
 
 const IMGBB_API_KEY = '026f7f3c9d1761c7403633dcb627f8f3';
@@ -59,11 +62,15 @@ function startDbListener() {
             categories = data.categories || DEF_CATS;
             reminders  = data.reminders  || DEF_REMINDERS;
             budgets    = data.budgets     || {};
+            loans      = data.loans      || [];
+            lenders    = data.lenders    || DEF_LENDERS;
             saveLocal(KEYS.d, deposits);
             saveLocal(KEYS.e, expenses);
             saveLocal(KEYS.c, categories);
             saveLocal(KEYS.r, reminders);
             saveLocal(KEYS.b, budgets);
+            saveLocal(KEYS.l, loans);
+            saveLocal(KEYS.p, lenders);
             renderAll();
             console.log('🔄 Datos sincronizados desde Firebase');
         }
@@ -169,6 +176,8 @@ function persist() {
         saveLocal(KEYS.c, categories);
         saveLocal(KEYS.r, reminders);
         saveLocal(KEYS.b, budgets);
+        saveLocal(KEYS.l, loans);
+        saveLocal(KEYS.p, lenders);
     } catch(e) {
         console.error('Error guardando en localStorage:', e);
     }
@@ -180,6 +189,8 @@ function persist() {
             categories,
             reminders,
             budgets,
+            loans,
+            lenders,
             lastUpdated: new Date().toISOString()
         }).then(() => {
             _isSaving = false;
@@ -202,6 +213,20 @@ const monShort = s => MES_S[d2(s).getMonth()];
 const monYear = s => { const d=d2(s); return `${MES[d.getMonth()]} ${d.getFullYear()}`; };
 const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const money = n => { const num = Number(n); const formatted = num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); return `S/ ${formatted}`; };
+
+function animateCount(el, targetNum, duration = 550) {
+    const startNum = parseFloat(String(el.dataset.rawVal || '0').replace(/[^\d.-]/g, '')) || 0;
+    el.dataset.rawVal = targetNum;
+    const startTime = performance.now();
+    const tick = now => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = money(startNum + (targetNum - startNum) * eased);
+        if (progress < 1) requestAnimationFrame(tick);
+        else el.textContent = money(targetNum);
+    };
+    requestAnimationFrame(tick);
+}
 
 window.getWalletIcon = (w, size=22) => {
     if(w==='yape') return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="wallet-icon" style="margin-right:6px; flex-shrink:0; vertical-align:middle; box-shadow: 0 1px 3px rgba(0,0,0,0.15); border-radius: 22%;" title="Yape"><defs><linearGradient id="yg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#91139e"/><stop offset="100%" stop-color="#55006b"/></linearGradient></defs><rect width="100" height="100" rx="22" fill="url(#yg)"/><path d="M50 14 C 64 14 74 22 74 33 C 74 44 64 52 50 52 C 47 52 44 51.5 41 50 L 32 58 L 35 46 C 29 42 26 38 26 33 C 26 22 36 14 50 14 Z" fill="#00E5C0"/><text x="51" y="41" font-family="Arial, sans-serif" font-weight="bold" font-size="22" fill="#55006b" text-anchor="middle">S/</text><text x="50" y="86" font-family="'Brush Script MT', 'Comic Sans MS', cursive, sans-serif" font-weight="bold" font-size="44" fill="#ffffff" text-anchor="middle" transform="rotate(-6 50 86)">yape</text></svg>`;
@@ -253,16 +278,20 @@ let pendingConfirm=null;
 function confirm_(title,msg,fn){document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmMessage').textContent=msg;pendingConfirm=fn;openM('confirmModal');}
 document.getElementById('confirmAction').addEventListener('click',()=>{if(pendingConfirm)pendingConfirm();pendingConfirm=null;closeM('confirmModal');});
 
-let editDepositId=null, editExpenseId=null;
+let editDepositId=null, editExpenseId=null, editLoanId=null;
 
 // ====== RENDER KPIs ======
 function renderKPIs(){
     const ti=deposits.reduce((s,d)=>s+ +d.amount,0), te=expenses.reduce((s,e)=>s+ +e.amount,0);
-    document.getElementById('totalIncome').textContent=money(ti);
-    document.getElementById('totalExpenses').textContent=money(te);
+    animateCount(document.getElementById('totalIncome'), ti);
+    animateCount(document.getElementById('totalExpenses'), te);
     document.getElementById('totalDeposits').textContent=deposits.length;
     document.getElementById('totalDays').textContent=allDates().length;
-    document.getElementById('currentBalance').textContent=money(totalBal());
+    const balEl = document.getElementById('currentBalance');
+    animateCount(balEl, totalBal());
+    balEl.classList.remove('updated');
+    void balEl.offsetWidth;
+    balEl.classList.add('updated');
     // Delta vs previous cycle
     const cycles = typeof getCycles !== 'undefined' ? getCycles() : [];
     const curC = cycles[0];
@@ -639,6 +668,19 @@ window.editDeposit=requireAuth(function(id){const dep=deposits.find(d=>d.id===id
 window.editExpense=requireAuth(function(id){const exp=expenses.find(e=>e.id===id);if(!exp)return;editExpenseId=id;document.getElementById('expenseModalTitle').textContent='Editar Gasto';document.getElementById('expenseDate').value=exp.date;populateCatSelect();document.getElementById('expenseCategory').value=exp.category;document.getElementById('expenseDescription').value=exp.description||'';document.getElementById('expenseAmount').value=exp.amount;document.getElementById('expenseWallet').value=exp.wallet||'efectivo';resetImageUI();const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);if(imgs.length){pendingImagesData=[...imgs];renderPendingImages();document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent='Adjuntar fotos';}openM('expenseModal');});
 window.deleteDeposit=requireAuth(function(id){confirm_('Eliminar Depósito','¿Estás seguro?',()=>{deposits=deposits.filter(d=>d.id!==id);persist();renderAll();toast('Depósito eliminado');});});
 window.deleteExpense=requireAuth(function(id){confirm_('Eliminar Gasto','¿Estás seguro?',()=>{expenses=expenses.filter(e=>e.id!==id);persist();renderAll();toast('Gasto eliminado');});});
+window.deleteLoan=requireAuth(function(id){confirm_('Eliminar Préstamo','¿Eliminar este registro de préstamo?',()=>{loans=loans.filter(l=>l.id!==id);persist();renderLoans();toast('Préstamo eliminado');});});
+window.editLoan=requireAuth(function(id){
+    const loan=loans.find(l=>l.id===id);if(!loan)return;
+    editLoanId=id;
+    const t=document.getElementById('loanModalTitle');if(t)t.textContent='Editar Préstamo';
+    document.getElementById('loanDate').value=loan.date;
+    populateLenderSelect();
+    document.getElementById('loanPerson').value=loan.person;
+    document.getElementById('loanAmount').value=loan.amount;
+    document.getElementById('loanDesc').value=loan.description||'';
+    openM('loanModal');
+    setTimeout(()=>document.getElementById('loanAmount').focus(),120);
+});
 
 window.viewRecord = function(type, id) {
     let rec = type === 'deposit' ? deposits.find(d => d.id === id) : expenses.find(e => e.id === id);
@@ -751,7 +793,7 @@ window.openLightboxFromView = function() {
     }
 };
 
-function renderAll(){renderKPIs();renderCharts();renderLineChart();renderCatBreakdown();renderCatList();populateCatSelect();renderMonthFilter();renderDaily();renderCalendar();renderReminders();}
+function renderAll(){renderKPIs();renderCharts();renderLineChart();renderCatBreakdown();renderCatList();populateCatSelect();renderMonthFilter();renderDaily();renderCalendar();renderReminders();renderLoans();}
 
 // ====== EVENTS: DEPOSIT ======
 document.getElementById('openDepositModal').addEventListener('click',requireAuth(()=>{editDepositId=null;document.getElementById('depositModalTitle').textContent='Nuevo Depósito';document.getElementById('depositDate').value=today();document.getElementById('depositAmount').value='';document.getElementById('depositDescription').value='';document.getElementById('depositType').value='quincenal';document.getElementById('depositCycleStart').checked=false;openM('depositModal');setTimeout(()=>document.getElementById('depositAmount').focus(),120);}));
@@ -1009,7 +1051,7 @@ document.getElementById('saveReminder').addEventListener('click',()=>{
 
 // ====== EXPORT / IMPORT ======
 document.getElementById('exportBtn').addEventListener('click', () => {
-    const data = { version:1, exportedAt:new Date().toISOString(), deposits, expenses, categories, reminders };
+    const data = { version:1, exportedAt:new Date().toISOString(), deposits, expenses, categories, reminders, loans, lenders };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');a.href = url;
@@ -1037,6 +1079,8 @@ document.getElementById('importFile').addEventListener('change', (e) => {
                 expenses = data.expenses;
                 categories = data.categories;
                 reminders = Array.isArray(data.reminders) ? data.reminders : reminders;
+                loans   = Array.isArray(data.loans)   ? data.loans   : [];
+                lenders = Array.isArray(data.lenders) ? data.lenders : DEF_LENDERS;
                 persist();
                 renderAll();
                 toast(`Importados: ${deposits.length} depósitos, ${expenses.length} gastos`);
@@ -1376,6 +1420,301 @@ if (bnavSearch) bnavSearch.addEventListener('click', () => {
 if (bnavFilter) bnavFilter.addEventListener('click', () => {
     openM('filterModal');
 });
+
+// ====== LOANS ======
+function renderLoans() {
+    const totalLoaned   = loans.reduce((s,l) => s + +l.amount, 0);
+    const totalDevolved = loans.reduce((s,l) => s + (l.devolutions||[]).reduce((ds,d) => ds + +d.amount, 0), 0);
+    const totalDebt     = Math.max(0, totalLoaned - totalDevolved);
+
+    // Toolbar button text
+    const loansBtnText = document.getElementById('loansBtnText');
+    if (loansBtnText) {
+        if (totalDebt > 0)        loansBtnText.textContent = `Préstamos  ${money(totalDebt)}`;
+        else if (totalLoaned > 0) loansBtnText.textContent = 'Préstamos ✓';
+        else                      loansBtnText.textContent = 'Préstamos';
+    }
+    // Bottom nav badge
+    const bnavBadge = document.getElementById('bnavLoansBadge');
+    if (bnavBadge) bnavBadge.textContent = totalDebt > 0 ? money(totalDebt) : 'Préstamos';
+
+    const body = document.getElementById('loansModalBody');
+    if (!body) return;
+
+    if (loans.length === 0) {
+        body.innerHTML = `<div style="text-align:center;padding:48px 20px 36px;">
+            <span class="material-symbols-outlined" style="font-size:52px;opacity:0.15;display:block;margin-bottom:14px;color:var(--ink-black);">account_balance_wallet</span>
+            <p style="font-weight:700;font-size:15px;color:var(--ink-black);margin-bottom:6px;">Sin préstamos registrados</p>
+            <p style="font-size:12px;color:var(--slate-gray);">Toca "Nuevo Préstamo" cuando alguien te preste dinero.</p>
+        </div>`;
+        return;
+    }
+
+    const pct     = totalLoaned > 0 ? Math.min(totalDevolved / totalLoaned * 100, 100) : 0;
+    const settled = totalDebt === 0;
+    let html = '';
+
+    // ── Summary 3-chip strip ──
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div class="loan-chip" style="--i:0;text-align:center;padding:12px 6px;background:var(--canvas-cream);border-radius:var(--radius-lg);border:1px solid rgba(20,20,19,0.06);">
+            <div style="font-size:14px;font-weight:900;color:var(--ink-black);letter-spacing:-0.02em;">${money(totalLoaned)}</div>
+            <div style="font-size:9px;color:var(--slate-gray);text-transform:uppercase;letter-spacing:0.07em;margin-top:3px;font-weight:700;">Prestado</div>
+        </div>
+        <div class="loan-chip" style="--i:1;text-align:center;padding:12px 6px;background:var(--canvas-cream);border-radius:var(--radius-lg);border:1px solid rgba(20,20,19,0.06);">
+            <div style="font-size:14px;font-weight:900;color:#16a34a;letter-spacing:-0.02em;">${money(totalDevolved)}</div>
+            <div style="font-size:9px;color:var(--slate-gray);text-transform:uppercase;letter-spacing:0.07em;margin-top:3px;font-weight:700;">Devuelto</div>
+        </div>
+        <div class="loan-chip" style="--i:2;text-align:center;padding:12px 6px;background:${settled?'#f0fdf4':'#fef2f2'};border-radius:var(--radius-lg);border:1px solid ${settled?'#bbf7d0':'#fecaca'};">
+            <div style="font-size:14px;font-weight:900;color:${settled?'#16a34a':'#dc2626'};letter-spacing:-0.02em;">${settled?'¡OK!':money(totalDebt)}</div>
+            <div style="font-size:9px;color:var(--slate-gray);text-transform:uppercase;letter-spacing:0.07em;margin-top:3px;font-weight:700;">Pendiente</div>
+        </div>
+    </div>`;
+
+    // ── Overall progress bar ──
+    html += `<div style="height:3px;background:rgba(20,20,19,0.06);border-radius:2px;margin-bottom:20px;overflow:hidden;">
+        <div style="height:100%;width:${pct.toFixed(1)}%;background:linear-gradient(90deg,#16a34a,#4ade80);border-radius:2px;transition:width 0.6s ease;"></div>
+    </div>`;
+
+    // ── Group by person (preserving newest-first order within each group) ──
+    const personOrder = [];
+    const personGroups = {};
+    [...loans].sort((a,b) => d2(b.date) - d2(a.date)).forEach(l => {
+        if (!personGroups[l.person]) { personGroups[l.person] = []; personOrder.push(l.person); }
+        personGroups[l.person].push(l);
+    });
+
+    personOrder.forEach((person, personIdx) => {
+        const pLoans    = personGroups[person];
+        const pLoaned   = pLoans.reduce((s,l) => s + +l.amount, 0);
+        const pDevolved = pLoans.reduce((s,l) => s + (l.devolutions||[]).reduce((ds,d) => ds + +d.amount, 0), 0);
+        const pDebt     = Math.max(0, pLoaned - pDevolved);
+        const pSettled  = pDebt === 0;
+        const pPct      = pLoaned > 0 ? Math.min(pDevolved / pLoaned * 100, 100) : 0;
+
+        // ── Person group header ──
+        html += `<div class="loan-group" style="--i:${personIdx};border:1px solid ${pSettled?'rgba(22,163,74,0.2)':'rgba(220,38,38,0.12)'};border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:${pSettled?'rgba(22,163,74,0.04)':'rgba(220,38,38,0.03)'};">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:32px;height:32px;border-radius:50%;background:${pSettled?'#dcfce7':'#fef2f2'};border:1.5px solid ${pSettled?'#bbf7d0':'#fecaca'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:${pSettled?'#16a34a':'#dc2626'};flex-shrink:0;">${person.charAt(0).toUpperCase()}</div>
+                    <div>
+                        <div style="font-size:14px;font-weight:800;color:var(--ink-black);">${person}</div>
+                        <div style="font-size:10px;color:var(--slate-gray);">${pLoans.length} préstamo${pLoans.length>1?'s':''}</div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:16px;font-weight:900;letter-spacing:-0.03em;color:${pSettled?'#16a34a':'#dc2626'};">${pSettled?'✓ Saldado':money(pDebt)}</div>
+                    <div style="font-size:10px;color:var(--slate-gray);">de ${money(pLoaned)}</div>
+                </div>
+            </div>
+            ${!pSettled?`<div style="padding:0 14px 6px;background:${pSettled?'rgba(22,163,74,0.04)':'rgba(220,38,38,0.03)'};"><div style="height:3px;background:rgba(20,20,19,0.06);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pPct.toFixed(1)}%;background:linear-gradient(90deg,#16a34a,#4ade80);border-radius:2px;transition:width 0.6s;"></div></div></div>`:''}
+            ${!pSettled?`<div style="padding:6px 14px 10px;background:${pSettled?'rgba(22,163,74,0.04)':'rgba(220,38,38,0.03)'};">
+                <button onclick="openAddDevolution('${person.replace(/'/g,"\\'")}')" style="width:100%;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:var(--radius-md);padding:8px 10px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:background 0.15s;"><span class="material-symbols-outlined" style="font-size:15px;">payments</span>Registrar devolución de ${person}</button>
+            </div>`:''}
+
+            <div style="border-top:1px solid rgba(20,20,19,0.06);">`;
+
+        // ── Individual loan rows (compact, no devolution button) ──
+        pLoans.forEach((l, idx) => {
+            const loanDev  = (l.devolutions||[]).reduce((s,d) => s + +d.amount, 0);
+            const loanDebt = Math.max(0, +l.amount - loanDev);
+            const lSettled = loanDebt === 0;
+
+            let devHtml = '';
+            if ((l.devolutions||[]).length > 0) {
+                devHtml += `<div style="padding:6px 12px 4px;background:rgba(22,163,74,0.04);border-top:1px dashed rgba(22,163,74,0.15);">`;
+                l.devolutions.forEach(d => {
+                    devHtml += `<div style="display:flex;align-items:center;gap:5px;padding:3px 0;">
+                        <span class="material-symbols-outlined" style="font-size:12px;color:#16a34a;flex-shrink:0;">check</span>
+                        <span style="flex:1;font-size:10px;color:var(--slate-gray);">${fmtDate(d.date)}${d.description?' · '+d.description:''}</span>
+                        <span style="font-size:11px;font-weight:700;color:#16a34a;flex-shrink:0;">+${money(d.amount)}</span>
+                        <button onclick="deleteDevolution('${l.id}','${d.id}')" style="background:none;border:none;cursor:pointer;color:rgba(20,20,19,0.22);padding:0;display:flex;line-height:1;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:12px;">close</span></button>
+                    </div>`;
+                });
+                devHtml += `</div>`;
+            }
+
+            html += `<div style="${idx>0?'border-top:1px solid rgba(20,20,19,0.05);':''}">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;">
+                    <div style="min-width:0;flex:1;margin-right:10px;">
+                        <div style="font-size:11px;color:var(--slate-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${fmtDate(l.date)}${l.description?' · <em>'+l.description+'</em>':''}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                        <div style="text-align:right;">
+                            <div style="font-size:13px;font-weight:800;color:${lSettled?'#16a34a':'var(--ink-black)'};">${lSettled?'✓':money(+l.amount)}</div>
+                            ${lSettled?'':`<div style="font-size:9px;color:var(--slate-gray);">orig.</div>`}
+                        </div>
+                        <button onclick="editLoan('${l.id}')" style="background:none;color:rgba(20,20,19,0.35);border:1px solid rgba(20,20,19,0.09);border-radius:8px;padding:5px 7px;font-family:inherit;cursor:pointer;display:flex;align-items:center;" onmouseover="this.style.color='#2563eb';this.style.borderColor='#bfdbfe';this.style.background='#eff6ff';" onmouseout="this.style.color='rgba(20,20,19,0.35)';this.style.borderColor='rgba(20,20,19,0.09)';this.style.background='none';"><span class="material-symbols-outlined" style="font-size:14px;">edit</span></button>
+                        <button onclick="deleteLoan('${l.id}')" style="background:none;color:rgba(20,20,19,0.25);border:1px solid rgba(20,20,19,0.09);border-radius:8px;padding:5px 7px;font-family:inherit;cursor:pointer;display:flex;align-items:center;" onmouseover="this.style.color='#dc2626';this.style.borderColor='#fecaca';this.style.background='#fef2f2';" onmouseout="this.style.color='rgba(20,20,19,0.25)';this.style.borderColor='rgba(20,20,19,0.09)';this.style.background='none';"><span class="material-symbols-outlined" style="font-size:14px;">delete</span></button>
+                    </div>
+                </div>
+                ${devHtml}
+            </div>`;
+        });
+
+        html += `</div></div>`;
+    });
+
+    body.innerHTML = html;
+}
+
+function populateLenderSelect() {
+    const sel = document.getElementById('loanPerson');
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '';
+    lenders.forEach(l => {
+        const o = document.createElement('option');
+        o.value = l; o.textContent = l;
+        sel.appendChild(o);
+    });
+    if (prev && lenders.includes(prev)) sel.value = prev;
+}
+
+function renderLendersModal() {
+    const body = document.getElementById('lendersModalBody');
+    if (!body) return;
+    body.innerHTML = `
+        <div style="padding-bottom:16px;">
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+                ${lenders.length === 0
+                    ? `<p style="font-size:12px;color:var(--slate-gray);padding:8px 0;">Sin prestadores aún.</p>`
+                    : lenders.map((name,i) => `
+                        <div style="display:inline-flex;align-items:center;gap:3px;background:var(--canvas-cream);border:1px solid rgba(20,20,19,0.09);border-radius:999px;padding:4px 8px 4px 12px;font-size:12px;font-weight:600;color:var(--ink-black);">
+                            ${name}
+                            <button onclick="deleteLender(${i})" style="background:none;border:none;cursor:pointer;color:rgba(20,20,19,0.3);padding:0;margin-left:2px;display:flex;line-height:1;" title="Eliminar">
+                                <span class="material-symbols-outlined" style="font-size:13px;">close</span>
+                            </button>
+                        </div>`).join('')
+                }
+            </div>
+            <div style="display:flex;gap:8px;">
+                <input type="text" id="newLenderInput" class="mi" placeholder="Nuevo prestador..." style="flex:1;margin:0;" onkeydown="if(event.key==='Enter')addLender()">
+                <button onclick="addLender()" style="background:var(--ink-black);color:var(--canvas-cream);border:none;border-radius:var(--radius-md);padding:0 14px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Agregar</button>
+            </div>
+        </div>`;
+}
+
+window.addLender = requireAuth(function() {
+    const inp  = document.getElementById('newLenderInput');
+    const name = inp ? inp.value.trim() : '';
+    if (!name) { toast('Escribe un nombre', 'err'); return; }
+    if (lenders.map(l=>l.toLowerCase()).includes(name.toLowerCase())) { toast('Ya existe', 'err'); return; }
+    lenders.push(name);
+    persist();
+    populateLenderSelect();
+    renderLendersModal();
+    toast(`"${name}" agregado como prestador`);
+});
+
+window.deleteLender = requireAuth(function(idx) {
+    const name  = lenders[idx];
+    const inUse = loans.some(l => l.person === name);
+    const doIt  = () => {
+        lenders.splice(idx, 1);
+        persist();
+        populateLenderSelect();
+        renderLendersModal();
+        toast(`Prestador "${name}" eliminado`);
+    };
+    if (inUse) confirm_('Eliminar Prestador', `"${name}" tiene préstamos registrados. ¿Eliminar de todas formas?`, doIt);
+    else doIt();
+});
+
+let currentDevLoanId = null;
+
+window.openAddDevolution = requireAuth(function(person) {
+    // Find loans for this person sorted oldest-first; attach to oldest with remaining balance
+    const pLoans  = loans.filter(l => l.person === person);
+    const pLoaned = pLoans.reduce((s,l) => s + +l.amount, 0);
+    const pDev    = pLoans.reduce((s,l) => s + (l.devolutions||[]).reduce((ds,d) => ds + +d.amount, 0), 0);
+    const remaining = Math.max(0, pLoaned - pDev);
+
+    const sorted = [...pLoans].sort((a,b) => d2(a.date) - d2(b.date));
+    const target = sorted.find(l => {
+        const ld = (l.devolutions||[]).reduce((s,d) => s + +d.amount, 0);
+        return +l.amount > ld;
+    }) || sorted[sorted.length - 1];
+    if (!target) return;
+
+    currentDevLoanId = target.id;
+    const info = document.getElementById('devLoanInfo');
+    if (info) info.innerHTML = `<span style="font-weight:400;color:var(--slate-gray);font-size:11px;">Devolución a</span> <strong>${person}</strong> &nbsp;·&nbsp; <span style="color:#dc2626;font-weight:700;">Total pendiente: ${money(remaining)}</span>`;
+    document.getElementById('devDate').value   = today();
+    document.getElementById('devAmount').value = '';
+    document.getElementById('devDesc').value   = '';
+    openM('devolutionModal');
+    setTimeout(() => document.getElementById('devAmount').focus(), 120);
+});
+
+if (document.getElementById('saveDevolution')) {
+    document.getElementById('saveDevolution').addEventListener('click', () => {
+        const date        = document.getElementById('devDate').value;
+        const amount      = parseFloat(document.getElementById('devAmount').value);
+        const description = document.getElementById('devDesc').value.trim();
+        if (!date || isNaN(amount) || amount <= 0) { toast('Completa correctamente', 'err'); return; }
+        const loan = loans.find(l => l.id === currentDevLoanId);
+        if (!loan) return;
+        if (!loan.devolutions) loan.devolutions = [];
+        loan.devolutions.push({ id: uid(), date, amount, description });
+        persist();
+        closeM('devolutionModal');
+        renderLoans();
+        toast(`Devolución de ${money(amount)} registrada`);
+    });
+}
+
+window.deleteDevolution = requireAuth(function(loanId, devId) {
+    const loan = loans.find(l => l.id === loanId);
+    if (!loan || !loan.devolutions) return;
+    confirm_('Eliminar Devolución', '¿Eliminar esta devolución?', () => {
+        loan.devolutions = loan.devolutions.filter(d => d.id !== devId);
+        persist();
+        renderLoans();
+        toast('Devolución eliminada');
+    });
+});
+
+if (document.getElementById('addLoanBtn')) {
+    document.getElementById('addLoanBtn').addEventListener('click', requireAuth(() => {
+        editLoanId = null;
+        const t = document.getElementById('loanModalTitle'); if(t) t.textContent = 'Registrar Préstamo';
+        document.getElementById('loanDate').value   = today();
+        document.getElementById('loanAmount').value = '';
+        document.getElementById('loanDesc').value   = '';
+        populateLenderSelect();
+        openM('loanModal');
+        setTimeout(() => document.getElementById('loanAmount').focus(), 120);
+    }));
+}
+if (document.getElementById('saveLoan')) {
+    document.getElementById('saveLoan').addEventListener('click', () => {
+        const date        = document.getElementById('loanDate').value;
+        const person      = document.getElementById('loanPerson').value.trim();
+        const amount      = parseFloat(document.getElementById('loanAmount').value);
+        const description = document.getElementById('loanDesc').value.trim();
+        if (!date || !person || isNaN(amount) || amount <= 0) { toast('Completa correctamente', 'err'); return; }
+        if (editLoanId) {
+            const loan = loans.find(l => l.id === editLoanId);
+            if (loan) { loan.date=date; loan.person=person; loan.amount=amount; loan.description=description; }
+            editLoanId = null;
+            persist(); closeM('loanModal'); renderLoans();
+            toast('Préstamo actualizado');
+        } else {
+            loans.push({ id: uid(), date, person, amount, description, devolutions: [] });
+            persist(); closeM('loanModal'); renderLoans();
+            toast(`Préstamo de ${money(amount)} registrado`);
+        }
+    });
+}
+if (document.getElementById('openLoansModal')) {
+    document.getElementById('openLoansModal').addEventListener('click', () => openM('loansModal'));
+}
+if (document.getElementById('openLendersModal')) {
+    document.getElementById('openLendersModal').addEventListener('click', () => {
+        renderLendersModal();
+        openM('lendersModal');
+    });
+}
 
 // ====== INIT ======
 renderAll();
