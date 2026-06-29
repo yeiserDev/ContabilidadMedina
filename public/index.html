@@ -507,45 +507,49 @@
 
     <!-- MODAL: VIEW RECORD -->
     <div class="modal-bg" id="viewRecordModal">
-        <div class="modal modal--sm" style="overflow: hidden;">
+        <div class="modal modal--detail" style="overflow: hidden;">
             <div class="modal-hd" style="border-bottom: none; padding-bottom: 0;">
-                <h2 id="viewRecordTitle" style="font-size: 24px; color: var(--ink-black);">Gasto</h2>
+                <h2 id="viewRecordTitle" style="font-size: 22px; color: var(--ink-black);">Gasto</h2>
                 <button class="modal-x" data-close="viewRecordModal"><span class="material-symbols-outlined">close</span></button>
             </div>
-            <div class="modal-bd" style="padding-top: 16px;">
-                <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px;">
-                    <div id="viewRecordAmount" style="font-size: 46px; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 12px; text-shadow: 0 4px 16px rgba(0,0,0,0.1); font-variant-numeric: tabular-nums; line-height: 1; transition: text-shadow 0.3s ease;">-S/ 0.00</div>
-                    <div id="viewRecordBadge" style="display: inline-flex; align-items: center; justify-content: center; padding: 4px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Categoría</div>
-                </div>
-                
-                <div style="background: var(--canvas-cream); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 20px; box-shadow: inset 0 0 0 1px rgba(20,20,19,0.04);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px;">
-                        <div style="flex: 1;">
-                            <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-weight: 600;">Fecha</div>
-                            <div id="viewRecordDate" style="font-size: 15px; font-weight: 600; color: var(--ink-black);">--</div>
-                        </div>
-                        <div id="viewRecordWalletWrap" style="flex: 1; text-align: right; display: none;">
-                            <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-weight: 600;">Método de Pago</div>
-                            <div id="viewRecordWallet" style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 15px; font-weight: 600; color: var(--ink-black);">
-                                <!-- Injected via JS -->
+            <div class="modal-bd vr-grid" style="padding-top: 16px;">
+                <!-- IZQUIERDA: detalles -->
+                <div class="vr-main">
+                    <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px;">
+                        <div id="viewRecordAmount" style="font-size: 44px; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 12px; text-shadow: 0 4px 16px rgba(0,0,0,0.1); font-variant-numeric: tabular-nums; line-height: 1; transition: text-shadow 0.3s ease;">-S/ 0.00</div>
+                        <div id="viewRecordBadge" style="display: inline-flex; align-items: center; justify-content: center; padding: 4px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Categoría</div>
+                    </div>
+
+                    <div style="background: var(--canvas-cream); border-radius: var(--radius-lg); padding: 16px; box-shadow: inset 0 0 0 1px rgba(20,20,19,0.04);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px;">
+                            <div style="flex: 1;">
+                                <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-weight: 600;">Fecha</div>
+                                <div id="viewRecordDate" style="font-size: 15px; font-weight: 600; color: var(--ink-black);">--</div>
+                            </div>
+                            <div id="viewRecordWalletWrap" style="flex: 1; text-align: right; display: none;">
+                                <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-weight: 600;">Método de Pago</div>
+                                <div id="viewRecordWallet" style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 15px; font-weight: 600; color: var(--ink-black);">
+                                    <!-- Injected via JS -->
+                                </div>
                             </div>
                         </div>
+
+                        <div style="border-top: 1px dashed rgba(20,20,19,0.1); padding-top: 16px;">
+                            <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-weight: 600;">Descripción</div>
+                            <div id="viewRecordDesc" style="font-size: 15px; font-weight: 500; color: var(--ink-black); line-height: 1.5;">--</div>
+                        </div>
                     </div>
-                    
-                    <div style="border-top: 1px dashed rgba(20,20,19,0.1); padding-top: 16px;">
-                        <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-weight: 600;">Descripción</div>
-                        <div id="viewRecordDesc" style="font-size: 15px; font-weight: 500; color: var(--ink-black); line-height: 1.5;">--</div>
+
+                    <div id="viewRecordActions" style="display: flex; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(20,20,19,0.05);">
+                        <button class="mb mb--ghost" id="viewRecordEditBtn" style="flex: 1; border: 1px solid rgba(20,20,19,0.1); display: flex; align-items: center; justify-content: center; gap: 6px;"><span class="material-symbols-outlined" style="font-size: 18px;">edit</span> Editar</button>
+                        <button class="mb mb--ghost" id="viewRecordDelBtn" style="flex: 1; border: 1px solid rgba(20,20,19,0.1); color: var(--signal-orange); display: flex; align-items: center; justify-content: center; gap: 6px;"><span class="material-symbols-outlined" style="font-size: 18px;">delete</span> Eliminar</button>
                     </div>
                 </div>
 
-                <div id="viewRecordImageWrap" style="display: none; width:100%; margin-bottom: 8px;">
-                    <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; font-weight: 600;">Comprobantes adjuntos</div>
-                    <div id="viewRecordMultiImages" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:8px; scroll-snap-type: x mandatory;"></div>
-                </div>
-
-                <div id="viewRecordActions" style="display: flex; gap: 8px; margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(20,20,19,0.05);">
-                    <button class="mb mb--ghost" id="viewRecordEditBtn" style="flex: 1; border: 1px solid rgba(20,20,19,0.1); display: flex; align-items: center; justify-content: center; gap: 6px;"><span class="material-symbols-outlined" style="font-size: 18px;">edit</span> Editar</button>
-                    <button class="mb mb--ghost" id="viewRecordDelBtn" style="flex: 1; border: 1px solid rgba(20,20,19,0.1); color: var(--signal-orange); display: flex; align-items: center; justify-content: center; gap: 6px;"><span class="material-symbols-outlined" style="font-size: 18px;">delete</span> Eliminar</button>
+                <!-- DERECHA: comprobantes -->
+                <div id="viewRecordImageWrap" class="vr-side" style="display: none;">
+                    <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; font-weight: 600;">Comprobantes adjuntos</div>
+                    <div id="viewRecordMultiImages" class="vr-photos"></div>
                 </div>
             </div>
         </div>

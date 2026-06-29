@@ -266,9 +266,14 @@ function toast(msg,type='ok'){
 }
 
 // MODALS
-const openM = id => document.getElementById(id).classList.add('active');
+const openM = id => {
+    document.getElementById(id).classList.add('active');
+    document.body.classList.add('modal-open');
+};
 const closeM = id => {
     document.getElementById(id).classList.remove('active');
+    // Desbloquear el scroll solo si ya no queda ningún modal abierto
+    if (!document.querySelector('.modal-bg.active')) document.body.classList.remove('modal-open');
     if (id === 'expenseModal' || id === 'depositModal') {
         const dl = document.getElementById('dailyView');
         if (dl) { dl.style.pointerEvents = 'none'; setTimeout(() => { dl.style.pointerEvents = ''; }, 300); }
@@ -628,7 +633,7 @@ function renderDaily(){
             exps.forEach(exp=>{
                 const ci=categories.indexOf(exp.category),col=COLORS[(ci>=0?ci:0)%COLORS.length];
                 const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);
-                const imgBtn=`<button class="exp-img-btn" onclick="event.stopPropagation(); if(window.innerWidth <= 900) viewRecord('expense','${exp.id}'); else { ${imgs.length ? `openLightbox('${imgs[0]}')` : `viewRecord('expense','${exp.id}')`} }">
+                const imgBtn=`<button class="exp-img-btn" onclick="event.stopPropagation(); viewRecord('expense','${exp.id}')">
                     <span class="material-symbols-outlined hide-on-mobile" ${imgs.length?'':'style="display:none;"'}>${imgs.length>1?'photo_library':'image'}</span>
                     <span class="material-symbols-outlined show-on-mobile" style="color:var(--signal-orange); font-size:18px;">visibility</span>
                 </button>`;
@@ -669,7 +674,21 @@ window.toggleDay = function(dt) {
 window.editDeposit=requireAuth(function(id){const dep=deposits.find(d=>d.id===id);if(!dep)return;editDepositId=id;document.getElementById('depositModalTitle').textContent='Editar Depósito';document.getElementById('depositDate').value=dep.date;document.getElementById('depositType').value=dep.type;document.getElementById('depositAmount').value=dep.amount;document.getElementById('depositDescription').value=dep.description||'';document.getElementById('depositCycleStart').checked=!!dep.isCycleStart;openM('depositModal');});
 window.editExpense=requireAuth(function(id){const exp=expenses.find(e=>e.id===id);if(!exp)return;editExpenseId=id;document.getElementById('expenseModalTitle').textContent='Editar Gasto';document.getElementById('expenseDate').value=exp.date;populateCatSelect();document.getElementById('expenseCategory').value=exp.category;document.getElementById('expenseDescription').value=exp.description||'';document.getElementById('expenseAmount').value=exp.amount;document.getElementById('expenseWallet').value=exp.wallet||'efectivo';resetImageUI();const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);if(imgs.length){pendingImagesData=[...imgs];renderPendingImages();document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent='Adjuntar fotos';}openM('expenseModal');});
 window.deleteDeposit=requireAuth(function(id){confirm_('Eliminar Depósito','¿Estás seguro?',()=>{deposits=deposits.filter(d=>d.id!==id);persist();renderAll();toast('Depósito eliminado');});});
-window.deleteExpense=requireAuth(function(id){confirm_('Eliminar Gasto','¿Estás seguro?',()=>{expenses=expenses.filter(e=>e.id!==id);persist();renderAll();toast('Gasto eliminado');});});
+// Borra en Google Drive los comprobantes cuyas URLs apuntan a nuestro backend.
+// Las URLs viejas de ImgBB (no coinciden con el patrón) se ignoran.
+async function deleteDriveComprobantes(urls){
+    if(!urls||!urls.length) return;
+    let idToken=null;
+    try{ idToken=(auth&&auth.currentUser)?await auth.currentUser.getIdToken():null; }catch(e){}
+    if(!idToken) return;
+    for(const url of urls){
+        const m=/\/api\/comprobantes\/([^/?#]+)/.exec(url||'');
+        if(!m) continue;
+        try{ await fetch(`${BACKEND_URL}/api/comprobantes/${m[1]}`,{method:'DELETE',headers:{'Authorization':`Bearer ${idToken}`}}); }
+        catch(e){ console.warn('No se pudo borrar comprobante de Drive:',e.message); }
+    }
+}
+window.deleteExpense=requireAuth(function(id){const exp=expenses.find(e=>e.id===id);const imgs=exp?(exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[])):[];confirm_('Eliminar Gasto','¿Estás seguro?',()=>{deleteDriveComprobantes(imgs);expenses=expenses.filter(e=>e.id!==id);persist();renderAll();toast('Gasto eliminado');});});
 window.deleteLoan=requireAuth(function(id){confirm_('Eliminar Préstamo','¿Eliminar este registro de préstamo?',()=>{loans=loans.filter(l=>l.id!==id);persist();renderLoans();toast('Préstamo eliminado');});});
 window.editLoan=requireAuth(function(id){
     const loan=loans.find(l=>l.id===id);if(!loan)return;
@@ -751,12 +770,9 @@ window.viewRecord = function(type, id) {
             imgs.forEach(url => {
                 const imgEl = document.createElement('img');
                 imgEl.src = url;
-                imgEl.style.height = '150px';
-                imgEl.style.minWidth = '100px';
-                imgEl.style.objectFit = 'cover';
-                imgEl.style.borderRadius = 'var(--radius-md)';
-                imgEl.style.border = '1px solid rgba(20,20,19,0.05)';
-                imgEl.style.cursor = 'pointer';
+                imgEl.className = 'vr-photo';
+                imgEl.loading = 'lazy';
+                imgEl.alt = 'Comprobante';
                 imgEl.onclick = () => window.openLightbox(url);
                 multiWrap.appendChild(imgEl);
             });
@@ -768,6 +784,10 @@ window.viewRecord = function(type, id) {
         imgWrap.style.display = 'none';
     }
     
+    // Ancho del modal: dos paneles solo si hay comprobantes
+    const vrModal = document.querySelector('#viewRecordModal .modal');
+    if (vrModal) vrModal.classList.toggle('vr-has-photos', imgWrap.style.display !== 'none');
+
     document.getElementById('viewRecordEditBtn').onclick = () => {
         closeM('viewRecordModal');
         if (type === 'deposit') editDeposit(id);
@@ -868,6 +888,9 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
         if(editExpenseId){
             const exp=expenses.find(e=>e.id===editExpenseId);
             if(exp){
+                // Borrar de Drive los comprobantes que se quitaron al editar
+                const oldImgs = exp.imageUrls || (exp.imageUrl ? [exp.imageUrl] : []);
+                deleteDriveComprobantes(oldImgs.filter(u => !finalImageUrls.includes(u)));
                 exp.date=date;exp.category=category;exp.description=description;exp.amount=amount;exp.wallet=wallet;
                 if(finalImageUrls.length > 0) {
                     exp.imageUrls = finalImageUrls;

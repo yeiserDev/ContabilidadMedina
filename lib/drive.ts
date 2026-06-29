@@ -39,6 +39,12 @@ export async function uploadImage(
   return res.data.id;
 }
 
+/** Borra un archivo de Drive por su id. */
+export async function deleteImage(fileId: string): Promise<void> {
+  const drive = getDrive();
+  await drive.files.delete({ fileId });
+}
+
 /** Descarga los bytes de un archivo de Drive para servirlo como imagen. */
 export async function fetchImage(
   fileId: string

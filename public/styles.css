@@ -4596,3 +4596,59 @@ a:focus-visible {
 /* ---- Header buttons: gentle press feedback ---- */
 .hdr-btn { transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease; }
 .hdr-btn:active { transform: scale(0.92); }
+
+/* ============================================================
+   VISOR DE DETALLE — dos paneles en desktop (detalles | comprobantes)
+   ============================================================ */
+.modal--detail { max-width: 420px; }
+.modal--detail.vr-has-photos { max-width: 800px; }
+
+.vr-photo {
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(20, 20, 19, 0.08);
+    object-fit: cover;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+/* Sin transform en hover: agrandar movía el borde bajo el cursor y causaba el parpadeo */
+.vr-photo:hover { box-shadow: var(--shadow-card); border-color: rgba(20, 20, 19, 0.18); }
+
+/* Bloquear scroll del fondo mientras hay un modal abierto */
+body.modal-open { overflow: hidden; }
+
+/* Móvil (por defecto): comprobantes en fila con scroll horizontal */
+.vr-photos {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
+}
+.vr-photo { height: 150px; min-width: 110px; flex: 0 0 auto; scroll-snap-align: start; }
+.vr-side { margin-top: 8px; }
+
+/* Desktop: dos paneles lado a lado */
+@media (min-width: 768px) {
+    .vr-grid { display: flex; gap: 22px; align-items: flex-start; }
+    .vr-main { flex: 1 1 auto; min-width: 0; }
+    .vr-side {
+        flex: 0 0 300px;
+        margin-top: 0;
+        max-height: 62vh;
+        overflow-y: auto;
+        border-left: 1px solid rgba(20, 20, 19, 0.08);
+        padding-left: 22px;
+    }
+    .vr-photos { flex-direction: column; overflow-x: visible; }
+    .vr-photo { width: 100%; height: auto; max-height: 380px; min-width: 0; }
+}
+
+[data-theme="dark"] .vr-side { border-left-color: rgba(255, 255, 255, 0.1); }
+[data-theme="dark"] .vr-photo { border-color: rgba(255, 255, 255, 0.12); }
+
+.vr-side::-webkit-scrollbar { width: 5px; }
+.vr-side::-webkit-scrollbar-thumb { background: rgba(20, 20, 19, 0.15); border-radius: 5px; }
+
+/* Ocultar la franja de KPIs (Ingresos/Gastos/Depósitos/Días).
+   Para volver a mostrarla, elimina esta regla. */
+.center .kpis { display: none !important; }
