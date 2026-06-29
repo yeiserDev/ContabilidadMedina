@@ -28,10 +28,11 @@
     /* Semantic */
     --link-blue: #3860BE;
 
-    /* Shadows */
-    --shadow-nav: rgba(0, 0, 0, 0.04) 0px 4px 24px 0px;
-    --shadow-card: rgba(0, 0, 0, 0.08) 0px 24px 48px 0px;
-    --shadow-dramatic: rgba(0, 0, 0, 0.25) 0px 70px 110px 0px;
+    /* Shadows — layered elevation scale (warm-tinted, premium) */
+    --shadow-nav: 0 1px 2px rgba(20, 20, 19, 0.04), 0 4px 16px rgba(20, 20, 19, 0.05);
+    --shadow-card: 0 1px 2px rgba(20, 20, 19, 0.04), 0 6px 16px -4px rgba(20, 20, 19, 0.07);
+    --shadow-hover: 0 2px 6px rgba(20, 20, 19, 0.06), 0 18px 36px -10px rgba(20, 20, 19, 0.14);
+    --shadow-dramatic: 0 10px 20px rgba(20, 20, 19, 0.12), 0 40px 80px -16px rgba(20, 20, 19, 0.30);
 
     /* Border Radius — Modern, cleaner look */
     --radius-sm: 4px;
@@ -3949,8 +3950,7 @@ select:focus-visible {
 }
 
 @media (max-width: 600px) {
-    .center .kpis { display: none; }
-    .sidebar-left .kpis { display: grid; }
+    .center .kpis { display: grid; }
 }
     
     .charts-section { flex-direction: column; }
@@ -4246,8 +4246,10 @@ select:focus-visible {
     --granite: #b0b0cc;
     --graphite: #aaaacc;
     --dust-taupe: #44445a;
-    --shadow-card: rgba(0, 0, 0, 0.4) 0px 24px 48px 0px;
-    --shadow-nav: rgba(0, 0, 0, 0.3) 0px 4px 24px 0px;
+    --shadow-nav: 0 1px 2px rgba(0, 0, 0, 0.25), 0 4px 16px rgba(0, 0, 0, 0.28);
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 20px -4px rgba(0, 0, 0, 0.4);
+    --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.35), 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+    --shadow-dramatic: 0 12px 24px rgba(0, 0, 0, 0.4), 0 48px 96px -16px rgba(0, 0, 0, 0.6);
 }
 [data-theme="dark"] body,
 [data-theme="dark"] .header,
@@ -4463,3 +4465,134 @@ body, .header, .day-card, .kpi, .chart-card, .modal, .sidebar-left, .bottom-nav 
 .bal-val.updated {
     animation: balancePop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ============================================================
+   AESTHETIC POLISH LAYER — v6 (UI/UX Pro Max)
+   Refines depth, numeric hierarchy & micro-interactions.
+   Builds on the existing Mastercard-inspired editorial system.
+   ============================================================ */
+
+/* Accessibility: honor reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---- KPI cards: tinted icon chips + stronger numbers + hover lift ---- */
+.kpi .ki {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    font-size: 24px !important;
+    background: rgba(20, 20, 19, 0.05);
+}
+.kpi--income .ki  { background: rgba(22, 163, 74, 0.12); }
+.kpi--expense .ki { background: rgba(207, 69, 0, 0.12); }
+.kpi--count .ki   { background: rgba(56, 96, 190, 0.12); }
+.kpi--days .ki    { background: rgba(154, 58, 10, 0.12); }
+
+.kpi-v   { font-variant-numeric: tabular-nums; }
+.kpi-l   { letter-spacing: 0.04em; font-weight: 700; }
+.center .kpi-v { font-size: 23px; line-height: 1.05; }
+
+.kpi {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+.kpi:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* ---- Unified KPI summary strip (center) — one card, 4 segments ---- */
+.center .kpis {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    background: var(--white);
+    border: 1px solid rgba(20, 20, 19, 0.08);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    padding: 0;
+}
+.center .kpi {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none !important;
+    padding: 16px 18px;
+    transition: background 0.2s ease;
+}
+.center .kpi + .kpi { border-left: 1px solid rgba(20, 20, 19, 0.07); }
+.center .kpi:hover { transform: none; background: rgba(20, 20, 19, 0.025); }
+
+/* Tablet & mobile: 2×2 layout with crossed dividers */
+@media (max-width: 1024px) {
+    .center .kpis { grid-template-columns: 1fr 1fr; }
+    .center .kpi { border-left: none !important; }
+    .center .kpi:nth-child(even) { border-left: 1px solid rgba(20, 20, 19, 0.07) !important; }
+    .center .kpi:nth-child(n+3) { border-top: 1px solid rgba(20, 20, 19, 0.07); }
+}
+
+[data-theme="dark"] .center .kpi + .kpi,
+[data-theme="dark"] .center .kpi:nth-child(even),
+[data-theme="dark"] .center .kpi:nth-child(n+3) { border-color: rgba(255, 255, 255, 0.08) !important; }
+
+@media (max-width: 480px) {
+    .center .kpi { padding: 12px; gap: 10px; }
+    .center .kpi .ki { width: 36px; height: 36px; font-size: 20px !important; }
+    .center .kpi-v { font-size: 19px; }
+    .center .kpi-l { font-size: 10px; }
+}
+
+/* ---- Cards: refined hover elevation ---- */
+.chart-card { transition: box-shadow 0.25s ease, transform 0.25s ease; }
+.chart-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+
+/* ---- Saldo pill: make the hero number pop ---- */
+.bal-val  { font-size: 19px; }
+.bal-pill { background: linear-gradient(180deg, var(--lifted-cream), var(--canvas-cream)); }
+
+/* ---- Brand accent: subtle warm gradient ---- */
+.brand-accent {
+    background: linear-gradient(135deg, var(--signal-orange), var(--light-signal-orange));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ---- Tabular numerals on every monetary figure (no width jitter) ---- */
+.dep-amt, .exp-amt, .day-bal-val, .cat-amount, #viewRecordAmount {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- Transaction rows: subtle colored accent edge ---- */
+.row-deposit { box-shadow: inset 3px 0 0 #16a34a; }
+.row-expense { transition: background 0.15s ease, box-shadow 0.15s ease; }
+.row-expense:hover { box-shadow: inset 3px 0 0 rgba(207, 69, 0, 0.45); }
+
+/* ---- Day date badge: warm gradient fill ---- */
+.day-icon { background: linear-gradient(180deg, var(--lifted-cream), var(--canvas-cream)); }
+
+/* ---- Focus rings: rounded to match component radii ---- */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--signal-orange);
+    outline-offset: 2px;
+    border-radius: var(--radius-md);
+}
+
+/* ---- Modal backdrop: richer blur for foreground separation ---- */
+.modal-bg { backdrop-filter: blur(6px) saturate(1.1); -webkit-backdrop-filter: blur(6px) saturate(1.1); }
+
+/* ---- Header buttons: gentle press feedback ---- */
+.hdr-btn { transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease; }
+.hdr-btn:active { transform: scale(0.92); }

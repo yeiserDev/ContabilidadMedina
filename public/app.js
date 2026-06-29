@@ -39,7 +39,9 @@ let loans     = loadLocal(KEYS.l,[]);
 let lenders   = loadLocal(KEYS.p, DEF_LENDERS);
 let searchQuery = '';
 
-const IMGBB_API_KEY = '026f7f3c9d1761c7403633dcb627f8f3';
+// Backend de comprobantes. Como la app y el backend están en el MISMO proyecto
+// (mismo origen), se deja vacío y las llamadas son relativas: /api/comprobantes.
+const BACKEND_URL = '';
 
 // ====== FIREBASE SYNC ======
 let db = null;
@@ -828,32 +830,32 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
             
             if (newImgs.length > 0) {
                 btn.textContent = 'Subiendo foto(s)...';
-                for (let img of newImgs) {
-                    try {
-                        const form = new FormData();
-                        form.append('key', IMGBB_API_KEY);
-                        form.append('image', img.split(',')[1]);
+                let idToken = null;
+                try {
+                    idToken = (auth && auth.currentUser) ? await auth.currentUser.getIdToken() : null;
+                } catch (e) { /* sin sesión */ }
 
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-                        const res = await fetch('https://api.imgbb.com/1/upload', {
-                            method: 'POST',
-                            body: form,
-                            signal: controller.signal
-                        });
-                        clearTimeout(timeoutId);
-
-                        const data = await res.json();
-                        if (data.success) {
-                            finalImageUrls.push(data.data.url);
-                        } else {
-                            throw new Error(data.error?.message || 'Error ImgBB');
-                        }
-                    } catch(e) {
-                        if (e.name === 'AbortError') {
-                            toast('Tiempo agotado al subir foto.', 'err');
-                        } else {
+                if (!idToken) {
+                    toast('Inicia sesión para subir comprobantes.', 'err');
+                } else {
+                    for (let img of newImgs) {
+                        try {
+                            const res = await fetch(`${BACKEND_URL}/api/comprobantes`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${idToken}`
+                                },
+                                body: JSON.stringify({ image: img, mimeType: 'image/jpeg' })
+                            });
+                            const data = await res.json();
+                            if (res.ok && data.fileId) {
+                                // Guardamos la URL del proxy: el render existente la muestra tal cual.
+                                finalImageUrls.push(`${BACKEND_URL}/api/comprobantes/${data.fileId}`);
+                            } else {
+                                throw new Error(data.error || 'Error backend');
+                            }
+                        } catch (e) {
                             console.error('❌ Error subiendo foto:', e.message);
                             toast('Error al subir foto. Verifica tu conexión.', 'err');
                         }
@@ -1264,20 +1266,41 @@ document.getElementById('openReportModal').addEventListener('click', () => {
 // ====== IMAGE HANDLING ======
 let pendingImagesData = [];
 
+// Compresión máxima: 1000px lado mayor + calidad JPEG adaptativa hasta ~130 KB.
+// Mantiene legible el texto del comprobante mientras minimiza el almacenamiento.
+const IMG_MAX_DIM = 1000;        // lado más largo en px
+const IMG_TARGET_BYTES = 130000; // objetivo ~130 KB por imagen
+const IMG_MIN_QUALITY = 0.45;    // piso de calidad para no perder legibilidad
+
+function dataUrlBytes(dataUrl) {
+    const b64 = (dataUrl.split(',')[1] || '');
+    return Math.floor(b64.length * 3 / 4);
+}
+
 function resizeToThumb(file) {
     return new Promise(resolve => {
         const reader = new FileReader();
         reader.onload = e => {
             const img = new Image();
             img.onload = () => {
-                const MAX = 900;
+                const MAX = IMG_MAX_DIM;
                 let w = img.width, h = img.height;
                 if (w > h && w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-                else if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+                else if (h >= w && h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
                 const canvas = document.createElement('canvas');
                 canvas.width = w; canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                resolve(canvas.toDataURL('image/jpeg', 0.78));
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';            // fondo blanco para PNG con transparencia
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+                // Baja la calidad por pasos hasta alcanzar el tamaño objetivo
+                let q = 0.72;
+                let out = canvas.toDataURL('image/jpeg', q);
+                while (dataUrlBytes(out) > IMG_TARGET_BYTES && q > IMG_MIN_QUALITY) {
+                    q = Math.max(IMG_MIN_QUALITY, q - 0.08);
+                    out = canvas.toDataURL('image/jpeg', q);
+                }
+                resolve(out);
             };
             img.src = e.target.result;
         };
