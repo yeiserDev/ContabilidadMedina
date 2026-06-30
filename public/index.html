@@ -25,9 +25,9 @@
     <link rel="stylesheet" href="styles.css">
     <style>
         /* ===== SPLASH SCREEN (carga inicial) ===== */
-        #splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F3F0EE;transition:opacity .4s ease;font-family:'Sofia Sans',system-ui,-apple-system,sans-serif}
+        #splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F3F0EE;transition:opacity .55s ease-in, transform .6s cubic-bezier(.55,0,.85,.25);will-change:transform,opacity;font-family:'Sofia Sans',system-ui,-apple-system,sans-serif}
         #splash.dark{background:#12121f}
-        #splash.hide{opacity:0;pointer-events:none}
+        #splash.hide{opacity:0;transform:scale(2.6);pointer-events:none}
         #splash .sp-logo{width:96px;height:96px;animation:spPop .38s cubic-bezier(.34,1.56,.64,1) both}
         #splash .sp-m{stroke-dasharray:720;stroke-dashoffset:720;animation:spDraw .5s .1s ease-out forwards}
         #splash .sp-word{margin-top:18px;font-size:23px;font-weight:700;letter-spacing:-.02em;color:#141413;opacity:0;animation:spUp .3s .38s ease-out forwards}
@@ -661,7 +661,7 @@
             if (!s) return;
             setTimeout(function(){
                 s.classList.add('hide');
-                setTimeout(function(){ if (s && s.parentNode) s.parentNode.removeChild(s); }, 450);
+                setTimeout(function(){ if (s && s.parentNode) s.parentNode.removeChild(s); }, 600);
             }, 1050);
         })();
     </script>
