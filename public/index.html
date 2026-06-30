@@ -13,18 +13,53 @@
         content="Sistema profesional de gestión de gastos e ingresos personales con control diario.">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:ital,opsz,wght@0,9..40,400;0,9..40,450;0,9..40,500;0,9..40,700;1,9..40,400&display=swap"
         rel="stylesheet">
     <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
         rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ===== SPLASH SCREEN (carga inicial) ===== */
+        #splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F3F0EE;transition:opacity .4s ease;font-family:'Sofia Sans',system-ui,-apple-system,sans-serif}
+        #splash.dark{background:#12121f}
+        #splash.hide{opacity:0;pointer-events:none}
+        #splash .sp-logo{width:96px;height:96px;animation:spPop .38s cubic-bezier(.34,1.56,.64,1) both}
+        #splash .sp-m{stroke-dasharray:720;stroke-dashoffset:720;animation:spDraw .5s .1s ease-out forwards}
+        #splash .sp-word{margin-top:18px;font-size:23px;font-weight:700;letter-spacing:-.02em;color:#141413;opacity:0;animation:spUp .3s .38s ease-out forwards}
+        #splash.dark .sp-word{color:#f0f0ef}
+        #splash .sp-word b{color:#CF4500}
+        #splash .sp-bar{margin-top:24px;width:92px;height:3px;border-radius:3px;background:rgba(20,20,19,.1);overflow:hidden;opacity:0;animation:spUp .26s .52s ease-out forwards}
+        #splash.dark .sp-bar{background:rgba(255,255,255,.12)}
+        #splash .sp-bar i{display:block;width:40%;height:100%;border-radius:3px;background:#CF4500;animation:spLoad .8s .5s ease-in-out infinite}
+        @keyframes spPop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+        @keyframes spDraw{to{stroke-dashoffset:0}}
+        @keyframes spUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        @keyframes spLoad{0%{transform:translateX(-120%)}100%{transform:translateX(360%)}}
+        @media (prefers-reduced-motion:reduce){#splash .sp-logo,#splash .sp-m,#splash .sp-word,#splash .sp-bar i{animation:none!important}#splash .sp-m{stroke-dashoffset:0}#splash .sp-word,#splash .sp-bar{opacity:1}}
+    </style>
 </head>
 
 <body>
+    <!-- SPLASH SCREEN -->
+    <div id="splash">
+        <svg class="sp-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="sbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#23231f"/><stop offset="1" stop-color="#141413"/></linearGradient>
+                <linearGradient id="smk" x1=".1" y1="1" x2=".9" y2="0"><stop offset="0" stop-color="#CF4500"/><stop offset="1" stop-color="#F8814A"/></linearGradient>
+            </defs>
+            <rect width="512" height="512" rx="118" fill="url(#sbg)"/>
+            <polyline class="sp-m" points="146,358 146,168 256,286 366,168 366,358" fill="none" stroke="url(#smk)" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="sp-word">Conta <b>Medina</b></div>
+        <div class="sp-bar"><i></i></div>
+    </div>
+    <script>(function(){try{if(localStorage.getItem('ct_theme')==='dark')document.getElementById('splash').classList.add('dark');}catch(e){}})();</script>
+
     <!-- HEADER -->
     <header class="header">
         <div class="header-inner">
@@ -619,6 +654,16 @@
         window.addEventListener('online', updateOnlineStatus);
         window.addEventListener('offline', updateOnlineStatus);
         updateOnlineStatus();
+
+        // Splash screen: se muestra ~1.9s (para la animación) y se desvanece.
+        (function(){
+            var s = document.getElementById('splash');
+            if (!s) return;
+            setTimeout(function(){
+                s.classList.add('hide');
+                setTimeout(function(){ if (s && s.parentNode) s.parentNode.removeChild(s); }, 450);
+            }, 1050);
+        })();
     </script>
 
 <!-- OFFLINE BANNER -->

@@ -4555,8 +4555,10 @@ body, .header, .day-card, .kpi, .chart-card, .modal, .sidebar-left, .bottom-nav 
 .chart-card { transition: box-shadow 0.25s ease, transform 0.25s ease; }
 .chart-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
 
-/* ---- Saldo pill: make the hero number pop ---- */
-.bal-val  { font-size: 19px; }
+/* ---- Saldo pill: make the hero number pop (solo escritorio; en móvil se mantiene compacto) ---- */
+@media (min-width: 901px) {
+    .bal-val { font-size: 19px; }
+}
 .bal-pill { background: linear-gradient(180deg, var(--lifted-cream), var(--canvas-cream)); }
 
 /* ---- Brand accent: subtle warm gradient ---- */
