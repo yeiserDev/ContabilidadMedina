@@ -5,7 +5,7 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#1a1a2e",
+  "background_color": "#141413",
   "theme_color": "#CF4500",
   "orientation": "portrait",
   "lang": "es",
@@ -18,7 +18,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "icon.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"

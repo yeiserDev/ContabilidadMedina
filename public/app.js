@@ -360,20 +360,22 @@ function renderCharts(){
         incData.push(deposits.filter(d=>{const dd=d2(d.date);return dd>=c.start&&dd<=c.end;}).reduce((s,d)=>s+ +d.amount,0));
         expData.push(expenses.filter(e=>{const dd=d2(e.date);return dd>=c.start&&dd<=c.end;}).reduce((s,e)=>s+ +e.amount,0));
     });
+    const _dark=document.documentElement.getAttribute('data-theme')==='dark';
+    const _tick=_dark?'#9C988E':'#94a3b8', _grid=_dark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)', _legend=_dark?'#B6B2A8':'#64748b';
     const barCtx=document.getElementById('chartBar');
     if(barCtx){
         if(barChart)barChart.destroy();
         barChart=new Chart(barCtx,{type:'bar',data:{labels,datasets:[
             {label:'Ingresos',data:incData,backgroundColor:'rgba(22,163,74,0.72)',borderColor:'rgba(22,163,74,1)',borderWidth:1.5,borderRadius:4,borderSkipped:false},
             {label:'Gastos',data:expData,backgroundColor:'rgba(220,38,38,0.62)',borderColor:'rgba(220,38,38,0.9)',borderWidth:1.5,borderRadius:4,borderSkipped:false}
-        ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1200,easing:'easeOutQuart',delay:c=>c.type==='data'?c.dataIndex*100+c.datasetIndex*100:0},plugins:{legend:{labels:{font:{size:10,family:'Sofia Sans, Arial'},color:'#64748b'},boxWidth:10,padding:10},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${money(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#94a3b8',font:{size:10},callback:v=>v>=1000?`S/${(v/1000).toFixed(0)}k`:`S/${v}`}}}}});
+        ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1200,easing:'easeOutQuart',delay:c=>c.type==='data'?c.dataIndex*100+c.datasetIndex*100:0},plugins:{legend:{labels:{font:{size:10,family:'Sofia Sans, Arial'},color:_legend},boxWidth:10,padding:10},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${money(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{color:_tick,font:{size:10}}},y:{grid:{color:_grid},ticks:{color:_tick,font:{size:10},callback:v=>v>=1000?`S/${(v/1000).toFixed(0)}k`:`S/${v}`}}}}});
     }
     const donutCtx=document.getElementById('chartDonut');
     if(donutCtx){
         const ct=catTotals(),cats=categories.filter(c=>(ct[c]||0)>0);
         if(donutChart)donutChart.destroy();
         if(!cats.length){donutChart=null;return;}
-        donutChart=new Chart(donutCtx,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>ct[c]),backgroundColor:cats.map((_,i)=>COLORS[i%COLORS.length]+'CC'),borderColor:cats.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',animation:{animateScale:true,animateRotate:true,duration:1200,easing:'easeOutQuart'},plugins:{legend:{position:'bottom',labels:{font:{size:10,family:'Sofia Sans, Arial'},color:'#64748b',boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${money(c.raw)}`}}}}});
+        donutChart=new Chart(donutCtx,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>ct[c]),backgroundColor:cats.map((_,i)=>COLORS[i%COLORS.length]+'CC'),borderColor:cats.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',animation:{animateScale:true,animateRotate:true,duration:1200,easing:'easeOutQuart'},plugins:{legend:{position:'bottom',labels:{font:{size:10,family:'Sofia Sans, Arial'},color:_legend,boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${money(c.raw)}`}}}}});
     }
 }
 
@@ -398,7 +400,7 @@ function renderLineChart() {
     }
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const gridCol = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
-    const tickCol = isDark ? '#9b9bba' : '#94a3b8';
+    const tickCol = isDark ? '#9C988E' : '#94a3b8';
     const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 200);
     gradient.addColorStop(0, 'rgba(207,69,0,0.3)');
     gradient.addColorStop(1, 'rgba(207,69,0,0)');
@@ -641,7 +643,14 @@ function renderDaily(){
                 let walletHtml = window.getWalletIcon(exp.wallet, 20);
                 h+=`<div class="row-expense" onclick="viewRecord('expense','${exp.id}')" style="cursor:pointer"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span>${walletHtml}<div class="exp-desc"><span>${styledDesc}</span></div>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span><div class="row-actions"><button class="row-btn" style="color:var(--signal-orange);" onclick="event.stopPropagation(); viewRecord('expense','${exp.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="event.stopPropagation(); editExpense('${exp.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="event.stopPropagation(); deleteExpense('${exp.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;
             });
-            h+=`<div class="day-foot"><span class="day-foot-lbl">Total del día</span><span class="day-foot-val">-${money(expT)}</span></div></div>`;
+            h+='</div>';
+        }
+        if (deps.length || exps.length) {
+            const net = depT - expT;
+            let bd = '';
+            if (depT > 0) bd += `<span class="dfb dfb--in"><span class="material-symbols-outlined">arrow_upward</span>+${money(depT)}</span>`;
+            if (expT > 0) bd += `<span class="dfb dfb--out"><span class="material-symbols-outlined">arrow_downward</span>-${money(expT)}</span>`;
+            h += `<div class="day-foot"><div class="day-foot-break">${bd}</div><div class="day-foot-net"><span class="day-foot-lbl">Neto del día</span><span class="day-foot-val ${net>=0?'pos':'neg'}">${net>=0?'+':'-'}${money(Math.abs(net))}</span></div></div>`;
         }
         h+='</div>';card.innerHTML=h;container.insertBefore(card,empty);
     });
@@ -777,6 +786,9 @@ window.viewRecord = function(type, id) {
                 multiWrap.appendChild(imgEl);
             });
             imgWrap.style.display = '';
+            const lbl = document.getElementById('viewRecordImgLabel');
+            if (lbl) lbl.textContent = imgs.length > 1 ? `Comprobantes adjuntos · ${imgs.length}` : 'Comprobantes adjuntos';
+            multiWrap.scrollLeft = 0;
         } else {
             imgWrap.style.display = 'none';
         }
@@ -1559,43 +1571,37 @@ function renderLoans() {
 
             <div style="border-top:1px solid rgba(20,20,19,0.06);">`;
 
-        // ── Individual loan rows (compact, no devolution button) ──
-        pLoans.forEach((l, idx) => {
-            const loanDev  = (l.devolutions||[]).reduce((s,d) => s + +d.amount, 0);
-            const loanDebt = Math.max(0, +l.amount - loanDev);
-            const lSettled = loanDebt === 0;
-
-            let devHtml = '';
-            if ((l.devolutions||[]).length > 0) {
-                devHtml += `<div style="padding:6px 12px 4px;background:rgba(22,163,74,0.04);border-top:1px dashed rgba(22,163,74,0.15);">`;
-                l.devolutions.forEach(d => {
-                    devHtml += `<div style="display:flex;align-items:center;gap:5px;padding:3px 0;">
-                        <span class="material-symbols-outlined" style="font-size:12px;color:#16a34a;flex-shrink:0;">check</span>
-                        <span style="flex:1;font-size:10px;color:var(--slate-gray);">${fmtDate(d.date)}${d.description?' · '+d.description:''}</span>
-                        <span style="font-size:11px;font-weight:700;color:#16a34a;flex-shrink:0;">+${money(d.amount)}</span>
-                        <button onclick="deleteDevolution('${l.id}','${d.id}')" style="background:none;border:none;cursor:pointer;color:rgba(20,20,19,0.22);padding:0;display:flex;line-height:1;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:12px;">close</span></button>
-                    </div>`;
-                });
-                devHtml += `</div>`;
-            }
-
-            html += `<div style="${idx>0?'border-top:1px solid rgba(20,20,19,0.05);':''}">
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;">
-                    <div style="min-width:0;flex:1;margin-right:10px;">
-                        <div style="font-size:11px;color:var(--slate-gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${fmtDate(l.date)}${l.description?' · <em>'+l.description+'</em>':''}</div>
+        // ── Roadmap: línea de tiempo cronológica (préstamos + devoluciones) ──
+        const events = [];
+        pLoans.forEach(l => {
+            events.push({ t:'loan', date:l.date, amount:+l.amount, desc:l.description||'', id:l.id });
+            (l.devolutions||[]).forEach(d => events.push({ t:'dev', date:d.date, amount:+d.amount, desc:d.description||'', loanId:l.id, devId:d.id }));
+        });
+        events.sort((a,b) => (d2(a.date) - d2(b.date)) || (a.t==='loan'?-1:1)); // antiguo → reciente
+        let running = 0;
+        html += `<div class="loan-tl">`;
+        events.forEach((ev, i) => {
+            const isLoan = ev.t === 'loan';
+            running = Math.max(0, running + (isLoan ? ev.amount : -ev.amount));
+            const acts = isLoan
+                ? `<button class="loan-tl-act" onclick="editLoan('${ev.id}')" title="Editar"><span class="material-symbols-outlined">edit</span></button><button class="loan-tl-act loan-tl-act--del" onclick="deleteLoan('${ev.id}')" title="Eliminar"><span class="material-symbols-outlined">delete</span></button>`
+                : `<button class="loan-tl-act loan-tl-act--del" onclick="deleteDevolution('${ev.loanId}','${ev.devId}')" title="Eliminar devolución"><span class="material-symbols-outlined">close</span></button>`;
+            html += `<div class="loan-tl-item${i===events.length-1?' is-last':''}">
+                <div class="loan-tl-dot loan-tl-dot--${isLoan?'in':'out'}"><span class="material-symbols-outlined">${isLoan?'south_west':'check'}</span></div>
+                <div class="loan-tl-content">
+                    <div class="loan-tl-top">
+                        <span class="loan-tl-label">${isLoan?'Prestado':'Devuelto'}</span>
+                        <span class="loan-tl-amt loan-tl-amt--${isLoan?'in':'out'}">${isLoan?'+':'−'}${money(ev.amount)}</span>
                     </div>
-                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-                        <div style="text-align:right;">
-                            <div style="font-size:13px;font-weight:800;color:${lSettled?'#16a34a':'var(--ink-black)'};">${lSettled?'✓':money(+l.amount)}</div>
-                            ${lSettled?'':`<div style="font-size:9px;color:var(--slate-gray);">orig.</div>`}
-                        </div>
-                        <button onclick="editLoan('${l.id}')" style="background:none;color:rgba(20,20,19,0.35);border:1px solid rgba(20,20,19,0.09);border-radius:8px;padding:5px 7px;font-family:inherit;cursor:pointer;display:flex;align-items:center;" onmouseover="this.style.color='#2563eb';this.style.borderColor='#bfdbfe';this.style.background='#eff6ff';" onmouseout="this.style.color='rgba(20,20,19,0.35)';this.style.borderColor='rgba(20,20,19,0.09)';this.style.background='none';"><span class="material-symbols-outlined" style="font-size:14px;">edit</span></button>
-                        <button onclick="deleteLoan('${l.id}')" style="background:none;color:rgba(20,20,19,0.25);border:1px solid rgba(20,20,19,0.09);border-radius:8px;padding:5px 7px;font-family:inherit;cursor:pointer;display:flex;align-items:center;" onmouseover="this.style.color='#dc2626';this.style.borderColor='#fecaca';this.style.background='#fef2f2';" onmouseout="this.style.color='rgba(20,20,19,0.25)';this.style.borderColor='rgba(20,20,19,0.09)';this.style.background='none';"><span class="material-symbols-outlined" style="font-size:14px;">delete</span></button>
+                    <div class="loan-tl-meta">${fmtDate(ev.date)}${ev.desc?' · '+ev.desc:''}</div>
+                    <div class="loan-tl-bottom">
+                        <span class="loan-tl-bal">Debe ${money(running)}</span>
+                        <span class="loan-tl-actions">${acts}</span>
                     </div>
                 </div>
-                ${devHtml}
             </div>`;
         });
+        html += `</div>`;
 
         html += `</div></div>`;
     });
