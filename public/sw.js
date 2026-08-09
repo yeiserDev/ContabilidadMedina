@@ -1,6 +1,13 @@
 // ====== CONTA MEDINA — SERVICE WORKER (Modo Metro) ======
 // Versión: bump this string to force a cache refresh after updates
-const CACHE_NAME = 'contamedina-v11';
+// v23 — reloj y calendario en cristal; el panel derecho ya es un solo material.
+// Antes: v22 banda KPI de cristal, v21 cristal del panel derecho con la
+// paleta, v20 primera versión del cristal, v19 último depósito y gastos,
+// v18 recordatorios con monto, v17 tarjetas en vertical, v16 mazo de métodos,
+// v15 banda KPI, v14 modal de detalle, v13 logo CM, v12 rediseño estético.
+// La estrategia del shell es cache-first: sin este bump, las instalaciones
+// existentes seguirían sirviendo los assets viejos.
+const CACHE_NAME = 'contamedina-v23';
 
 // All app shell files to pre-cache on install
 const SHELL = [
@@ -8,8 +15,11 @@ const SHELL = [
     './index.html',
     './styles.css',
     './app.js',
+    './ui-controls.js',
     './firebase-config.js',
     './icon.svg',
+    './icon.png',
+    './icon-192.png',
     './manifest.json',
 ];
 

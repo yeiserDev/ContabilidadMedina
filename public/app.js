@@ -238,6 +238,18 @@ window.getWalletIcon = (w, size=22) => {
 };
 window.getWalletName = (w) => w==='yape'?'Yape':w==='bcp'?'BCP':'Efectivo';
 
+// Chip de método de pago para el modal de detalle. Los <span> de las ondas
+// sólo se usan en Yape; el CSS los anima desde el centro del icono.
+window.getPayChip = (w) => {
+    const key = (w === 'yape' || w === 'bcp') ? w : 'efectivo';
+    const ondas = key === 'yape'
+        ? '<span class="vr-pay-ring"></span><span class="vr-pay-ring"></span>'
+        : '';
+    return `<span class="vr-pay vr-pay--${key}">${ondas}`
+        + `<span class="vr-pay-ic">${window.getWalletIcon(key, 22)}</span>`
+        + `<span class="vr-pay-nm">${window.getWalletName(key)}</span></span>`;
+};
+
 // BALANCE
 const allDates = () => [...new Set([...deposits.map(d=>d.date),...expenses.map(e=>e.date)])].sort();
 const balBefore = dt => { let b=0; deposits.forEach(d=>{if(d.date<dt)b+=+d.amount}); expenses.forEach(e=>{if(e.date<dt)b-=+e.amount}); return b; };
@@ -289,37 +301,114 @@ let editDepositId=null, editExpenseId=null, editLoanId=null;
 
 // ====== RENDER KPIs ======
 function renderKPIs(){
-    const ti=deposits.reduce((s,d)=>s+ +d.amount,0), te=expenses.reduce((s,e)=>s+ +e.amount,0);
-    animateCount(document.getElementById('totalIncome'), ti);
-    animateCount(document.getElementById('totalExpenses'), te);
-    document.getElementById('totalDeposits').textContent=deposits.length;
-    document.getElementById('totalDays').textContent=allDates().length;
     const balEl = document.getElementById('currentBalance');
     animateCount(balEl, totalBal());
     balEl.classList.remove('updated');
     void balEl.offsetWidth;
     balEl.classList.add('updated');
-    // Delta vs previous cycle
+
     const cycles = typeof getCycles !== 'undefined' ? getCycles() : [];
     const curC = cycles[0];
     const prevC = cycles[1];
     const inCycle = (arr, c) => c ? arr.filter(r => { const d = d2(r.date); return d >= c.start && d <= c.end; }) : [];
-    
-    const curInc = inCycle(deposits, curC).reduce((s,d)=>s+ +d.amount,0);
+
+    const curDeps = inCycle(deposits, curC), curExps = inCycle(expenses, curC);
+    const curInc = curDeps.reduce((s,d)=>s+ +d.amount,0);
     const prevInc = inCycle(deposits, prevC).reduce((s,d)=>s+ +d.amount,0);
-    const curExp = inCycle(expenses, curC).reduce((s,e)=>s+ +e.amount,0);
+    const curExp = curExps.reduce((s,e)=>s+ +e.amount,0);
     const prevExp = inCycle(expenses, prevC).reduce((s,e)=>s+ +e.amount,0);
+
+    // Las cifras se miden sobre el ciclo actual, no sobre el histórico.
+    // Antes el número era el total de siempre pero el delta decía "vs ciclo
+    // anterior": dos cosas distintas en la misma tarjeta, y la variación no
+    // significaba nada contra un acumulado que sólo crece.
+    animateCount(document.getElementById('totalIncome'), curInc);
+    animateCount(document.getElementById('totalExpenses'), curExp);
+
+    const net = curInc - curExp;
+    const netEl = document.getElementById('cycleNet');
+    if (netEl) { animateCount(netEl, Math.abs(net)); netEl.classList.toggle('is-neg', net < 0); }
+    const netSub = document.getElementById('cycleNetSub');
+    if (netSub) {
+        netSub.textContent = net >= 0 ? 'A favor en este ciclo' : 'En contra en este ciclo';
+        netSub.className = 'kpi-delta ' + (net >= 0 ? 'up' : 'down');
+    }
+
+    // También por ciclo: antes contaba los días de todo el histórico mientras
+    // el subtítulo hablaba de movimientos del ciclo, dos escalas en la misma
+    // tarjeta.
+    document.getElementById('totalDays').textContent =
+        new Set([...curDeps, ...curExps].map(r => r.date)).size;
+    const depSub = document.getElementById('depositsSub');
+    if (depSub) {
+        const n = curDeps.length + curExps.length;
+        depSub.textContent = n === 1 ? '1 movimiento en el ciclo' : `${n} movimientos en el ciclo`;
+        depSub.className = 'kpi-delta neutral';
+    }
+
     const setDelta=(elId,cur,prev)=>{
         const el=document.getElementById(elId);if(!el)return;
         if(prev===0&&cur===0){el.textContent='';el.className='kpi-delta';return;}
         if(prev===0){el.textContent='Nuevo ciclo';el.className='kpi-delta neutral';return;}
         const pct=Math.abs((cur-prev)/prev*100).toFixed(0);
         const up=cur>=prev;
-        el.textContent=`${up?'▲':'▼'} ${pct}% vs Ciclo ant.`;
+        el.textContent=`${up?'▲':'▼'} ${pct}% vs ciclo ant.`;
         el.className=`kpi-delta ${up?'up':'down'}`;
     };
     setDelta('incomeDelta',curInc,prevInc);
     setDelta('expenseDelta',curExp,prevExp);
+
+    renderPayMethods(curExps);
+}
+
+// Métodos de pago como mazo de tarjetas. Se deriva del `wallet` que ya se
+// guarda en cada gasto; no hace falta ningún campo nuevo.
+//
+// Nota deliberada: no se inventan número de tarjeta, EXP ni CVV como en la
+// referencia. Aquí no existen esos datos, y rellenarlos con dígitos falsos
+// haría que la tarjeta pareciera decir algo que no sabe. Esos tres huecos se
+// usan para lo que sí es real: gastado, número de gastos y peso en el ciclo.
+function renderPayMethods(curExps){
+    const box = document.getElementById('payMethods');
+    if (!box) return;
+    const orden = ['bcp','yape','efectivo'];
+    const acc = { bcp:{t:0,n:0}, yape:{t:0,n:0}, efectivo:{t:0,n:0} };
+    (curExps||[]).forEach(e=>{
+        const k = acc[e.wallet] ? e.wallet : 'efectivo';
+        acc[k].t += +e.amount; acc[k].n++;
+    });
+    const total = orden.reduce((s,k)=>s+acc[k].t,0);
+
+    box.innerHTML = orden.map(k=>{
+        const {t,n} = acc[k];
+        const pct = total>0 ? (t/total*100) : 0;
+        const activo = n > 0;
+        return `<div class="pm-card pm-card--${k}${activo?'':' is-idle'}">
+            <div class="pm-card-hd">
+                <span class="pm-state">
+                    <span class="material-symbols-outlined">${activo?'wifi_tethering':'do_not_disturb_on'}</span>
+                    ${activo?'Activo':'Sin uso'}
+                </span>
+                <span class="pm-card-brand">${window.getWalletIcon(k,26)}</span>
+            </div>
+            <div class="pm-card-name">${window.getWalletName(k)}</div>
+            <div class="pm-card-ft">
+                <div class="pm-f pm-f--main">
+                    <span class="pm-f-l">Gastado</span>
+                    <span class="pm-f-v">${money(t)}</span>
+                </div>
+                <div class="pm-f">
+                    <span class="pm-f-l">Gastos</span>
+                    <span class="pm-f-v">${n}</span>
+                </div>
+                <div class="pm-f">
+                    <span class="pm-f-l">Del total</span>
+                    <span class="pm-f-v">${pct.toFixed(0)}%</span>
+                </div>
+            </div>
+            <div class="pm-card-bar"><i style="width:${pct.toFixed(0)}%"></i></div>
+        </div>`;
+    }).join('');
 }
 
 // ====== CHARTS ======
@@ -440,7 +529,12 @@ function renderLineChart() {
 
 // ====== SIDEBAR ======
 function renderCatBreakdown(){
-    const el=document.getElementById('categoryBreakdown'),t=catTotals(),mx=Math.max(...Object.values(t),1);
+    // El bloque "Resumen por Rubro" se retiró del panel (esa lectura ya la da
+    // el gráfico de distribución). renderAll() sigue llamando aquí, así que sin
+    // esta guarda reventaría toda la cadena de render.
+    const el=document.getElementById('categoryBreakdown');
+    if(!el) return;
+    const t=catTotals(),mx=Math.max(...Object.values(t),1);
     const totalExp=Object.values(t).reduce((s,v)=>s+v,0);
     el.innerHTML='';
     categories.forEach((c,i)=>{
@@ -629,7 +723,7 @@ function renderDaily(){
         const card=document.createElement('div');card.className='day-card';card.dataset.date=dt;card.style.animationDelay=`${idx*.04}s`;
         const totalItems = deps.length + exps.length;
         let h=`<div class="day-head" onclick="toggleDay('${dt}')" style="cursor:pointer"><div class="day-left"><div class="day-icon" style="background:${dc.bg};border-color:${dc.border}"><span class="day-num" style="color:${dc.text}">${dayNum(dt)}</span><span class="day-mon">${monShort(dt)}</span></div><div><div class="day-label">${fmtDate(dt)}</div><div class="day-weekday" style="color:${dc.text};font-weight:600">${weekday(dt)}</div></div></div><div class="day-right"><div class="day-bal"><div class="day-bal-tag">Saldo Antes</div><div class="day-bal-val ${bb>=0?'pos':'neg'}">${money(bb)}</div></div><span class="material-symbols-outlined day-arrow">arrow_forward</span><div class="day-bal"><div class="day-bal-tag">Saldo Después</div><div class="day-bal-val ${ba>=0?'pos':'neg'}">${money(ba)}</div></div><div class="day-toggle-btn"><span class="material-symbols-outlined day-toggle-icon">expand_less</span></div></div></div><div class="day-body day-body-collapsible">`;
-        deps.forEach(dep=>{h+=`<div class="row-deposit" onclick="viewRecord('deposit','${dep.id}')" style="cursor:pointer"><div class="dep-icon"><span class="material-symbols-outlined">arrow_upward</span></div><div class="dep-info"><div class="dep-type">Depósito ${dep.type}</div>${dep.description?`<div class="dep-desc">${dep.description}</div>`:''}</div><div class="dep-amt">+${money(dep.amount)}</div><div class="row-actions"><button class="row-btn" style="color:var(--signal-orange);" onclick="event.stopPropagation(); viewRecord('deposit','${dep.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="event.stopPropagation(); editDeposit('${dep.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="event.stopPropagation(); deleteDeposit('${dep.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;});
+        deps.forEach(dep=>{h+=`<div class="row-deposit" onclick="viewRecord('deposit','${dep.id}')" style="cursor:pointer"><div class="dep-icon"><span class="material-symbols-outlined">arrow_upward</span></div><div class="dep-info"><div class="dep-type">Depósito ${dep.type}</div>${dep.description?`<div class="dep-desc">${dep.description}</div>`:''}</div><div class="dep-amt">+${money(dep.amount)}</div>${rowMenu('deposit',dep.id)}</div>`;});
         if(exps.length){
             h+='<div class="exp-table">';
             exps.forEach(exp=>{
@@ -641,7 +735,7 @@ function renderDaily(){
                 </button>`;
                 let styledDesc = (exp.description||'—').replace(/(#[a-zA-Z0-9_]+)/g, '<span style="display:inline-block; background:var(--canvas-cream); color:var(--ink-black); border:1px solid rgba(20,20,19,0.1); border-radius:4px; padding:0 4px; font-size:11px; margin-left:4px; font-weight:600;">$1</span>');
                 let walletHtml = window.getWalletIcon(exp.wallet, 20);
-                h+=`<div class="row-expense" onclick="viewRecord('expense','${exp.id}')" style="cursor:pointer"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span>${walletHtml}<div class="exp-desc"><span>${styledDesc}</span></div>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span><div class="row-actions"><button class="row-btn" style="color:var(--signal-orange);" onclick="event.stopPropagation(); viewRecord('expense','${exp.id}')"><span class="material-symbols-outlined">visibility</span></button><button class="row-btn row-btn--edit" onclick="event.stopPropagation(); editExpense('${exp.id}')"><span class="material-symbols-outlined">edit</span></button><button class="row-btn row-btn--del" onclick="event.stopPropagation(); deleteExpense('${exp.id}')"><span class="material-symbols-outlined">delete</span></button></div></div>`;
+                h+=`<div class="row-expense" onclick="viewRecord('expense','${exp.id}')" style="cursor:pointer"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span>${walletHtml}<div class="exp-desc"><span>${styledDesc}</span></div>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span>${rowMenu('expense',exp.id)}</div>`;
             });
             h+='</div>';
         }
@@ -655,6 +749,66 @@ function renderDaily(){
         h+='</div>';card.innerHTML=h;container.insertBefore(card,empty);
     });
 }
+// ====== MENÚ DE FILA ======
+// Antes cada fila llevaba tres botones diminutos: en escritorio aparecían al
+// pasar el ratón y en móvil quedaban siempre visibles, apretados contra el
+// monto y por debajo del mínimo táctil. Ahora es un solo objetivo de 44px.
+function rowMenu(type, id){
+    return `<button class="row-menu-btn" aria-label="Acciones del movimiento" aria-haspopup="menu"`
+        + ` onclick="event.stopPropagation(); openRowMenu(this,'${type}','${id}')">`
+        + `<span class="material-symbols-outlined">more_horiz</span></button>`;
+}
+
+let _rowMenuEl = null;
+function closeRowMenu(){
+    if(_rowMenuEl){ _rowMenuEl.remove(); _rowMenuEl = null; }
+}
+
+window.openRowMenu = function(btn, type, id){
+    const yaAbierto = _rowMenuEl && _rowMenuEl.dataset.id === id;
+    closeRowMenu();
+    if(yaAbierto) return;   // segundo toque en el mismo botón = cerrar
+
+    const m = document.createElement('div');
+    m.className = 'row-menu';
+    m.setAttribute('role','menu');
+    m.dataset.id = id;
+    m.innerHTML =
+        `<button role="menuitem" data-a="ver"><span class="material-symbols-outlined">visibility</span>Ver detalle</button>`
+      + `<button role="menuitem" data-a="editar"><span class="material-symbols-outlined">edit</span>Editar</button>`
+      + `<button role="menuitem" data-a="borrar" class="is-del"><span class="material-symbols-outlined">delete</span>Eliminar</button>`;
+    document.body.appendChild(m);
+    _rowMenuEl = m;
+
+    // position:fixed y coordenadas calculadas, para que no lo recorte el
+    // overflow:hidden de la tarjeta del día.
+    const r = btn.getBoundingClientRect();
+    const alto = m.offsetHeight, ancho = m.offsetWidth, margen = 8;
+    const cabeAbajo = window.innerHeight - r.bottom - margen > alto;
+    m.style.top  = cabeAbajo ? (r.bottom + 6) + 'px' : (r.top - alto - 6) + 'px';
+    m.style.left = Math.max(margen, Math.min(r.right - ancho, window.innerWidth - ancho - margen)) + 'px';
+
+    m.addEventListener('click', e => {
+        e.stopPropagation();
+        const b = e.target.closest('button');
+        if(!b) return;
+        const a = b.dataset.a;
+        closeRowMenu();
+        if(a === 'ver')    return window.viewRecord(type, id);
+        if(a === 'editar') return type === 'deposit' ? window.editDeposit(id) : window.editExpense(id);
+        if(a === 'borrar') return type === 'deposit' ? window.deleteDeposit(id) : window.deleteExpense(id);
+    });
+};
+
+document.addEventListener('mousedown', e => {
+    if(_rowMenuEl && !e.target.closest('.row-menu, .row-menu-btn')) closeRowMenu();
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeRowMenu(); });
+window.addEventListener('scroll', e => {
+    if(_rowMenuEl && !(e.target.closest && e.target.closest('.row-menu'))) closeRowMenu();
+}, true);
+window.addEventListener('resize', closeRowMenu);
+
 window.toggleDay = function(dt) {
     const card = document.querySelector(`.day-card[data-date="${dt}"]`);
     if (!card) return;
@@ -763,8 +917,12 @@ window.viewRecord = function(type, id) {
     let walletDiv = document.getElementById('viewRecordWallet');
     if (type === 'expense') {
         const w = rec.wallet || 'efectivo';
-        walletDiv.innerHTML = window.getWalletIcon(w, 24) + ' <span>' + window.getWalletName(w) + '</span>';
+        walletDiv.innerHTML = window.getPayChip(w);
         if (walletWrap) walletWrap.style.display = 'block';
+        // Relanzar la animación en cada apertura: sin el reflow intermedio el
+        // navegador no reinicia una animación que ya terminó en ese elemento.
+        const chip = walletDiv.querySelector('.vr-pay');
+        if (chip) { chip.classList.remove('is-in'); void chip.offsetWidth; chip.classList.add('is-in'); }
     } else {
         if (walletWrap) walletWrap.style.display = 'none';
     }
@@ -827,7 +985,7 @@ window.openLightboxFromView = function() {
     }
 };
 
-function renderAll(){renderKPIs();renderCharts();renderLineChart();renderCatBreakdown();renderCatList();populateCatSelect();renderMonthFilter();renderDaily();renderCalendar();renderReminders();renderLoans();}
+function renderAll(){renderKPIs();renderCharts();renderLineChart();renderCatBreakdown();renderCatList();populateCatSelect();renderMonthFilter();renderDaily();renderCalendar();renderSidebarInsights();renderReminders();renderLoans();}
 
 // ====== EVENTS: DEPOSIT ======
 document.getElementById('openDepositModal').addEventListener('click',requireAuth(()=>{editDepositId=null;document.getElementById('depositModalTitle').textContent='Nuevo Depósito';document.getElementById('depositDate').value=today();document.getElementById('depositAmount').value='';document.getElementById('depositDescription').value='';document.getElementById('depositType').value='quincenal';document.getElementById('depositCycleStart').checked=false;openM('depositModal');setTimeout(()=>document.getElementById('depositAmount').focus(),120);}));
@@ -1061,29 +1219,150 @@ window.scrollToDate = function(dt) {
 };
 
 // ====== REMINDERS ======
+const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio',
+    'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+// ====== PANEL DERECHO: último depósito + gastos más fuertes ======
+function renderSidebarInsights(){
+    const cardEl = document.getElementById('lastDepositCard');
+    const listEl = document.getElementById('topExpenses');
+    if(!cardEl || !listEl) return;
+
+    // --- Último depósito ---
+    const ult = [...deposits].sort((a,b)=>d2(b.date)-d2(a.date))[0];
+    if(!ult){
+        cardEl.innerHTML = `<div class="sr-empty">Todavía no hay depósitos registrados</div>`;
+    }else{
+        const hoy = new Date(); hoy.setHours(12,0,0,0);
+        const dias = Math.round((hoy - d2(ult.date)) / 86400000);
+        const cuando = dias<=0 ? 'Hoy' : dias===1 ? 'Ayer' : `Hace ${dias} días`;
+        cardEl.innerHTML = `<div class="ldep">
+            <span class="ldep-layer ldep-layer--2"></span>
+            <span class="ldep-layer ldep-layer--1"></span>
+            <div class="ldep-card" onclick="viewRecord('deposit','${ult.id}')" title="Ver detalle">
+                <div class="ldep-top">
+                    <span class="ldep-lbl">Depósito ${ult.type||''}</span>
+                    <span class="ldep-when">${cuando}</span>
+                </div>
+                <div class="ldep-amt">+${money(ult.amount)}</div>
+                <div class="ldep-sub">${fmtDate(ult.date)}${ult.description?' · '+ult.description:''}</div>
+            </div>
+        </div>`;
+    }
+
+    // --- Gastos más fuertes del ciclo actual ---
+    const cycles = typeof getCycles!=='undefined' ? getCycles() : [];
+    const c = cycles[0];
+    const enCiclo = c ? expenses.filter(e=>{const d=d2(e.date);return d>=c.start&&d<=c.end;}) : expenses.slice();
+    const top = [...enCiclo].sort((a,b)=>(+b.amount)-(+a.amount)).slice(0,5);
+
+    if(!top.length){
+        listEl.innerHTML = `<div class="sr-empty">Sin gastos en este ciclo</div>`;
+        return;
+    }
+    // La barra mide cada gasto contra el mayor, no contra el total: así se ve
+    // de un vistazo cuánto se despega el más fuerte del resto.
+    const mayor = +top[0].amount;
+    listEl.innerHTML = top.map((e,i)=>{
+        const ci = categories.indexOf(e.category);
+        const col = COLORS[(ci>=0?ci:0)%COLORS.length];
+        const pct = mayor>0 ? (+e.amount/mayor*100) : 0;
+        return `<div class="topx" onclick="viewRecord('expense','${e.id}')" title="Ver detalle">
+            <span class="topx-rank">${i+1}</span>
+            <div class="topx-info">
+                <div class="topx-head">
+                    <span class="topx-desc">${e.description||e.category}</span>
+                    <span class="topx-amt">${money(e.amount)}</span>
+                </div>
+                <div class="topx-bar"><i style="width:${pct.toFixed(0)}%;background:${col}"></i></div>
+                <div class="topx-meta"><span class="topx-dot" style="background:${col}"></span>${e.category} · ${dayNum(e.date)} ${monShort(e.date)}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
 function renderReminders(){
-    const list=document.getElementById('remindersList');list.innerHTML='';
-    const todayDate=new Date().getDate();
-    reminders.forEach(rem=>{
-        let statusClass='normal',whenText='';
-        const diff=rem.day-todayDate;
-        if(rem.repeat==='inicio')whenText=`Día ${rem.day} — Inicio de mes`;
-        else if(rem.repeat==='fin')whenText=`Último día del mes`;
-        else whenText=`Cada día ${rem.day} del mes`;
-        if(diff===0){statusClass='upcoming';whenText+=' — ¡HOY!';}
-        else if(diff>0&&diff<=3){statusClass='upcoming';whenText+=` — en ${diff} día${diff>1?'s':''}`;}
-        else if(diff<0){statusClass='done';whenText+=' — completado este mes';}
-        const div=document.createElement('div');div.className='rem-item';
-        div.innerHTML=`<div class="rem-icon ${statusClass}"><span class="material-symbols-outlined">${statusClass==='upcoming'?'warning':statusClass==='done'?'check_circle':'schedule'}</span></div><div class="rem-info"><div class="rem-desc">${rem.desc}</div><div class="rem-when">${whenText}</div></div><button class="rem-del" onclick="deleteReminder('${rem.id}')"><span class="material-symbols-outlined">close</span></button>`;
+    const list=document.getElementById('remindersList');
+    const deck=document.getElementById('remindersDeck');
+    if(!list) return;
+    list.innerHTML='';
+
+    const hoy=new Date();
+    const todayDate=hoy.getDate();
+    // Día en que efectivamente cae cada recordatorio este mes. Los de tipo
+    // "fin" no tienen día fijo: dependen de cuántos tenga el mes en curso.
+    const ultimoDia=new Date(hoy.getFullYear(), hoy.getMonth()+1, 0).getDate();
+    const diaEfectivo=rem=>rem.repeat==='fin'?ultimoDia:Math.min(rem.day, ultimoDia);
+
+    const filas=reminders.map(rem=>{
+        const dia=diaEfectivo(rem);
+        const diff=dia-todayDate;
+        // Los recordatorios antiguos no tienen monto: se muestran igual, pero
+        // no suman al acumulado. Nunca hay que inventarles un importe.
+        const monto=(rem.amount!==undefined && rem.amount!==null && rem.amount!=='')?+rem.amount:null;
+        let estado='normal', cuando;
+        if(rem.repeat==='inicio')      cuando=`Día ${rem.day} — inicio de mes`;
+        else if(rem.repeat==='fin')    cuando=`Último día del mes (${ultimoDia})`;
+        else                           cuando=`Cada día ${rem.day}`;
+        if(diff===0){ estado='hoy';      cuando+=' — ¡hoy!'; }
+        else if(diff>0&&diff<=3){ estado='pronto'; cuando+=` — en ${diff} día${diff>1?'s':''}`; }
+        else if(diff<0){ estado='done';  cuando+=' — ya pasó este mes'; }
+        return {rem, dia, diff, monto, estado, cuando, pendiente: diff>=0};
+    });
+
+    // Pendientes primero y por cercanía; los ya pasados al final.
+    filas.sort((a,b)=>{
+        if(a.pendiente!==b.pendiente) return a.pendiente?-1:1;
+        return a.dia-b.dia;
+    });
+
+    const pend=filas.filter(f=>f.pendiente);
+    const hechos=filas.filter(f=>!f.pendiente);
+    const suma=arr=>arr.reduce((s,f)=>s+(f.monto||0),0);
+    const totalPend=suma(pend), totalHecho=suma(hechos);
+    const conMonto=filas.some(f=>f.monto!==null);
+
+    // Resumen compacto: la tarjeta grande apilada pasó a "Último depósito",
+    // y tener dos en el mismo panel restaba fuerza a ambas.
+    if(deck){
+        if(!filas.length){
+            deck.innerHTML='';
+        }else{
+            const mes=MESES_ES[hoy.getMonth()];
+            deck.innerHTML=`<div class="rem-sum">
+                <span class="rem-sum-cnt">${pend.length}</span>
+                <span class="rem-sum-l">Pendiente en ${mes}</span>
+                <span class="rem-sum-v">${conMonto?money(totalPend):''}</span>
+            </div>`;
+        }
+    }
+
+    filas.forEach(f=>{
+        const ic = f.estado==='hoy'?'notifications_active'
+                 : f.estado==='pronto'?'schedule'
+                 : f.estado==='done'?'check_circle':'event';
+        const div=document.createElement('div');
+        div.className=`rem-item is-${f.estado}`;
+        div.innerHTML=`<div class="rem-icon ${f.estado}"><span class="material-symbols-outlined">${ic}</span></div>`
+            + `<div class="rem-info"><div class="rem-desc">${f.rem.desc}</div><div class="rem-when">${f.cuando}</div></div>`
+            + (f.monto!==null?`<div class="rem-amt">${money(f.monto)}</div>`:'')
+            + `<button class="rem-del" onclick="deleteReminder('${f.rem.id}')" aria-label="Eliminar recordatorio"><span class="material-symbols-outlined">close</span></button>`;
         list.appendChild(div);
     });
 }
 window.deleteReminder=requireAuth(function(id){confirm_('Eliminar Recordatorio','¿Eliminar este recordatorio?',()=>{reminders=reminders.filter(r=>r.id!==id);persist();renderReminders();toast('Recordatorio eliminado');});});
-document.getElementById('addReminderBtn').addEventListener('click',requireAuth(()=>{document.getElementById('reminderModalTitle').textContent='Nuevo Recordatorio';document.getElementById('reminderDesc').value='';document.getElementById('reminderDay').value='';document.getElementById('reminderRepeat').value='mensual';openM('reminderModal');setTimeout(()=>document.getElementById('reminderDesc').focus(),120);}));
+document.getElementById('addReminderBtn').addEventListener('click',requireAuth(()=>{document.getElementById('reminderModalTitle').textContent='Nuevo Recordatorio';document.getElementById('reminderDesc').value='';document.getElementById('reminderDay').value='';document.getElementById('reminderAmount').value='';document.getElementById('reminderRepeat').value='mensual';openM('reminderModal');setTimeout(()=>document.getElementById('reminderDesc').focus(),120);}));
 document.getElementById('saveReminder').addEventListener('click',()=>{
     const desc=document.getElementById('reminderDesc').value.trim();const day=parseInt(document.getElementById('reminderDay').value);const repeat=document.getElementById('reminderRepeat').value;
     if(!desc||isNaN(day)||day<1||day>31){toast('Completa correctamente','err');return;}
-    reminders.push({id:uid(),desc,day,repeat});persist();closeM('reminderModal');renderReminders();toast('Recordatorio agregado');
+    // El monto es opcional: si se deja vacío el recordatorio se guarda sin él
+    // y simplemente no suma al acumulado del mes.
+    const raw=document.getElementById('reminderAmount').value;
+    const amount=(raw===''||isNaN(parseFloat(raw)))?null:parseFloat(raw);
+    if(amount!==null&&amount<0){toast('El monto no puede ser negativo','err');return;}
+    const nuevo={id:uid(),desc,day,repeat};
+    if(amount!==null) nuevo.amount=amount;
+    reminders.push(nuevo);persist();closeM('reminderModal');renderReminders();toast('Recordatorio agregado');
 });
 
 // ====== EXPORT / IMPORT ======

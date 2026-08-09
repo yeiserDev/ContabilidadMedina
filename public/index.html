@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#1e293b">
+    <meta name="theme-color" content="#F3F0EE" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#161513" media="(prefers-color-scheme: dark)">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
@@ -26,21 +27,35 @@
     <style>
         /* ===== SPLASH SCREEN (carga inicial) ===== */
         #splash{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F3F0EE;transition:opacity .55s ease-in, transform .6s cubic-bezier(.55,0,.85,.25);will-change:transform,opacity;font-family:'Sofia Sans',system-ui,-apple-system,sans-serif}
-        #splash.dark{background:#12121f}
+        /* El fondo oscuro era #12121f (azulado) mientras la app usa #161513
+           (negro cálido): al terminar el splash se notaba el salto de tono. */
+        #splash.dark{background:#161513}
         #splash.hide{opacity:0;transform:scale(2.6);pointer-events:none}
-        #splash .sp-logo{width:96px;height:96px;animation:spPop .38s cubic-bezier(.34,1.56,.64,1) both}
-        #splash .sp-m{stroke-dasharray:720;stroke-dashoffset:720;animation:spDraw .5s .1s ease-out forwards}
+        #splash .sp-logo{width:104px;height:104px;animation:spPop .38s cubic-bezier(.34,1.56,.64,1) both}
+        /* Longitudes medidas sobre la geometría real: el arco de la C abarca
+           256° de radio 156 (~697) y la polilínea de la M suma ~827. */
+        #splash .sp-c{stroke-dasharray:700;stroke-dashoffset:700;animation:spDraw .55s .06s ease-out forwards}
+        #splash .sp-m{stroke-dasharray:830;stroke-dashoffset:830;animation:spDraw .55s .22s ease-out forwards}
+        #splash .sp-b{opacity:0;animation:spUp .3s ease-out forwards}
+        #splash .sp-b:nth-child(1){animation-delay:.5s}
+        #splash .sp-b:nth-child(2){animation-delay:.57s}
+        #splash .sp-b:nth-child(3){animation-delay:.64s}
         #splash .sp-word{margin-top:18px;font-size:23px;font-weight:700;letter-spacing:-.02em;color:#141413;opacity:0;animation:spUp .3s .38s ease-out forwards}
         #splash.dark .sp-word{color:#f0f0ef}
-        #splash .sp-word b{color:#CF4500}
+        /* Oro, no naranja: junto al logo dorado el naranja se leía como otra
+           marca. #A8781F sobre el cream da 3.7:1 y el logotipo es texto grande
+           en negrita (>=18.66px bold), cuyo mínimo AA es 3:1. El naranja sigue
+           siendo el color de interacción de la app, no el de la marca. */
+        #splash .sp-word b{color:#A8781F}
+        #splash.dark .sp-word b{color:#E0B44A}
         #splash .sp-bar{margin-top:24px;width:92px;height:3px;border-radius:3px;background:rgba(20,20,19,.1);overflow:hidden;opacity:0;animation:spUp .26s .52s ease-out forwards}
         #splash.dark .sp-bar{background:rgba(255,255,255,.12)}
-        #splash .sp-bar i{display:block;width:40%;height:100%;border-radius:3px;background:#CF4500;animation:spLoad .8s .5s ease-in-out infinite}
+        #splash .sp-bar i{display:block;width:40%;height:100%;border-radius:3px;background:linear-gradient(90deg,#A8781F,#E0B44A);animation:spLoad .8s .5s ease-in-out infinite}
         @keyframes spPop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
         @keyframes spDraw{to{stroke-dashoffset:0}}
         @keyframes spUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes spLoad{0%{transform:translateX(-120%)}100%{transform:translateX(360%)}}
-        @media (prefers-reduced-motion:reduce){#splash .sp-logo,#splash .sp-m,#splash .sp-word,#splash .sp-bar i{animation:none!important}#splash .sp-m{stroke-dashoffset:0}#splash .sp-word,#splash .sp-bar{opacity:1}}
+        @media (prefers-reduced-motion:reduce){#splash .sp-logo,#splash .sp-c,#splash .sp-m,#splash .sp-b,#splash .sp-word,#splash .sp-bar i{animation:none!important}#splash .sp-c,#splash .sp-m{stroke-dashoffset:0}#splash .sp-b,#splash .sp-word,#splash .sp-bar{opacity:1}}
     </style>
 </head>
 
@@ -49,11 +64,21 @@
     <div id="splash">
         <svg class="sp-logo" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <linearGradient id="sbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#23231f"/><stop offset="1" stop-color="#141413"/></linearGradient>
-                <linearGradient id="smk" x1=".1" y1="1" x2=".9" y2="0"><stop offset="0" stop-color="#CF4500"/><stop offset="1" stop-color="#F8814A"/></linearGradient>
+                <linearGradient id="sbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#26241D"/><stop offset="1" stop-color="#131210"/></linearGradient>
+                <linearGradient id="sbr" x1=".1" y1="1" x2=".9" y2="0"><stop offset="0" stop-color="#6E5730"/><stop offset="1" stop-color="#B99A57"/></linearGradient>
+                <linearGradient id="sor" x1=".1" y1="1" x2=".9" y2="0"><stop offset="0" stop-color="#A8781F"/><stop offset=".5" stop-color="#E0B44A"/><stop offset="1" stop-color="#F7E3A1"/></linearGradient>
             </defs>
             <rect width="512" height="512" rx="118" fill="url(#sbg)"/>
-            <polyline class="sp-m" points="146,358 146,168 256,286 366,168 366,358" fill="none" stroke="url(#smk)" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
+            <path class="sp-c" d="M 330.5 133.7 A 156 156 0 1 0 330.5 378.3" fill="none" stroke="url(#sbr)" stroke-width="46"/>
+            <g fill="url(#sor)">
+                <rect class="sp-b" x="192" y="316" width="19" height="60" rx="3"/>
+                <rect class="sp-b" x="222" y="292" width="19" height="84" rx="3"/>
+                <rect class="sp-b" x="252" y="268" width="19" height="108" rx="3"/>
+            </g>
+            <g fill="none" stroke-linejoin="miter" stroke-miterlimit="3">
+                <polyline points="298,398 298,150 368,300 438,150 438,398" stroke="#131210" stroke-width="61"/>
+                <polyline class="sp-m" points="298,398 298,150 368,300 438,150 438,398" stroke="url(#sor)" stroke-width="43"/>
+            </g>
         </svg>
         <div class="sp-word">Conta <b>Medina</b></div>
         <div class="sp-bar"><i></i></div>
@@ -65,6 +90,7 @@
         <div class="header-inner">
             <!-- Brand - Left -->
             <div class="header-brand">
+                <img src="icon.svg" alt="" class="brand-mark" width="34" height="34">
                 <div class="brand-text">
                     <h1 class="brand-name">Conta <span class="brand-accent">Medina</span></h1>
                 </div>
@@ -104,9 +130,10 @@
         <!-- LEFT SIDEBAR -->
         <aside class="sidebar-left" id="sidebar">
             <div class="sl-block">
-                <div class="sl-heading"><span class="material-symbols-outlined">pie_chart</span> Resumen por Rubro</div>
-                <div id="categoryBreakdown" class="sl-cats"></div>
+                <div class="sl-heading"><span class="material-symbols-outlined">credit_card</span> Métodos de Pago</div>
+                <div id="payMethods" class="pm-deck"></div>
             </div>
+
             <div class="sl-block">
                 <div class="sl-heading"><span class="material-symbols-outlined">label</span> Administrar Rubros</div>
                 <div class="sl-add">
@@ -137,33 +164,40 @@
 
         <!-- CENTER CONTENT -->
         <main class="center">
-            <!-- KPIs -->
-            <section class="kpis">
-                <div class="kpi kpi--income"><span class="material-symbols-outlined ki">trending_up</span>
-                    <div>
-                        <div class="kpi-l">Total Ingresos</div>
-                        <div class="kpi-v" id="totalIncome">S/ 0.00</div>
-                        <div class="kpi-delta" id="incomeDelta"></div>
+            <!-- KPIs — banda bento. En móvil se desliza en horizontal para no
+                 empujar el feed del día fuera de la primera pantalla. -->
+            <section class="kpis kpi-band" aria-label="Resumen del ciclo">
+                <div class="kpi kpi--expense kpi--hero">
+                    <div class="kpi-top">
+                        <span class="kpi-l">Gastos del ciclo</span>
+                        <span class="material-symbols-outlined ki">trending_down</span>
                     </div>
+                    <div class="kpi-v" id="totalExpenses">S/ 0.00</div>
+                    <div class="kpi-delta" id="expenseDelta"></div>
                 </div>
-                <div class="kpi kpi--expense"><span class="material-symbols-outlined ki">trending_down</span>
-                    <div>
-                        <div class="kpi-l">Total Gastos</div>
-                        <div class="kpi-v" id="totalExpenses">S/ 0.00</div>
-                        <div class="kpi-delta" id="expenseDelta"></div>
+                <div class="kpi kpi--income">
+                    <div class="kpi-top">
+                        <span class="kpi-l">Ingresos del ciclo</span>
+                        <span class="material-symbols-outlined ki">trending_up</span>
                     </div>
+                    <div class="kpi-v" id="totalIncome">S/ 0.00</div>
+                    <div class="kpi-delta" id="incomeDelta"></div>
                 </div>
-                <div class="kpi kpi--count"><span class="material-symbols-outlined ki">receipt_long</span>
-                    <div>
-                        <div class="kpi-l">Depósitos</div>
-                        <div class="kpi-v" id="totalDeposits">0</div>
+                <div class="kpi kpi--count">
+                    <div class="kpi-top">
+                        <span class="kpi-l">Neto del ciclo</span>
+                        <span class="material-symbols-outlined ki">account_balance</span>
                     </div>
+                    <div class="kpi-v" id="cycleNet">S/ 0.00</div>
+                    <div class="kpi-delta" id="cycleNetSub"></div>
                 </div>
-                <div class="kpi kpi--days"><span class="material-symbols-outlined ki">calendar_month</span>
-                    <div>
-                        <div class="kpi-l">Días con Registro</div>
-                        <div class="kpi-v" id="totalDays">0</div>
+                <div class="kpi kpi--days">
+                    <div class="kpi-top">
+                        <span class="kpi-l">Días con registro</span>
+                        <span class="material-symbols-outlined ki">calendar_month</span>
                     </div>
+                    <div class="kpi-v" id="totalDays">0</div>
+                    <div class="kpi-delta" id="depositsSub"></div>
                 </div>
             </section>
 
@@ -241,7 +275,7 @@
         <!-- RIGHT PANEL -->
         <aside class="sidebar-right">
             <!-- CLOCK -->
-            <div class="sr-block sr-clock-block">
+            <div class="sr-block sr-block--glass sr-clock-block">
                 <div class="sr-clock">
                     <div class="clock-unit"><span id="clockH" class="clock-num">00</span><span
                             class="clock-label">Horas</span></div>
@@ -254,21 +288,36 @@
                 </div>
             </div>
             <!-- CALENDAR -->
-            <div class="sr-block">
+            <div class="sr-block sr-block--glass">
                 <div class="cal-header">
                     <button class="cal-nav cal-nav-prev"><span class="material-symbols-outlined">chevron_left</span></button>
                     <span class="cal-title cal-title-sync">Abril 2026</span>
                     <button class="cal-nav cal-nav-next"><span class="material-symbols-outlined">chevron_right</span></button>
                 </div>
-                <div class="cal-grid">
-                    <span class="cal-dow">DO</span><span class="cal-dow">LU</span><span class="cal-dow">MA</span><span class="cal-dow">MI</span><span class="cal-dow">JU</span><span class="cal-dow">VI</span><span class="cal-dow">SA</span>
+                <!-- Envoltorio para que la rejilla entera vaya sobre una sola
+                     lámina de cristal, en vez de dos sueltas -->
+                <div class="cal-pane">
+                    <div class="cal-grid">
+                        <span class="cal-dow">DO</span><span class="cal-dow">LU</span><span class="cal-dow">MA</span><span class="cal-dow">MI</span><span class="cal-dow">JU</span><span class="cal-dow">VI</span><span class="cal-dow">SA</span>
+                    </div>
+                    <div class="cal-grid cal-days cal-days-sync"></div>
                 </div>
-                <div class="cal-grid cal-days cal-days-sync"></div>
             </div>
+            <!-- ÚLTIMO DEPÓSITO + GASTOS MÁS FUERTES -->
+            <div class="sr-block sr-block--glass">
+                <div class="sr-heading"><span class="material-symbols-outlined">savings</span>
+                    Último Depósito</div>
+                <div id="lastDepositCard"></div>
+                <div class="sr-subheading"><span class="material-symbols-outlined">local_fire_department</span>
+                    Gastos más fuertes</div>
+                <div id="topExpenses" class="topx-list"></div>
+            </div>
+
             <!-- REMINDERS -->
             <div class="sr-block">
                 <div class="sr-heading"><span class="material-symbols-outlined">notifications_active</span>
                     Recordatorios</div>
+                <div id="remindersDeck"></div>
                 <div id="remindersList" class="reminders-list"></div>
                 <button id="addReminderBtn" class="rem-add-btn"><span class="material-symbols-outlined">add</span>
                     Agregar recordatorio</button>
@@ -472,6 +521,8 @@
                 <label>Descripción<input type="text" id="reminderDesc" class="mi" placeholder="Ej: Pagar banco"></label>
                 <label>Día del mes<input type="number" id="reminderDay" class="mi" placeholder="Ej: 3" min="1"
                         max="31"></label>
+                <label>Monto <small>(opcional)</small><input type="number" id="reminderAmount" class="mi"
+                        placeholder="0.00" step="0.01" min="0"></label>
                 <label>Repetición<select id="reminderRepeat" class="mi msel">
                         <option value="mensual">Cada mes</option>
                         <option value="inicio">Inicio de mes</option>
@@ -550,34 +601,34 @@
             <div class="modal-bd vr-grid" style="padding-top: 16px;">
                 <!-- IZQUIERDA: detalles -->
                 <div class="vr-main">
-                    <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px;">
-                        <div id="viewRecordAmount" style="font-size: 44px; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 12px; text-shadow: 0 4px 16px rgba(0,0,0,0.1); font-variant-numeric: tabular-nums; line-height: 1; transition: text-shadow 0.3s ease;">-S/ 0.00</div>
-                        <div id="viewRecordBadge" style="display: inline-flex; align-items: center; justify-content: center; padding: 4px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Categoría</div>
+                    <div class="vr-hero">
+                        <div id="viewRecordAmount" class="vr-amount">-S/ 0.00</div>
+                        <div id="viewRecordBadge" class="vr-badge">Categoría</div>
                     </div>
 
-                    <div style="background: var(--canvas-cream); border-radius: var(--radius-lg); padding: 16px; box-shadow: inset 0 0 0 1px rgba(20,20,19,0.04);">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px;">
-                            <div style="flex: 1;">
-                                <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-weight: 600;">Fecha</div>
-                                <div id="viewRecordDate" style="font-size: 15px; font-weight: 600; color: var(--ink-black);">--</div>
+                    <div class="vr-card">
+                        <div class="vr-row">
+                            <div class="vr-field">
+                                <div class="vr-label">Fecha</div>
+                                <div id="viewRecordDate" class="vr-value">--</div>
                             </div>
-                            <div id="viewRecordWalletWrap" style="flex: 1; text-align: right; display: none;">
-                                <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-weight: 600;">Método de Pago</div>
-                                <div id="viewRecordWallet" style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 15px; font-weight: 600; color: var(--ink-black);">
-                                    <!-- Injected via JS -->
+                            <div id="viewRecordWalletWrap" class="vr-field vr-field--end">
+                                <div class="vr-label">Método de Pago</div>
+                                <div id="viewRecordWallet" class="vr-value">
+                                    <!-- Chip inyectado por JS -->
                                 </div>
                             </div>
                         </div>
 
-                        <div style="border-top: 1px dashed rgba(20,20,19,0.1); padding-top: 16px;">
-                            <div style="font-size: 11px; color: var(--slate-gray); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-weight: 600;">Descripción</div>
-                            <div id="viewRecordDesc" style="font-size: 15px; font-weight: 500; color: var(--ink-black); line-height: 1.5;">--</div>
+                        <div class="vr-sep">
+                            <div class="vr-label">Descripción</div>
+                            <div id="viewRecordDesc" class="vr-value vr-value--desc">--</div>
                         </div>
                     </div>
 
-                    <div id="viewRecordActions" style="display: flex; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(20,20,19,0.05);">
-                        <button class="mb mb--ghost" id="viewRecordEditBtn" style="flex: 1; border: 1px solid rgba(20,20,19,0.1); display: flex; align-items: center; justify-content: center; gap: 6px;"><span class="material-symbols-outlined" style="font-size: 18px;">edit</span> Editar</button>
-                        <button class="mb mb--ghost" id="viewRecordDelBtn" style="flex: 1; border: 1px solid rgba(20,20,19,0.1); color: var(--signal-orange); display: flex; align-items: center; justify-content: center; gap: 6px;"><span class="material-symbols-outlined" style="font-size: 18px;">delete</span> Eliminar</button>
+                    <div id="viewRecordActions" class="vr-actions">
+                        <button class="mb vr-act" id="viewRecordEditBtn"><span class="material-symbols-outlined">edit</span> Editar</button>
+                        <button class="mb vr-act vr-act--del" id="viewRecordDelBtn"><span class="material-symbols-outlined">delete</span> Eliminar</button>
                     </div>
                 </div>
 
@@ -633,6 +684,7 @@
     <script src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="app.js"></script>
+    <script src="ui-controls.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
