@@ -3745,7 +3745,15 @@ select:focus-visible {
 .chart-wrap {
     position: relative;
     height: 180px;
+    min-width: 0;
 }
+
+/* Un elemento de rejilla tiene min-width:auto, o sea que no baja del ancho
+   de su contenido. Con el canvas de Chart.js en sus 300px por defecto, a
+   320px de pantalla la tarjeta se plantaba en 350 y empujaba scroll
+   horizontal a toda la página. */
+.charts-section > * { min-width: 0; }
+.chart-wrap canvas { max-width: 100%; }
 .chart-wrap--donut {
     height: 200px;
     display: flex;
@@ -4643,18 +4651,20 @@ body, .header, .day-card, .kpi, .chart-card, .modal, .sidebar-left, .bottom-nav 
 /* La banda es la superficie tintada; las tarjetas, el cristal.
    Los dos halos existen para que el desenfoque tenga algo que mezclar:
    sobre el cream plano, difuminar cream da cream. */
+/* Vive en el panel lateral, así que apila en vertical a cualquier ancho:
+   una rejilla de cuatro columnas no cabe en 300px, y un carrusel dentro de
+   un cajón lateral obliga a deslizar dentro de algo que ya se deslizó. */
 .kpi-band {
-    display: grid;
-    grid-template-columns: 1.25fr 1fr 1fr 1fr;
-    gap: 14px;
-    margin-bottom: var(--space-3);
-    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
     background:
         radial-gradient(60% 130% at 78% -25%, rgba(207, 69, 0, 0.07), transparent 62%),
         radial-gradient(55% 130% at 4% 125%, rgba(154, 58, 10, 0.06), transparent 62%),
         var(--canvas-cream);
     border: 1px solid var(--line);
-    border-radius: var(--radius-2xl);
+    border-radius: var(--radius-xl);
     box-shadow: none;
 }
 
@@ -4837,41 +4847,10 @@ body, .header, .day-card, .kpi, .chart-card, .modal, .sidebar-left, .bottom-nav 
     [data-theme="dark"] .kpi-band .kpi { background: rgba(255, 255, 255, 0.11); }
 }
 
-/* Tablet: 2×2 */
-@media (max-width: 1024px) {
-    .kpi-band { grid-template-columns: 1fr 1fr; }
-}
-
-/* Móvil: carrusel horizontal. La rejilla 2×2 empujaba el feed del día
-   unos 180px hacia abajo; así la primera pantalla sigue siendo el feed. */
-@media (max-width: 600px) {
-    .kpi-band {
-        display: flex;
-        gap: 10px;
-        overflow-x: auto;
-        overscroll-behavior-x: contain;
-        scroll-snap-type: x mandatory;
-        /* El padding lateral compensa el del .center para que las tarjetas
-           puedan sangrar hasta el borde y se vea que hay más al deslizar. */
-        margin-left: calc(var(--space-2) * -1);
-        margin-right: calc(var(--space-2) * -1);
-        padding: 12px var(--space-2);
-        scrollbar-width: none;
-        /* Sangra de lado a lado, así que sin borde ni esquinas: un marco
-           cortado por los dos extremos se lee como un error de maquetación. */
-        border: none;
-        border-radius: 0;
-    }
-    .kpi-band::-webkit-scrollbar { display: none; }
-    .kpi-band .kpi {
-        flex: 0 0 63%;
-        max-width: 230px;
-        scroll-snap-align: start;
-        padding: 14px 16px 13px;
-    }
-    .kpi-band .kpi-v { font-size: var(--text-lg); }
-    .kpi-top { margin-bottom: 10px; }
-}
+/* En columna estrecha las tarjetas no necesitan tanto aire interior */
+.kpi-band .kpi { padding: 14px 16px 12px; }
+.kpi-band .kpi-top { margin-bottom: 10px; }
+.kpi-band .kpi-v { margin-bottom: 6px; }
 
 
 /* ============================================================
@@ -4884,6 +4863,47 @@ body, .header, .day-card, .kpi, .chart-card, .modal, .sidebar-left, .bottom-nav 
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+/* En cabecera: los tres métodos en fila, ocupando el ancho del centro */
+.pm-deck--header {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: var(--space-3);
+}
+
+/* Por debajo de 760px tres tarjetas quedan por debajo de 210px cada una y los
+   montos empiezan a partirse, así que pasan a carrusel.
+
+   Sin márgenes negativos: la versión anterior sangraba hasta el borde y,
+   combinada con el scroll-snap, dejaba la primera tarjeta 8px FUERA de la
+   pantalla —se veía cortada— y la segunda asomando 128px, media tarjeta con
+   el texto partido. Ahora el carrusel vive dentro de la caja de contenido y
+   las tarjetas arrancan en el mismo canal que el resto de la página. */
+@media (max-width: 760px) {
+    .pm-deck--header {
+        display: flex;
+        /* .pm-deck base es column; sin esto el carrusel salía apilado */
+        flex-direction: row;
+        gap: 10px;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x mandatory;
+        margin: 0 0 var(--space-3);
+        padding: 2px 0 10px;
+        scrollbar-width: none;
+    }
+    .pm-deck--header::-webkit-scrollbar { display: none; }
+
+    /* El hueco de 46px deja ~36px de la siguiente tarjeta: lo justo para que
+       se vea su borde redondeado y se entienda que hay más, sin mostrar
+       contenido cortado a medias. */
+    .pm-deck--header .pm-card {
+        flex: 0 0 calc(100% - 46px);
+        max-width: 320px;
+        scroll-snap-align: start;
+    }
 }
 
 .pm-card {

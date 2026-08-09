@@ -129,9 +129,44 @@
     <div class="layout">
         <!-- LEFT SIDEBAR -->
         <aside class="sidebar-left" id="sidebar">
+            <!-- Resumen del ciclo. Vive en el panel porque la cabecera pasó a
+                 mostrar los métodos de pago. -->
             <div class="sl-block">
-                <div class="sl-heading"><span class="material-symbols-outlined">credit_card</span> Métodos de Pago</div>
-                <div id="payMethods" class="pm-deck"></div>
+                <div class="sl-heading"><span class="material-symbols-outlined">monitoring</span> Resumen del Ciclo</div>
+                <section class="kpis kpi-band" aria-label="Resumen del ciclo">
+                    <div class="kpi kpi--expense kpi--hero">
+                        <div class="kpi-top">
+                            <span class="kpi-l">Gastos del ciclo</span>
+                            <span class="material-symbols-outlined ki">trending_down</span>
+                        </div>
+                        <div class="kpi-v" id="totalExpenses">S/ 0.00</div>
+                        <div class="kpi-delta" id="expenseDelta"></div>
+                    </div>
+                    <div class="kpi kpi--income">
+                        <div class="kpi-top">
+                            <span class="kpi-l">Ingresos del ciclo</span>
+                            <span class="material-symbols-outlined ki">trending_up</span>
+                        </div>
+                        <div class="kpi-v" id="totalIncome">S/ 0.00</div>
+                        <div class="kpi-delta" id="incomeDelta"></div>
+                    </div>
+                    <div class="kpi kpi--count">
+                        <div class="kpi-top">
+                            <span class="kpi-l">Neto del ciclo</span>
+                            <span class="material-symbols-outlined ki">account_balance</span>
+                        </div>
+                        <div class="kpi-v" id="cycleNet">S/ 0.00</div>
+                        <div class="kpi-delta" id="cycleNetSub"></div>
+                    </div>
+                    <div class="kpi kpi--days">
+                        <div class="kpi-top">
+                            <span class="kpi-l">Días con registro</span>
+                            <span class="material-symbols-outlined ki">calendar_month</span>
+                        </div>
+                        <div class="kpi-v" id="totalDays">0</div>
+                        <div class="kpi-delta" id="depositsSub"></div>
+                    </div>
+                </section>
             </div>
 
             <div class="sl-block">
@@ -164,42 +199,9 @@
 
         <!-- CENTER CONTENT -->
         <main class="center">
-            <!-- KPIs — banda bento. En móvil se desliza en horizontal para no
-                 empujar el feed del día fuera de la primera pantalla. -->
-            <section class="kpis kpi-band" aria-label="Resumen del ciclo">
-                <div class="kpi kpi--expense kpi--hero">
-                    <div class="kpi-top">
-                        <span class="kpi-l">Gastos del ciclo</span>
-                        <span class="material-symbols-outlined ki">trending_down</span>
-                    </div>
-                    <div class="kpi-v" id="totalExpenses">S/ 0.00</div>
-                    <div class="kpi-delta" id="expenseDelta"></div>
-                </div>
-                <div class="kpi kpi--income">
-                    <div class="kpi-top">
-                        <span class="kpi-l">Ingresos del ciclo</span>
-                        <span class="material-symbols-outlined ki">trending_up</span>
-                    </div>
-                    <div class="kpi-v" id="totalIncome">S/ 0.00</div>
-                    <div class="kpi-delta" id="incomeDelta"></div>
-                </div>
-                <div class="kpi kpi--count">
-                    <div class="kpi-top">
-                        <span class="kpi-l">Neto del ciclo</span>
-                        <span class="material-symbols-outlined ki">account_balance</span>
-                    </div>
-                    <div class="kpi-v" id="cycleNet">S/ 0.00</div>
-                    <div class="kpi-delta" id="cycleNetSub"></div>
-                </div>
-                <div class="kpi kpi--days">
-                    <div class="kpi-top">
-                        <span class="kpi-l">Días con registro</span>
-                        <span class="material-symbols-outlined ki">calendar_month</span>
-                    </div>
-                    <div class="kpi-v" id="totalDays">0</div>
-                    <div class="kpi-delta" id="depositsSub"></div>
-                </div>
-            </section>
+            <!-- Métodos de pago en cabecera. En móvil se desliza en horizontal
+                 para no empujar el feed del día fuera de la primera pantalla. -->
+            <section id="payMethods" class="pm-deck pm-deck--header" aria-label="Métodos de pago"></section>
 
             <!-- CHARTS -->
             <section class="charts-section" id="chartsSection">
