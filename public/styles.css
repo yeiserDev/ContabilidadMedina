@@ -7618,9 +7618,10 @@ body.modal-open { overflow: hidden; }
 [data-theme="dark"] .vr-scene .es { filter: saturate(0.85) brightness(0.88); }
 
 /* ---- Movimiento ----
-   Entra una vez y se queda: nada que siga moviéndose al lado de un
-   número que se está leyendo. La ruta es la excepción, porque su
-   discontinua avanzando es lo que la hace ruta y no una raya. */
+   Por defecto entra una vez y se queda: nada que siga moviéndose al lado
+   de un número que se está leyendo. Las excepciones son la moto del
+   reparto, que va en marcha, y la discontinua del préstamo, que avanzando
+   es lo que la hace camino y no una raya. */
 .vr-scene .es-flota { animation: esFlota 0.7s var(--ease-out) both; }
 .vr-scene .es-entra { animation: esEntra 0.7s var(--ease-out) 0.08s both; }
 .vr-scene .es-cae   { animation: esCae 0.8s var(--ease-out) 0.15s both; }
@@ -7665,4 +7666,39 @@ body.modal-open { overflow: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
     .vr-scene .es-traza { animation: none; stroke-dasharray: none; }
+}
+
+/* ---- La escena del reparto sí se mueve en bucle ----
+   El resto de escenas entran y se quedan quietas, para no competir con la
+   cifra. Ésta es la excepción pedida: la moto va en marcha, así que la rueda
+   gira, las líneas de velocidad pasan y el humo se deshace. Amplitudes
+   cortas: lo justo para que se lea movimiento sin tirar del ojo. */
+.vr-scene .es-bota,
+.vr-scene .es-llanta,
+.vr-scene .es-veloz,
+.vr-scene .es-humo,
+.vr-scene .es-brillo {
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+.vr-scene .es-bota   { animation: esBota 1.1s ease-in-out infinite; }
+.vr-scene .es-llanta { animation: esRueda 0.75s linear infinite; }
+.vr-scene .es-veloz  { animation: esVeloz 0.9s linear infinite; }
+.vr-scene .es-humo   { animation: esHumo 1.7s ease-out infinite; }
+.vr-scene .es-brillo { animation: esBrillo 1.9s ease-in-out infinite; }
+.vr-scene .es-brillo--b { animation-delay: 0.65s; }
+.vr-scene .es-llanta--b { animation-delay: -0.2s; }
+
+@keyframes esBota  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+@keyframes esVeloz { 0% { transform: translateX(-14px); opacity: 0; } 40% { opacity: 0.75; } 100% { transform: translateX(16px); opacity: 0; } }
+@keyframes esHumo  { 0% { transform: translate(0, 0) scale(0.8); opacity: 0.6; } 100% { transform: translate(20px, -10px) scale(1.2); opacity: 0; } }
+@keyframes esBrillo{ 0%, 100% { transform: scale(0.85); opacity: 0.45; } 50% { transform: scale(1.1); opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .vr-scene .es-bota,
+    .vr-scene .es-llanta,
+    .vr-scene .es-veloz,
+    .vr-scene .es-humo,
+    .vr-scene .es-brillo { animation: none; }
 }

@@ -80,29 +80,70 @@
             '<circle cx="240" cy="96" r="11" fill="#2A2825"/><circle cx="240" cy="96" r="4" fill="#8A857C"/>' +
             '</g>',
 
-        /* El motorizado del reparto, con la caja detrás */
+        /* El repartidor con la caja en alto, al modo de la ilustración de la
+           referencia: contorno negro, uniforme naranja y su mancha clara
+           detrás. Es la única escena que se mueve en bucle —rueda, líneas de
+           velocidad y humo—, porque de eso iba el encargo.
+
+           Las piezas van de atrás hacia delante (ruedas, carrocería, piloto,
+           llantas, caja) y todas llevan su contorno: sin él, dos naranjas que
+           se tocan se funden en una mancha sola. */
         comida:
-            SUELO +
-            '<g class="es-flota">' +
-            /* caja del reparto */
-            '<rect x="86" y="38" width="48" height="42" rx="8" fill="#CF4500"/>' +
-            '<rect x="99" y="50" width="22" height="19" rx="4" fill="#FBD9C4"/>' +
-            '<path d="M105 55 v9 M110 55 v9 M115 55 v9" stroke="#CF4500" stroke-width="2" stroke-linecap="round"/>' +
-            /* chasis, asiento y manillar */
-            '<path d="M128 86 h68" stroke="#3D3A34" stroke-width="9" stroke-linecap="round"/>' +
-            '<path d="M200 86 l14 -26" stroke="#3D3A34" stroke-width="8" stroke-linecap="round"/>' +
-            '<path d="M208 58 h20" stroke="#2A2825" stroke-width="6" stroke-linecap="round"/>' +
-            '<rect x="136" y="66" width="38" height="11" rx="5" fill="#2A2825"/>' +
-            /* piloto */
-            '<path d="M170 54 q12 -8 22 2 l8 22 h-32 z" fill="#3860BE"/>' +
-            '<path d="M192 60 l24 0" stroke="#3860BE" stroke-width="8" stroke-linecap="round"/>' +
-            '<path d="M176 78 l-4 12" stroke="#2A4E96" stroke-width="8" stroke-linecap="round"/>' +
-            '<circle cx="180" cy="38" r="14" fill="#3D3A34"/>' +
-            '<path d="M167 38 a13 13 0 0 1 26 0 z" fill="#CF4500"/>' +
-            '<path d="M192 36 l8 4 -8 5 z" fill="#8A857C"/>' +
+            '<path d="M62 14 C 126 -10 216 -2 254 24 C 294 52 286 104 234 118 C 176 132 90 128 58 104 C 24 80 24 32 62 14 Z" ' +
+            'fill="#FFFFFF" opacity="0.42"/>' +
+            '<path class="es-brillo" d="M40 16 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#FFF3E9" opacity="0.85"/>' +
+            '<path class="es-brillo es-brillo--b" d="M286 26 l2.5 7 7 2.5 -7 2.5 -2.5 7 -2.5 -7 -7 -2.5 7 -2.5 z" fill="#FFF3E9" opacity="0.7"/>' +
+            '<g class="es-veloz" stroke="#FFF3E9" stroke-width="5" stroke-linecap="round" opacity="0.75">' +
+            '<path d="M262 40 h42"/><path d="M272 56 h32"/><path d="M266 72 h38"/>' +
             '</g>' +
-            '<circle class="es-rueda" cx="128" cy="92" r="16" fill="none" stroke="#2A2825" stroke-width="7" stroke-dasharray="10 8"/>' +
-            '<circle class="es-rueda" cx="224" cy="92" r="16" fill="none" stroke="#2A2825" stroke-width="7" stroke-dasharray="10 8"/>',
+            '<g class="es-humo" fill="#FFF6EE">' +
+            '<circle cx="256" cy="112" r="9"/><circle cx="270" cy="107" r="12"/><circle cx="285" cy="112" r="8"/>' +
+            '<rect x="254" y="106" width="36" height="14" rx="7"/>' +
+            '</g>' +
+
+            '<g class="es-bota" stroke="#17130F" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round">' +
+            /* ---- neumáticos ---- */
+            '<circle cx="86" cy="100" r="18" fill="#17130F"/>' +
+            '<circle cx="222" cy="100" r="18" fill="#17130F"/>' +
+            /* ---- carrocería ---- */
+            '<path d="M182 98 C 180 74 196 62 216 62 C 240 62 250 78 248 98 Z" fill="#E05E10"/>' +
+            '<path d="M196 70 C 218 64 238 74 244 92" fill="none" stroke-width="2.4" opacity="0.45"/>' +
+            '<path d="M124 90 h60 v10 h-66 z" fill="#E05E10"/>' +
+            '<path d="M104 98 C 96 80 92 62 96 44 C 98 35 110 33 116 40 C 122 58 126 80 128 98 Z" fill="#E05E10"/>' +
+            '<path d="M64 94 C 66 78 84 70 100 76" fill="none" stroke-width="7" stroke="#E05E10"/>' +
+            '<circle cx="106" cy="56" r="10" fill="#FFF6EE"/>' +
+            '<circle cx="106" cy="56" r="4" fill="#F6C9A6" stroke-width="2"/>' +
+            '<path d="M86 34 h34" stroke-width="5"/>' +
+            '<path d="M82 30 h10 v8 h-10 z" fill="#17130F"/>' +
+            '<path d="M114 30 h10 v8 h-10 z" fill="#17130F"/>' +
+            '<path d="M180 62 h52 q10 0 10 8 t-10 8 h-52 q-8 0 -8 -8 t8 -8 z" fill="#17130F"/>' +
+            /* ---- piloto ---- */
+            '<path d="M200 76 L 160 86" fill="none" stroke="#F5813C" stroke-width="16"/>' +
+            '<path d="M160 86 L 150 98" fill="none" stroke="#F5813C" stroke-width="14"/>' +
+            '<path d="M136 94 h18 q6 0 6 6 v4 h-28 q-2 -6 4 -10 z" fill="#FFF6EE"/>' +
+            '<path d="M190 38 C 174 46 170 64 178 78 L 214 76 C 222 60 210 38 198 36 Z" fill="#F5813C"/>' +
+            '<path d="M180 60 q18 4 32 -2" fill="none" stroke-width="2.4" opacity="0.45"/>' +
+            '<path d="M194 50 C 162 54 128 48 112 40" fill="none" stroke="#F5813C" stroke-width="13"/>' +
+            '<circle cx="108" cy="38" r="7" fill="#F6C9A6"/>' +
+            '<path d="M196 42 L 176 32 L 158 26" fill="none" stroke="#F5813C" stroke-width="13"/>' +
+            '<circle cx="156" cy="26" r="7" fill="#F6C9A6"/>' +
+            /* ---- cabeza ---- */
+            '<circle cx="188" cy="26" r="15" fill="#F6C9A6"/>' +
+            '<path d="M174 22 C 174 8 202 6 204 20 L 204 26 L 174 28 Z" fill="#E05E10"/>' +
+            '<path d="M174 26 C 162 26 158 30 160 33 L 178 30 Z" fill="#E05E10"/>' +
+            '<circle cx="182" cy="28" r="2.1" fill="#17130F" stroke="none"/>' +
+            '<circle cx="194" cy="28" r="2.1" fill="#17130F" stroke="none"/>' +
+            '<path d="M182 34 q6 6 12 0" fill="none" stroke-width="2.4"/>' +
+            '<circle cx="178" cy="33" r="3" fill="#F59A8E" stroke="none" opacity="0.7"/>' +
+            '<circle cx="199" cy="33" r="3" fill="#F59A8E" stroke="none" opacity="0.7"/>' +
+            /* ---- llantas y caja ---- */
+            '<g class="es-llanta"><circle cx="86" cy="100" r="9" fill="#FFF6EE"/>' +
+            '<path d="M86 93 v14 M79 100 h14" stroke-width="2.4"/></g>' +
+            '<g class="es-llanta es-llanta--b"><circle cx="222" cy="100" r="9" fill="#FFF6EE"/>' +
+            '<path d="M222 93 v14 M215 100 h14" stroke-width="2.4"/></g>' +
+            '<path d="M132 4 h48 q4 0 4 4 v10 q0 4 -4 4 h-48 q-4 0 -4 -4 v-10 q0 -4 4 -4 z" fill="#FFF6EE"/>' +
+            '<path d="M128 13 h56" stroke-width="2.4"/>' +
+            '</g>',
 
         /* El mapa con la ruta trazada, al modo del widget de mapas: calles
            finas de fondo, el recorrido por encima y los dos extremos
@@ -268,7 +309,7 @@
     /* Cada familia con su fondo, para que la escena no flote sobre la nada */
     var FONDOS = {
         combustible: ['#FFF0E4', '#FBDCC6'],
-        comida: ['#FFF1E8', '#FAD9C8'],
+        comida: ['#F5813C', '#CF4F06'],
         viaje: ['#F6F1EA', '#E7DFD3'],
         taller: ['#EFF4FF', '#DAE4F8'],
         educacion: ['#F1F4FF', '#DEE5FA'],

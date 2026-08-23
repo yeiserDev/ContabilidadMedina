@@ -1,6 +1,7 @@
 // ====== CONTA MEDINA — SERVICE WORKER (Modo Metro) ======
 // Versión: bump this string to force a cache refresh after updates
-// v44 — la escena de viaje pasa a mapa con el recorrido trazado.
+// v45 — la escena de comida: repartidor ilustrado y en marcha.
+// Antes: v44 la escena de viaje pasa a mapa con el recorrido,
 // Antes: v43 cada gasto estrena su escena en el detalle,
 // Antes: v42 el detalle sale delante y sube como hoja inferior,
 // Antes: v41 el historial en lista con logotipos redondos,
@@ -27,7 +28,7 @@
 // v15 banda KPI, v14 modal de detalle, v13 logo CM, v12 rediseño estético.
 // La estrategia del shell es cache-first: sin este bump, las instalaciones
 // existentes seguirían sirviendo los assets viejos.
-const CACHE_NAME = 'contamedina-v44';
+const CACHE_NAME = 'contamedina-v45';
 
 // All app shell files to pre-cache on install
 const SHELL = [
