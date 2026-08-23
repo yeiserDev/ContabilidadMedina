@@ -239,6 +239,27 @@
                         </div>
                     </div>
                     <div class="mcard-body">
+                        <!-- El canto de la cartera va dibujado, no con
+                             border-radius: el borde de arriba se hunde en el
+                             centro (por ahí se sacan las tarjetas) y la
+                             costura tiene que seguir esa curva. Un borde
+                             discontinuo de CSS sólo sabe hacer rectángulos.
+                             preserveAspectRatio="none" estira la silueta al
+                             alto real; el trazo se mantiene fino gracias a
+                             vector-effect. -->
+                        <svg class="mcard-cuero" viewBox="0 0 360 200" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                            <defs>
+                                <linearGradient id="mcardCuero" x1="0" y1="0" x2="0.4" y2="1">
+                                    <stop offset="0" stop-color="#E2661F"/>
+                                    <stop offset="0.55" stop-color="#B8460A"/>
+                                    <stop offset="1" stop-color="#8E3406"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M0 22 Q180 54 360 22 L360 170 Q360 200 330 200 L30 200 Q0 200 0 170 Z" fill="url(#mcardCuero)"/>
+                            <path d="M11 36 Q180 66 349 36 L349 166 Q349 189 326 189 L34 189 Q11 189 11 166 Z"
+                                  fill="none" stroke="rgba(255,255,255,0.34)" stroke-width="1.4"
+                                  stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>
+                        </svg>
                         <div class="mcard-pocket">
                             <div class="mcard-bal" id="mcardBal"></div>
                             <div class="mcard-actions">
