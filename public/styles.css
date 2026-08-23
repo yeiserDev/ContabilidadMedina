@@ -6859,38 +6859,6 @@ body.modal-open { overflow: hidden; }
         transform: scale(0.96);
     }
 
-    /* ---- Accesos rápidos ---- */
-    .mquick {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-
-    .mq {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 16px 10px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-xl);
-        background: var(--white);
-        box-shadow: var(--shadow-flat);
-        font-family: inherit;
-        font-size: var(--text-sm);
-        font-weight: 700;
-        color: var(--ink-black);
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-        transition: transform 0.18s var(--ease-out), box-shadow 0.18s ease;
-    }
-    .mq:active { transform: scale(0.96); box-shadow: none; }
-    .mq .material-symbols-outlined { font-size: 24px; }
-    .mq--in  .material-symbols-outlined { color: #15803d; }
-    .mq--out .material-symbols-outlined { color: var(--signal-orange); }
-
     /* ---- Títulos de sección ---- */
     .msec-title {
         display: block;
@@ -6976,13 +6944,10 @@ body.modal-open { overflow: hidden; }
    que reponer los bordes, que en oscuro son luz y no tinta. */
 @media (max-width: 768px) {
     [data-theme="dark"] .mshell-avatar,
-    [data-theme="dark"] .mshell-actions .hdr-btn,
-    [data-theme="dark"] .mq {
+    [data-theme="dark"] .mshell-actions .hdr-btn {
         background: var(--white);
         border-color: rgba(255, 255, 255, 0.08);
     }
-    [data-theme="dark"] .mq--in  .material-symbols-outlined { color: #5FCB89; }
-    [data-theme="dark"] .mq--out .material-symbols-outlined { color: var(--signal-orange); }
 }
 
 /* En PWA la barra de estado del sistema queda por encima del contenido:

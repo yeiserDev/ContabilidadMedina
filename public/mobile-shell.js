@@ -182,19 +182,14 @@
         registrar(document.querySelector('.header-actions'), document.getElementById('mshellActions'));
         registrar(document.querySelector('.bal-pill'), document.getElementById('mcardBal'));
 
-        /* Accesos rápidos: reutilizan los botones que ya abren cada modal,
-           así no hay una segunda ruta que mantener. */
+        /* Cada botón del shell reutiliza el que ya abre ese modal en el
+           HTML de escritorio, así no hay una segunda ruta que mantener. */
         var abre = function (id) {
             return function () {
                 var b = document.getElementById(id);
                 if (b) b.click();
             };
         };
-        var qd = document.getElementById('mqDeposit');
-        var qe = document.getElementById('mqExpense');
-        if (qd) qd.addEventListener('click', abre('openDepositModal'));
-        if (qe) qe.addEventListener('click', abre('openExpenseModal'));
-
         /* Acciones de la cartera. Ninguna es un botón de adorno: la píldora
            abre el mismo modal de depósito y el redondo de la izquierda, el
            filtro de ciclos que ya vive en la barra inferior. */
