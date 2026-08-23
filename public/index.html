@@ -437,27 +437,29 @@
     </button>
 
     <!-- BOTTOM NAV (mobile / PWA) — Liquid Glass -->
+    <!-- Los iconos dicen lo mismo que el resto de la app: la alcancía es
+         depósito y el carrito es gasto, igual que en el historial y en las
+         tarjetas. Antes eran un + y un - dentro de un círculo, que sirven
+         para cualquier cosa. -->
     <nav class="bottom-nav" id="bottomNav">
         <button class="bnav-btn" id="bnavMenu">
-            <span class="material-symbols-outlined">menu</span>
+            <span class="material-symbols-outlined">sell</span>
             <span class="bnav-label">Rubros</span>
         </button>
-        <div class="bnav-sep"></div>
         <button class="bnav-btn bnav-btn--deposit" id="bnavDeposit">
-            <span class="material-symbols-outlined">add_circle</span>
+            <span class="material-symbols-outlined">savings</span>
             <span class="bnav-label">Depósito</span>
         </button>
         <button class="bnav-btn" id="bnavLoans" onclick="openM('loansModal')">
-            <span class="material-symbols-outlined">account_balance_wallet</span>
+            <span class="material-symbols-outlined">handshake</span>
             <span class="bnav-label" id="bnavLoansBadge">Préstamos</span>
         </button>
         <button class="bnav-btn bnav-btn--expense" id="bnavExpense">
-            <span class="material-symbols-outlined">remove_circle</span>
+            <span class="material-symbols-outlined">shopping_cart</span>
             <span class="bnav-label">Gasto</span>
         </button>
-        <div class="bnav-sep"></div>
         <button class="bnav-btn" id="bnavFilter">
-            <span class="material-symbols-outlined">filter_list</span>
+            <span class="material-symbols-outlined">tune</span>
             <span class="bnav-label">Filtrar</span>
         </button>
     </nav>
