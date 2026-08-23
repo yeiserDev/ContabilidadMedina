@@ -89,18 +89,40 @@
            llantas, caja) y todas llevan su contorno: sin él, dos naranjas que
            se tocan se funden en una mancha sola. */
         comida:
-            '<path d="M62 14 C 126 -10 216 -2 254 24 C 294 52 286 104 234 118 C 176 132 90 128 58 104 C 24 80 24 32 62 14 Z" ' +
+            /* mancha clara, sólo bajo el repartidor */
+            '<path d="M40 12 C 96 -8 168 -2 200 22 C 232 48 224 96 178 110 C 128 124 56 120 30 100 C 4 78 6 28 40 12 Z" ' +
             'fill="#FFFFFF" opacity="0.42"/>' +
-            '<path class="es-brillo" d="M40 16 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#FFF3E9" opacity="0.85"/>' +
-            '<path class="es-brillo es-brillo--b" d="M286 26 l2.5 7 7 2.5 -7 2.5 -2.5 7 -2.5 -7 -7 -2.5 7 -2.5 z" fill="#FFF3E9" opacity="0.7"/>' +
-            '<g class="es-veloz" stroke="#FFF3E9" stroke-width="5" stroke-linecap="round" opacity="0.75">' +
-            '<path d="M262 40 h42"/><path d="M272 56 h32"/><path d="M266 72 h38"/>' +
-            '</g>' +
-            '<g class="es-humo" fill="#FFF6EE">' +
-            '<circle cx="256" cy="112" r="9"/><circle cx="270" cy="107" r="12"/><circle cx="285" cy="112" r="8"/>' +
-            '<rect x="254" y="106" width="36" height="14" rx="7"/>' +
+            '<path class="es-brillo" d="M28 14 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#FFF3E9" opacity="0.85"/>' +
+            '<path class="es-brillo es-brillo--b" d="M186 16 l2.5 7 7 2.5 -7 2.5 -2.5 7 -2.5 -7 -7 -2.5 7 -2.5 z" fill="#FFF3E9" opacity="0.7"/>' +
+
+            /* ---- el local del que acaba de salir ----
+               Va detrás y en tonos claros: si compitiera en color con el
+               repartidor habría dos protagonistas y ninguno. */
+            '<g stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            '<path d="M206 110 V48 h104 v62 z" fill="#FFF3E6"/>' +
+            '<path d="M240 70 h30 v40 h-30 z" fill="#8A4A20"/>' +
+            '<circle cx="246" cy="90" r="2" fill="#FFF3E6" stroke="none"/>' +
+            '<path d="M282 68 h24 v24 h-24 z" fill="#CBDCE9"/>' +
+            '<path d="M294 68 v24 M282 80 h24" stroke-width="2"/>' +
+            '<path d="M200 50 h116 v-8 q0 -8 -8 -8 h-100 q-8 0 -8 8 z" fill="#E05E10"/>' +
+            '<path d="M200 50 q7 9 14.5 0 q7 9 14.5 0 q7 9 14.5 0 q7 9 14.5 0 q7 9 14.5 0 q7 9 14.5 0 q7 9 14.5 0 q7 9 14.5 0" ' +
+            'fill="#E05E10"/>' +
+            '<path d="M232 16 h52 q4 0 4 4 v10 q0 4 -4 4 h-52 q-4 0 -4 -4 v-10 q0 -4 4 -4 z" fill="#FFF3E6"/>' +
+            '<path d="M246 21 v8 M250 21 v8 M254 21 v8 M250 29 v-2" stroke-width="2"/>' +
+            '<path d="M266 21 q5 3 0 8 v0" stroke-width="2" fill="none"/>' +
             '</g>' +
 
+            '<g class="es-veloz" stroke="#FFF3E9" stroke-width="5" stroke-linecap="round" opacity="0.75">' +
+            '<path d="M186 34 h30"/><path d="M196 50 h22"/><path d="M190 66 h26"/>' +
+            '</g>' +
+            '<g class="es-humo" fill="#FFF6EE">' +
+            '<circle cx="194" cy="104" r="8"/><circle cx="206" cy="100" r="10"/><circle cx="218" cy="104" r="7"/>' +
+            '<rect x="192" y="99" width="32" height="12" rx="6"/>' +
+            '</g>' +
+
+            /* El vehículo entero se achica y se corre a la izquierda: en un
+               lienzo tan ancho, a tamaño completo parecía estirado. */
+            '<g transform="translate(-30 8) scale(0.86)">' +
             '<g class="es-bota" stroke="#17130F" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round">' +
             /* ---- neumáticos ---- */
             '<circle cx="86" cy="100" r="18" fill="#17130F"/>' +
@@ -143,6 +165,7 @@
             '<path d="M222 93 v14 M215 100 h14" stroke-width="2.4"/></g>' +
             '<path d="M132 4 h48 q4 0 4 4 v10 q0 4 -4 4 h-48 q-4 0 -4 -4 v-10 q0 -4 4 -4 z" fill="#FFF6EE"/>' +
             '<path d="M128 13 h56" stroke-width="2.4"/>' +
+            '</g>' +
             '</g>',
 
         /* El mapa con la ruta trazada, al modo del widget de mapas: calles
