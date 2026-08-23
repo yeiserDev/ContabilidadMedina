@@ -6644,7 +6644,7 @@ body.modal-open { overflow: hidden; }
         height: 13px;
         margin: 0 auto;
         border-radius: 14px 14px 0 0;
-        background: linear-gradient(150deg, #FDCBA6, #F8B183);
+        background: linear-gradient(150deg, #FFE0C6, #FCC9A4);
     }
 
     /* Colores fijos, no tokens: en oscuro --signal-orange se aclara hasta
@@ -6659,8 +6659,8 @@ body.modal-open { overflow: hidden; }
         margin: -4px auto 0;
         padding: 14px 18px 30px;
         background:
-            radial-gradient(70% 90% at 88% 0%, rgba(255, 255, 255, 0.30), transparent 62%),
-            linear-gradient(180deg, #FBB98B 0%, #F0925A 100%);
+            radial-gradient(60% 120% at 82% -10%, rgba(255, 255, 255, 0.55), transparent 60%),
+            linear-gradient(160deg, #FDD2B2 0%, #F7B489 52%, #F0A071 100%);
     }
 
     .mcard-slip-row {
@@ -6672,30 +6672,33 @@ body.modal-open { overflow: hidden; }
     .mcard-slip-row--b { margin-top: 10px; }
 
     .mcard-brand {
-        font-size: var(--text-base);
+        font-size: var(--text-md);
         font-weight: 450;
         letter-spacing: var(--tracking-tight);
-        color: rgba(74, 26, 0, 0.72);
+        color: rgba(74, 26, 0, 0.66);
     }
     .mcard-brand b { font-weight: 700; color: #4A1A00; }
 
-    .mcard-mark {
-        display: grid;
-        place-items: center;
-        width: 30px;
-        height: 30px;
-        border-radius: 9px;
-        background: rgba(255, 255, 255, 0.55);
-        border: 1px solid rgba(255, 255, 255, 0.7);
-    }
-    .mcard-mark .material-symbols-outlined { font-size: 18px; color: #A63E0B; }
-
-    .mcard-slip-l {
-        font-size: var(--text-micro);
-        text-transform: uppercase;
-        letter-spacing: 0.09em;
+    /* Donde la referencia pone la marca de la red va la nuestra, en el
+       mismo registro: palabra suelta, en versalitas apretadas, sin chip que
+       la encierre. El icono de la app aquí era un cuadro negro que rompía
+       la tarjeta en dos. */
+    .mcard-wordmark {
+        flex-shrink: 0;
+        font-size: var(--text-md);
         font-weight: 700;
-        color: rgba(74, 26, 0, 0.62);
+        font-style: italic;
+        letter-spacing: 0.02em;
+        color: #4A1A00;
+    }
+
+    /* Los puntos son eso, puntos: ni un dígito inventado. Ocupan el sitio
+       del número de tarjeta sin decir nada que no sea cierto. */
+    .mcard-slip-l {
+        font-size: var(--text-sm);
+        letter-spacing: 0.16em;
+        font-weight: 700;
+        color: rgba(74, 26, 0, 0.42);
     }
 
     /* Aquí la referencia pone la fecha de caducidad. Este ciclo es el dato
@@ -6720,15 +6723,16 @@ body.modal-open { overflow: hidden; }
         position: relative;
         /* Sube sobre las tarjetas: son ellas las que entran en la cartera,
            no la cartera la que se apoya debajo. */
-        margin-top: -20px;
-        padding: 7px;
-        border-radius: 30px;
-        background: linear-gradient(160deg, #A63E0B 0%, #7E2F06 100%);
-        /* La sombra hacia arriba es lo que vende que las tarjetas pasan por
-           detrás; sin ella el marco parece pegado encima. */
+        margin-top: -22px;
+        /* Sin relleno arriba: el canto de cuero asoma por los lados y por
+           abajo, y el borde superior del bolsillo ES el borde de la cartera,
+           que es por donde entran las tarjetas. */
+        padding: 0 10px 11px;
+        border-radius: 32px;
+        background: linear-gradient(160deg, #F0873F 0%, #D25A15 100%);
         box-shadow:
-            0 -10px 18px -10px rgba(80, 24, 0, 0.6),
-            inset 0 1px 0 rgba(255, 255, 255, 0.22);
+            0 -10px 18px -10px rgba(80, 24, 0, 0.55),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.18);
     }
 
     /* Los dos remaches del canto */
@@ -6743,18 +6747,18 @@ body.modal-open { overflow: hidden; }
         border-radius: var(--radius-circle);
         background: rgba(255, 255, 255, 0.5);
     }
-    .mcard-body::before { left: 13px; }
-    .mcard-body::after  { right: 13px; }
+    .mcard-body::before { left: 15px; }
+    .mcard-body::after  { right: 15px; }
 
     /* ---- El bolsillo ---- */
     .mcard-pocket {
         position: relative;
-        padding: 18px 16px 16px;
-        border-radius: 23px;
+        padding: 18px 18px 18px;
+        border-radius: 32px 32px 22px 22px;
         background:
-            radial-gradient(70% 90% at 88% 6%, rgba(255, 255, 255, 0.18), transparent 60%),
-            linear-gradient(145deg, #F37338 0%, #CF4500 52%, #B03C02 100%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30);
+            radial-gradient(70% 90% at 88% 6%, rgba(255, 255, 255, 0.14), transparent 60%),
+            linear-gradient(150deg, #BF4102 0%, #A33705 55%, #832D08 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26);
     }
 
     /* La costura: una línea de puntada por dentro del bolsillo, como la
@@ -6762,9 +6766,9 @@ body.modal-open { overflow: hidden; }
     .mcard-pocket::after {
         content: '';
         position: absolute;
-        inset: 6px;
-        border: 1.5px dashed rgba(255, 255, 255, 0.30);
-        border-radius: 18px;
+        inset: 7px;
+        border: 1.5px dashed rgba(255, 255, 255, 0.32);
+        border-radius: 24px 24px 16px 16px;
         pointer-events: none;
     }
 
