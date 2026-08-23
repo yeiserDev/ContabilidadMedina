@@ -6985,15 +6985,44 @@ body.modal-open { overflow: hidden; }
     }
     .charts-section::-webkit-scrollbar { display: none; }
 
+    /* ---- Las tarjetas de gráfico, en cristal ----
+       Misma receta que la banda de KPIs y el panel derecho: lámina clara
+       con desenfoque por detrás y un filo de luz arriba. El canvas de
+       Chart.js es transparente, así que el material se ve entre los ejes
+       sin tocar una línea del gráfico. */
     .charts-section > .chart-card {
         flex: 0 0 100%;
         scroll-snap-align: start;
         padding: 16px 18px 18px;
         border-radius: var(--radius-2xl);
-        border: 1px solid var(--line);
-        box-shadow: var(--shadow-flat);
+        background:
+            radial-gradient(70% 50% at 92% -6%, rgba(207, 69, 0, 0.07), transparent 62%),
+            linear-gradient(160deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.58));
+        backdrop-filter: blur(14px) saturate(1.5);
+        -webkit-backdrop-filter: blur(14px) saturate(1.5);
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        box-shadow:
+            0 4px 14px rgba(20, 20, 19, 0.07),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
     }
     .chart-card:hover { transform: none; }
+
+    [data-theme="dark"] .charts-section > .chart-card {
+        background:
+            radial-gradient(70% 50% at 92% -6%, rgba(242, 120, 60, 0.10), transparent 62%),
+            linear-gradient(160deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow:
+            0 4px 14px rgba(0, 0, 0, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.13);
+    }
+
+    /* Sin backdrop-filter el cristal cae a superficie opaca: se pierde el
+       efecto, nunca la legibilidad del gráfico. */
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        .charts-section > .chart-card { background: rgba(255, 255, 255, 0.94); }
+        [data-theme="dark"] .charts-section > .chart-card { background: rgba(255, 255, 255, 0.11); }
+    }
 
     /* ---- Cabecera de cada gráfico ----
        Era una línea de versalitas grises de 11px, del mismo peso que

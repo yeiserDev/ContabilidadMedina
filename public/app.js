@@ -439,6 +439,49 @@ if(typeof Chart!=='undefined'&&!Chart.registry.plugins.get('donutPct')){
         }
     });
 }
+// El globo de datos y la leyenda los dibuja Chart.js dentro del canvas, así
+// que ninguna regla de styles.css los alcanza: la única forma de que sigan la
+// paleta (tinta, esquina de --radius-lg, Sofia Sans) es describirlos aquí.
+// De serie llegaban en Helvetica y con la esquina a 6px, que sobre las
+// tarjetas de cristal cantaba.
+//
+// Son funciones, no constantes: las lee tanto renderCharts como
+// renderLineChart, y el tema puede haber cambiado entre una y otra.
+function globoDatos() {
+    const oscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+    return {
+        backgroundColor: oscuro ? 'rgba(24,22,20,0.94)' : 'rgba(20,20,19,0.92)',
+        titleColor: '#ffffff',
+        bodyColor: 'rgba(255,255,255,0.92)',
+        borderColor: 'rgba(255,255,255,0.15)',
+        borderWidth: 1,
+        cornerRadius: 14,
+        padding: { top: 9, right: 13, bottom: 10, left: 13 },
+        titleFont: { family: 'Sofia Sans, Arial', size: 12, weight: '700' },
+        titleMarginBottom: 5,
+        bodyFont: { family: 'Sofia Sans, Arial', size: 14, weight: '700' },
+        usePointStyle: true,
+        boxWidth: 8,
+        boxHeight: 8,
+        boxPadding: 6,
+        caretSize: 6,
+        caretPadding: 8,
+        displayColors: true
+    };
+}
+
+// Cuadraditos fuera: el punto redondo es el mismo lenguaje que los puntos del
+// carrusel y las viñetas de la leyenda del donut.
+function leyendaDatos() {
+    const oscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+    return {
+        font: { size: 10, family: 'Sofia Sans, Arial' },
+        color: oscuro ? '#B6B2A8' : '#64748b',
+        usePointStyle: true,
+        pointStyle: 'circle'
+    };
+}
+
 function renderCharts(){
     if(typeof Chart==='undefined')return;
     const now=new Date();
@@ -451,20 +494,25 @@ function renderCharts(){
     });
     const _dark=document.documentElement.getAttribute('data-theme')==='dark';
     const _tick=_dark?'#9C988E':'#94a3b8', _grid=_dark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)', _legend=_dark?'#B6B2A8':'#64748b';
+
+    const _tt = globoDatos(), _legLbl = leyendaDatos();
     const barCtx=document.getElementById('chartBar');
     if(barCtx){
         if(barChart)barChart.destroy();
         barChart=new Chart(barCtx,{type:'bar',data:{labels,datasets:[
             {label:'Ingresos',data:incData,backgroundColor:'rgba(22,163,74,0.72)',borderColor:'rgba(22,163,74,1)',borderWidth:1.5,borderRadius:4,borderSkipped:false},
             {label:'Gastos',data:expData,backgroundColor:'rgba(220,38,38,0.62)',borderColor:'rgba(220,38,38,0.9)',borderWidth:1.5,borderRadius:4,borderSkipped:false}
-        ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1200,easing:'easeOutQuart',delay:c=>c.type==='data'?c.dataIndex*100+c.datasetIndex*100:0},plugins:{legend:{labels:{font:{size:10,family:'Sofia Sans, Arial'},color:_legend},boxWidth:10,padding:10},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${money(c.raw)}`}}},scales:{x:{grid:{display:false},ticks:{color:_tick,font:{size:10}}},y:{grid:{color:_grid},ticks:{color:_tick,font:{size:10},callback:v=>v>=1000?`S/${(v/1000).toFixed(0)}k`:`S/${v}`}}}}});
+        ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1200,easing:'easeOutQuart',delay:c=>c.type==='data'?c.dataIndex*100+c.datasetIndex*100:0},plugins:{legend:{labels:Object.assign({},_legLbl,{boxWidth:8,padding:12})},tooltip:Object.assign({},_tt,{callbacks:{label:c=>` ${c.dataset.label}: ${money(c.raw)}`}})},scales:{x:{grid:{display:false},ticks:{color:_tick,font:{size:10}}},y:{grid:{color:_grid},ticks:{color:_tick,font:{size:10},callback:v=>v>=1000?`S/${(v/1000).toFixed(0)}k`:`S/${v}`}}}}});
     }
     const donutCtx=document.getElementById('chartDonut');
     if(donutCtx){
         const ct=catTotals(),cats=categories.filter(c=>(ct[c]||0)>0);
         if(donutChart)donutChart.destroy();
         if(!cats.length){donutChart=null;return;}
-        donutChart=new Chart(donutCtx,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>ct[c]),backgroundColor:cats.map((_,i)=>COLORS[i%COLORS.length]+'CC'),borderColor:cats.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',animation:{animateScale:true,animateRotate:true,duration:1200,easing:'easeOutQuart'},plugins:{legend:{position:'bottom',labels:{font:{size:10,family:'Sofia Sans, Arial'},color:_legend,boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>`${c.label}: ${money(c.raw)}`}}}}});
+        donutChart=new Chart(donutCtx,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>ct[c]),backgroundColor:cats.map((_,i)=>COLORS[i%COLORS.length]+'CC'),borderColor:cats.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:1.5,hoverOffset:8,spacing:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',animation:{animateScale:true,animateRotate:true,duration:1200,easing:'easeOutQuart'},plugins:{legend:{position:'bottom',labels:Object.assign({},_legLbl,{boxWidth:8,padding:9})},tooltip:Object.assign({},_tt,{callbacks:{
+            title:i=>i[0].label,
+            label:c=>{const t=c.dataset.data.reduce((a,v)=>a+ +v,0);return ` ${money(c.raw)} · ${t?Math.round(c.raw/t*100):0}% del ciclo`;}
+        }})}}});
     }
 }
 
@@ -517,7 +565,7 @@ function renderLineChart() {
             animation: { duration: 1400, easing: 'easeOutQuart' },
             plugins: {
                 legend: { display: false },
-                tooltip: { callbacks: { label: c => money(c.raw) } }
+                tooltip: Object.assign({}, globoDatos(), { callbacks: { label: c => ` ${money(c.raw)}` } })
             },
             scales: {
                 x: { grid: { display: false }, ticks: { color: tickCol, font: { size: 10 } } },
