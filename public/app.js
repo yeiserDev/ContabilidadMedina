@@ -1086,7 +1086,14 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
                 if (!idToken) {
                     toast('Inicia sesión para subir comprobantes.', 'err');
                 } else {
-                    for (let img of newImgs) {
+                    // Las fotos viajan a la vez, no una detrás de otra: con tres
+                    // comprobantes, en serie se sumaban tres esperas completas.
+                    // La miniatura de cada una se marca como "subiendo" mientras
+                    // va y vuelve.
+                    newImgs.forEach(img => imagenesSubiendo.add(pendingImagesData.indexOf(img)));
+                    renderPendingImages();
+
+                    const subidas = await Promise.all(newImgs.map(async (img) => {
                         try {
                             const res = await fetch(`${BACKEND_URL}/api/comprobantes`, {
                                 method: 'POST',
@@ -1099,14 +1106,24 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
                             const data = await res.json();
                             if (res.ok && data.fileId) {
                                 // Guardamos la URL del proxy: el render existente la muestra tal cual.
-                                finalImageUrls.push(`${BACKEND_URL}/api/comprobantes/${data.fileId}`);
-                            } else {
-                                throw new Error(data.error || 'Error backend');
+                                return `${BACKEND_URL}/api/comprobantes/${data.fileId}`;
                             }
+                            throw new Error(data.error || 'Error backend');
                         } catch (e) {
                             console.error('❌ Error subiendo foto:', e.message);
-                            toast('Error al subir foto. Verifica tu conexión.', 'err');
+                            return null;
+                        } finally {
+                            imagenesSubiendo.delete(pendingImagesData.indexOf(img));
+                            renderPendingImages();
                         }
+                    }));
+
+                    // El orden se mantiene: Promise.all devuelve en el mismo
+                    // orden en que se pidieron, no en el que respondieron.
+                    const ok = subidas.filter(Boolean);
+                    finalImageUrls.push(...ok);
+                    if (ok.length < newImgs.length) {
+                        toast('Alguna foto no se pudo subir. Verifica tu conexión.', 'err');
                     }
                 }
                 btn.textContent = 'Guardando...';
@@ -1649,6 +1666,54 @@ function dataUrlBytes(dataUrl) {
     return Math.floor(b64.length * 3 / 4);
 }
 
+// Cuántas evidencias se están comprimiendo y cuáles se están subiendo:
+// la vista previa las pinta como huecos de cristal en cuanto se eligen, sin
+// esperar a que estén listas.
+let imagenesProcesando = 0;
+let imagenesSubiendo = new Set();
+
+// Comprimir con createImageBitmap y toBlob, que descodifican y codifican fuera
+// del hilo que pinta. Con FileReader + <img> + toDataURL —el camino de abajo,
+// que sigue ahí como respaldo— una foto de 12 MP congelaba la interfaz medio
+// segundo, y eso era la mitad de la espera.
+async function comprimir(file) {
+    if (!self.createImageBitmap || !HTMLCanvasElement.prototype.toBlob) return resizeToThumb(file);
+    try {
+        const bmp = await createImageBitmap(file);
+        const MAX = IMG_MAX_DIM;
+        let w = bmp.width, h = bmp.height;
+        if (w > h && w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        else if (h >= w && h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';                 // fondo para PNG con transparencia
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(bmp, 0, 0, w, h);
+        if (bmp.close) bmp.close();
+
+        const aBlob = q => new Promise(r => canvas.toBlob(r, 'image/jpeg', q));
+        let q = 0.72;
+        let blob = await aBlob(q);
+        // Tres intentos como mucho: cada pasada vuelve a codificar la imagen
+        // entera y el cuarto recorte ya no se nota en pantalla.
+        for (let i = 0; i < 3 && blob && blob.size > IMG_TARGET_BYTES && q > IMG_MIN_QUALITY; i++) {
+            q = Math.max(IMG_MIN_QUALITY, q - 0.1);
+            blob = await aBlob(q);
+        }
+        if (!blob) return resizeToThumb(file);
+        return await new Promise(r => {
+            const fr = new FileReader();
+            fr.onload = () => r(fr.result);
+            fr.onerror = () => r(null);
+            fr.readAsDataURL(blob);
+        });
+    } catch (e) {
+        return resizeToThumb(file);
+    }
+}
+
 function resizeToThumb(file) {
     return new Promise(resolve => {
         const reader = new FileReader();
@@ -1682,6 +1747,10 @@ function resizeToThumb(file) {
 
 function resetImageUI() {
     pendingImagesData = [];
+    // Los contadores de estado también se vacían: si no, un modal cerrado a
+    // medias dejaba huecos de cristal fantasma en el siguiente gasto.
+    imagenesProcesando = 0;
+    imagenesSubiendo.clear();
     const container = document.getElementById('multiImgPreviewContainer');
     const inp = document.getElementById('expenseImage');
     if (container) container.innerHTML = '';
@@ -1690,49 +1759,53 @@ function resetImageUI() {
 
 function renderPendingImages() {
     const container = document.getElementById('multiImgPreviewContainer');
-    if(!container) return;
+    if (!container) return;
     container.innerHTML = '';
+
     pendingImagesData.forEach((data, index) => {
         const wrap = document.createElement('div');
-        wrap.style.position = 'relative';
-        wrap.style.width = '64px';
-        wrap.style.height = '64px';
-        
+        wrap.className = 'evd';
+
         const img = document.createElement('img');
+        img.className = 'evd-img';
         img.src = data;
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = 'var(--radius-md)';
-        img.style.border = '1px solid rgba(20,20,19,0.1)';
-        
-        const rm = document.createElement('button');
-        rm.type = 'button';
-        rm.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">close</span>';
-        rm.style.position = 'absolute';
-        rm.style.top = '-6px';
-        rm.style.right = '-6px';
-        rm.style.background = 'var(--signal-orange)';
-        rm.style.color = '#fff';
-        rm.style.border = 'none';
-        rm.style.borderRadius = '50%';
-        rm.style.width = '20px';
-        rm.style.height = '20px';
-        rm.style.display = 'flex';
-        rm.style.alignItems = 'center';
-        rm.style.justifyContent = 'center';
-        rm.style.cursor = 'pointer';
-        
-        rm.onclick = (e) => {
-            e.stopPropagation(); // Prevent label from triggering file input on remove
-            pendingImagesData.splice(index, 1);
-            renderPendingImages();
-        };
-        
+        img.alt = '';
         wrap.appendChild(img);
-        wrap.appendChild(rm);
+
+        if (imagenesSubiendo.has(index)) {
+            /* Mientras viaja al servidor, la miniatura se queda bajo una
+               lámina de cristal con su aro girando: se ve qué foto es y que
+               todavía no está guardada. */
+            wrap.classList.add('evd--subiendo');
+            wrap.insertAdjacentHTML('beforeend',
+                '<span class="evd-velo"><span class="evd-aro"></span></span>');
+        } else {
+            const rm = document.createElement('button');
+            rm.type = 'button';
+            rm.className = 'evd-x';
+            rm.setAttribute('aria-label', 'Quitar comprobante');
+            rm.innerHTML = '<span class="material-symbols-outlined">close</span>';
+            rm.onclick = (e) => {
+                e.stopPropagation();   // el botón vive dentro de un label
+                pendingImagesData.splice(index, 1);
+                renderPendingImages();
+            };
+            wrap.appendChild(rm);
+        }
+
         container.appendChild(wrap);
     });
+
+    /* Un hueco de cristal por cada foto que aún se está comprimiendo. Antes
+       no aparecía nada hasta que estaban todas listas y parecía que el toque
+       no había hecho nada. */
+    for (let n = 0; n < imagenesProcesando; n++) {
+        const hueco = document.createElement('div');
+        hueco.className = 'evd evd--carga';
+        hueco.innerHTML = '<span class="evd-brillo"></span>' +
+            '<span class="material-symbols-outlined evd-ic">imagesmode</span>';
+        container.appendChild(hueco);
+    }
 }
 
 document.getElementById('imgUploadBtn').addEventListener('click', (e) => {
@@ -1742,14 +1815,21 @@ document.getElementById('imgUploadBtn').addEventListener('click', (e) => {
 document.getElementById('expenseImage').addEventListener('change', async e => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-    document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent = 'Adjuntando...';
-    for(let file of files) {
-        const data = await resizeToThumb(file);
-        pendingImagesData.push(data);
-    }
-    e.target.value = ''; // Reset so the same file can be re-selected after removal
-    document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent = 'Adjuntar fotos';
+    e.target.value = '';   // para poder volver a elegir la misma foto
+
+    const rotulo = document.getElementById('imgUploadBtn').querySelector('span:last-child');
+    rotulo.textContent = files.length > 1 ? 'Preparando fotos...' : 'Preparando foto...';
+    imagenesProcesando += files.length;
     renderPendingImages();
+
+    for (const file of files) {
+        const data = await comprimir(file);
+        imagenesProcesando = Math.max(0, imagenesProcesando - 1);
+        if (data) pendingImagesData.push(data);
+        renderPendingImages();   // aparece ésta sin esperar a las demás
+    }
+
+    rotulo.textContent = 'Adjuntar fotos';
 });
 
 window.openLightbox = function(url) {

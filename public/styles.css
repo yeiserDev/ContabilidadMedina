@@ -6594,7 +6594,7 @@ body.modal-open { overflow: hidden; }
     }
 
     .center {
-        padding: 0 14px calc(86px + env(safe-area-inset-bottom));
+        padding: 0 14px calc(86px + max(8px, calc(env(safe-area-inset-bottom) - 16px)));
     }
 
     .mshell { display: block; }
@@ -8014,11 +8014,12 @@ body.modal-open { overflow: hidden; }
 
     .bottom-nav {
         position: fixed;
-        /* Pegada al borde, donde vive la barra de cualquier app: flotaba a
-           18px y desde el pulgar se sentía a media pantalla. El área segura
-           se suma aparte, así que en un móvil con barra de gestos sigue sin
-           montarse encima de ella. */
-        bottom: calc(7px + env(safe-area-inset-bottom));
+        /* Pegada al borde, donde vive la barra de cualquier app.
+           El área segura del iPhone son ~34px y sumarla entera dejaba la
+           barra a media mano: se le restan 16, que es lo que ocupa de verdad
+           el indicador de inicio, y nunca baja de 8px en un navegador donde
+           esa medida no existe. */
+        bottom: max(8px, calc(env(safe-area-inset-bottom) - 16px));
         left: 50%;
         transform: translateX(-50%);
         z-index: 900;
@@ -8214,4 +8215,132 @@ body.modal-open { overflow: hidden; }
 
     #viewRecordModal.is-drag,
     #viewRecordModal .modal.is-drag { transition: none; }
+}
+
+
+/* ============================================================
+   EVIDENCIAS — la espera, en cristal
+   ------------------------------------------------------------
+   Tres estados en la misma casilla de 64px: el hueco mientras la
+   foto se comprime, la miniatura ya lista, y la miniatura bajo
+   una lámina con su aro girando mientras viaja al servidor.
+
+   Antes no había ninguno: se elegía la foto y la pantalla se
+   quedaba igual hasta que aparecía, así que parecía que el toque
+   no había hecho nada.
+   ============================================================ */
+.evd {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex: 0 0 auto;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    animation: evdEntra 0.32s var(--ease-out) both;
+}
+
+.evd-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(20, 20, 19, 0.1);
+}
+
+.evd-x {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: var(--radius-circle);
+    background: rgba(20, 20, 19, 0.62);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #fff;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.evd-x .material-symbols-outlined { font-size: 14px; }
+
+/* ---- Hueco mientras se comprime ---- */
+.evd--carga {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.55));
+    backdrop-filter: blur(12px) saturate(1.5);
+    -webkit-backdrop-filter: blur(12px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow:
+        0 4px 12px rgba(20, 20, 19, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+.evd--carga .evd-ic {
+    font-size: 22px !important;
+    color: var(--signal-orange);
+    opacity: 0.55;
+}
+
+/* El brillo que cruza el hueco: es lo que dice "esto está en marcha" sin
+   necesidad de un porcentaje que no sabríamos calcular. */
+.evd-brillo {
+    position: absolute;
+    inset: -30%;
+    pointer-events: none;
+    background: linear-gradient(104deg,
+        transparent 38%,
+        rgba(255, 255, 255, 0.85) 50%,
+        transparent 62%);
+    animation: evdBrillo 1.25s linear infinite;
+}
+
+/* ---- Lámina mientras sube ---- */
+.evd--subiendo .evd-img { filter: saturate(0.85) brightness(0.96); }
+
+.evd-velo {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.3));
+    backdrop-filter: blur(7px) saturate(1.4);
+    -webkit-backdrop-filter: blur(7px) saturate(1.4);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.evd-aro {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-circle);
+    border: 2.5px solid rgba(207, 69, 0, 0.25);
+    border-top-color: var(--signal-orange);
+    animation: evdAro 0.8s linear infinite;
+}
+
+@keyframes evdEntra  { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: none; } }
+@keyframes evdBrillo { from { transform: translateX(-70%); } to { transform: translateX(70%); } }
+@keyframes evdAro    { to { transform: rotate(360deg); } }
+
+[data-theme="dark"] .evd--carga {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06));
+    border-color: rgba(255, 255, 255, 0.14);
+}
+[data-theme="dark"] .evd-brillo {
+    background: linear-gradient(104deg, transparent 38%, rgba(255, 255, 255, 0.28) 50%, transparent 62%);
+}
+[data-theme="dark"] .evd-velo {
+    background: linear-gradient(160deg, rgba(32, 30, 28, 0.6), rgba(32, 30, 28, 0.35));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+[data-theme="dark"] .evd-img { border-color: rgba(255, 255, 255, 0.12); }
+
+@media (prefers-reduced-motion: reduce) {
+    .evd { animation: none; }
+    .evd-brillo { animation: none; opacity: 0.5; }
+    .evd-aro { animation-duration: 2.4s; }
 }
