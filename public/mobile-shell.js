@@ -250,6 +250,41 @@
         else if (MQ.addListener) MQ.addListener(function (e) { if (!e.matches) abrir(false); });
     }
 
+    /* ========================================================
+       HOJA DE DETALLE — arrastrar hacia abajo para cerrar
+       --------------------------------------------------------
+       El asa que dibuja el CSS promete este gesto; esto lo cumple.
+       Sólo cuenta si la hoja está arriba del todo: si el dedo baja
+       con la hoja desplazada, lo que quiere es leer, no cerrar.
+       ======================================================== */
+    function hojaDetalle() {
+        var fondo = document.getElementById('viewRecordModal');
+        if (!fondo) return;
+        var hoja = fondo.querySelector('.modal');
+        if (!hoja) return;
+
+        var y0 = 0, x0 = 0, sigue = false;
+
+        hoja.addEventListener('touchstart', function (e) {
+            if (e.touches.length !== 1) { sigue = false; return; }
+            y0 = e.touches[0].clientY;
+            x0 = e.touches[0].clientX;
+            sigue = MQ.matches && hoja.scrollTop <= 0;
+        }, { passive: true });
+
+        hoja.addEventListener('touchend', function (e) {
+            if (!sigue) return;
+            sigue = false;
+            var t = e.changedTouches && e.changedTouches[0];
+            if (!t) return;
+            if (t.clientY - y0 < 90 || Math.abs(t.clientX - x0) > 60) return;
+            /* Se cierra por el mismo botón que ya sabe cerrarlo, en vez de
+               replicar aquí lo que hace closeM. */
+            var x = fondo.querySelector('.modal-x');
+            if (x) x.click();
+        }, { passive: true });
+    }
+
     function init() {
         var shell = document.getElementById('mshell');
         if (!shell) return;
@@ -316,6 +351,7 @@
            antes de que pase a la siguiente. Los gráficos no giran solos:
            ahí el usuario está comparando, no ojeando. */
         historial();
+        hojaDetalle();
 
         carrusel(document.getElementById('payMethods'), 6500);
         carrusel(document.querySelector('.charts-section'), 0);

@@ -1439,6 +1439,11 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ===== MODALS ===== */
+/* ---- Capas ----
+   1150 velo del historial · 1200 el panel · 1300 los modales · 1400 los
+   emergentes que salen DESDE un modal (menú de fila, select, calendario)
+   · 2000 los avisos. Los modales estaban en 1000, o sea por debajo del
+   panel: al tocar un movimiento, el detalle se abría detrás. */
 .modal-bg {
     position: fixed;
     inset: 0;
@@ -1447,7 +1452,7 @@ h1, h2, h3, h4, h5, h6,
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 1300;
     opacity: 0;
     visibility: hidden;
     transition: all 0.25s ease;
@@ -5596,7 +5601,7 @@ body, .header, .day-card, .kpi, .chart-card, .modal, .sidebar-left, .bottom-nav 
 
 .row-menu {
     position: fixed;
-    z-index: 1200;
+    z-index: 1400;
     min-width: 178px;
     padding: 6px;
     background: var(--white);
@@ -5763,7 +5768,7 @@ a:focus-visible {
 /* ============================================================
    VISOR DE DETALLE — dos paneles en desktop (detalles | comprobantes)
    ============================================================ */
-.modal--detail { max-width: 420px; }
+.modal--detail { max-width: 420px; overflow: hidden; }
 .modal--detail.vr-has-photos { max-width: 800px; }
 
 .vr-photo {
@@ -6068,7 +6073,7 @@ body.modal-open { overflow: hidden; }
 
 .xsel-panel {
     position: fixed;
-    z-index: 1200;
+    z-index: 1400;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 6px;
@@ -6142,7 +6147,7 @@ body.modal-open { overflow: hidden; }
 
 .xdate-panel {
     position: fixed;
-    z-index: 1200;
+    z-index: 1400;
     width: 296px;
     padding: 14px;
     background: var(--white);
@@ -7526,4 +7531,53 @@ body.modal-open { overflow: hidden; }
         background: rgba(255, 255, 255, 0.07);
         border-color: rgba(255, 255, 255, 0.10);
     }
+}
+
+
+/* ============================================================
+   DETALLE DEL MOVIMIENTO — hoja inferior en móvil
+   ------------------------------------------------------------
+   Un cuadro flotando en el centro es lenguaje de escritorio: en el
+   móvil el detalle sube desde abajo, pegado al borde, con su asa
+   arriba. Se cierra tocando fuera, con la X o arrastrando hacia
+   abajo, que es lo que espera la mano.
+   ============================================================ */
+@media (max-width: 768px) {
+    #viewRecordModal { align-items: flex-end; }
+
+    #viewRecordModal .modal {
+        width: 100%;
+        max-width: none;
+        max-height: 92vh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        border-radius: 28px 28px 0 0;
+        border-bottom: none;
+        padding-bottom: env(safe-area-inset-bottom);
+        /* Sube en vez de aparecer: el gesto de cierre es el mismo
+           movimiento al revés, y conviene que se entienda de dónde vino. */
+        transform: translateY(100%);
+        transition: transform 0.34s var(--ease-out);
+    }
+    #viewRecordModal.active .modal { transform: none; }
+
+    /* El asa. Es la señal de que la hoja se arrastra; sin ella el gesto
+       existe pero no lo encuentra nadie. */
+    #viewRecordModal .modal-hd {
+        position: relative;
+        padding-top: 26px !important;
+    }
+    #viewRecordModal .modal-hd::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 42px;
+        height: 4px;
+        border-radius: var(--radius-pill);
+        background: var(--line-strong);
+    }
+
+    #viewRecordModal .modal-hd h2 { font-size: var(--text-lg) !important; }
 }
