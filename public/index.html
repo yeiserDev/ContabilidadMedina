@@ -220,16 +220,39 @@
                     <div class="mshell-actions" id="mshellActions"></div>
                 </div>
 
+                <!-- Cartera: dos tarjetas asomando por detrás de un bolsillo.
+                     Arriba, identidad y ciclo; en el bolsillo, el saldo y las
+                     acciones. El bolsillo va después en el HTML y sube con un
+                     margen negativo, así las tapa sin ningún z-index. -->
                 <article class="mcard" id="mcard">
-                    <div class="mcard-hd">
-                        <span class="mcard-mark">
-                            <span class="material-symbols-outlined">graphic_eq</span>
-                        </span>
-                        <span class="mcard-brand">Conta <b>Medina</b></span>
+                    <div class="mcard-slips">
+                        <span class="mcard-slip mcard-slip--back" aria-hidden="true"></span>
+                        <div class="mcard-slip mcard-slip--front">
+                            <div class="mcard-slip-row">
+                                <span class="mcard-brand">Conta <b>Medina</b></span>
+                                <span class="mcard-mark">
+                                    <span class="material-symbols-outlined">graphic_eq</span>
+                                </span>
+                            </div>
+                            <div class="mcard-slip-row mcard-slip-row--b">
+                                <span class="mcard-slip-l">Ciclo</span>
+                                <span class="mcard-cycle" id="mcardCycle">Ciclo actual</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mcard-ft">
+                    <div class="mcard-pocket">
                         <div class="mcard-bal" id="mcardBal"></div>
-                        <span class="mcard-cycle" id="mcardCycle">Ciclo actual</span>
+                        <div class="mcard-actions">
+                            <button type="button" class="mcard-cta" id="mcardDeposit">
+                                <span class="material-symbols-outlined">add</span> Depósito
+                            </button>
+                            <button type="button" class="mcard-ic" id="mcardSwap" aria-label="Cambiar de ciclo">
+                                <span class="material-symbols-outlined">sync_alt</span>
+                            </button>
+                            <button type="button" class="mcard-ic" id="mcardEye" aria-label="Ocultar saldo">
+                                <span class="material-symbols-outlined">visibility_off</span>
+                            </button>
+                        </div>
                     </div>
                 </article>
 

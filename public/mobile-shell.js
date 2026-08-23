@@ -195,6 +195,36 @@
         if (qd) qd.addEventListener('click', abre('openDepositModal'));
         if (qe) qe.addEventListener('click', abre('openExpenseModal'));
 
+        /* Acciones de la cartera. Ninguna es un botón de adorno: la píldora
+           abre el mismo modal de depósito y el redondo de la izquierda, el
+           filtro de ciclos que ya vive en la barra inferior. */
+        var cd = document.getElementById('mcardDeposit');
+        if (cd) cd.addEventListener('click', abre('openDepositModal'));
+        var cs = document.getElementById('mcardSwap');
+        if (cs) cs.addEventListener('click', abre('bnavFilter'));
+
+        /* Ojo: tapar el saldo cuando alguien mira por encima del hombro.
+           La preferencia se recuerda; si no, habría que taparlo otra vez en
+           cada recarga, que es justo cuando molesta. */
+        var caja = document.getElementById('mcardBal');
+        var ojo = document.getElementById('mcardEye');
+        if (caja && ojo) {
+            var icono = ojo.querySelector('.material-symbols-outlined');
+            var pintarOjo = function (oculto) {
+                caja.classList.toggle('is-oculto', oculto);
+                if (icono) icono.textContent = oculto ? 'visibility' : 'visibility_off';
+                ojo.setAttribute('aria-label', oculto ? 'Mostrar saldo' : 'Ocultar saldo');
+            };
+            var guardado = false;
+            try { guardado = localStorage.getItem('ct_saldo_oculto') === '1'; } catch (e) {}
+            pintarOjo(guardado);
+            ojo.addEventListener('click', function () {
+                var oculto = !caja.classList.contains('is-oculto');
+                pintarOjo(oculto);
+                try { localStorage.setItem('ct_saldo_oculto', oculto ? '1' : '0'); } catch (e) {}
+            });
+        }
+
         /* Etiqueta de ciclo en la tarjeta: espeja el filtro de ciclos.
            app.js reconstruye ese <select> con innerHTML (sin disparar
            'change'), de ahí el observer además del listener. */
