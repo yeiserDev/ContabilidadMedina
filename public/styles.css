@@ -6594,7 +6594,7 @@ body.modal-open { overflow: hidden; }
     }
 
     .center {
-        padding: 0 14px calc(96px + env(safe-area-inset-bottom));
+        padding: 0 14px calc(86px + env(safe-area-inset-bottom));
     }
 
     .mshell { display: block; }
@@ -8014,7 +8014,11 @@ body.modal-open { overflow: hidden; }
 
     .bottom-nav {
         position: fixed;
-        bottom: calc(18px + env(safe-area-inset-bottom));
+        /* Pegada al borde, donde vive la barra de cualquier app: flotaba a
+           18px y desde el pulgar se sentía a media pantalla. El área segura
+           se suma aparte, así que en un móvil con barra de gestos sigue sin
+           montarse encima de ella. */
+        bottom: calc(7px + env(safe-area-inset-bottom));
         left: 50%;
         transform: translateX(-50%);
         z-index: 900;
@@ -8022,7 +8026,7 @@ body.modal-open { overflow: hidden; }
         align-items: center;
         gap: 2px;
         width: auto;
-        max-width: calc(100% - 24px);
+        max-width: calc(100% - 16px);
         padding: 7px 8px;
         border-radius: 30px;
         border: none;
