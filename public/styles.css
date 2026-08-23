@@ -6860,7 +6860,11 @@ body.modal-open { overflow: hidden; }
 
     .pm-deck--header {
         gap: 12px;
-        padding: 2px 0 0;
+        /* Hueco abajo para que quepa la sombra de las tarjetas: el mazo
+           tiene overflow-x, y eso también recorta en vertical. Sin este
+           hueco la sombra se cortaba en seco y se leía como una raya
+           negra bajo la tarjeta. */
+        padding: 2px 0 14px;
         margin-bottom: 0;
     }
 
@@ -6973,7 +6977,7 @@ body.modal-open { overflow: hidden; }
         display: flex;
         flex-direction: row;
         gap: 12px;
-        padding: 2px 0 0;
+        padding: 2px 0 12px;
         overflow-x: auto;
         overscroll-behavior-x: contain;
         scroll-snap-type: x mandatory;
@@ -7027,13 +7031,31 @@ body.modal-open { overflow: hidden; }
         background: rgba(242, 120, 60, 0.16);
     }
 
+    /* ---- Borde desvanecido ----
+       La tarjeta que asoma por el lateral se cortaba a cuchillo contra el
+       margen. Con una máscara, el último 10% del ancho se va a transparente
+       y el corte pasa a ser un final. Sólo en el lado que esconde algo:
+       las clases las pone mobile-shell.js al desplazar. */
+    .mcut.is-cut-l {
+        -webkit-mask-image: linear-gradient(to right, transparent 0, #000 10%);
+        mask-image: linear-gradient(to right, transparent 0, #000 10%);
+    }
+    .mcut.is-cut-r {
+        -webkit-mask-image: linear-gradient(to right, #000 90%, transparent 100%);
+        mask-image: linear-gradient(to right, #000 90%, transparent 100%);
+    }
+    .mcut.is-cut-l.is-cut-r {
+        -webkit-mask-image: linear-gradient(to right, transparent 0, #000 10%, #000 90%, transparent 100%);
+        mask-image: linear-gradient(to right, transparent 0, #000 10%, #000 90%, transparent 100%);
+    }
+
     /* ---- Puntos de los dos carruseles ---- */
     .mdots {
         display: flex;
         justify-content: center;
         align-items: center;
         gap: 6px;
-        margin: 10px 0 22px;
+        margin: 2px 0 22px;
     }
     .mdot {
         width: 6px;
@@ -7050,4 +7072,10 @@ body.modal-open { overflow: hidden; }
 
     /* El margen inferior ya lo pone .mdots */
     .charts-section + .mdots { margin-bottom: 18px; }
+
+    /* Sombra más corta: la de escritorio caía 28px, y en el mazo esa cola
+       obligaba a reservar el doble de hueco bajo cada tarjeta. */
+    .pm-card {
+        box-shadow: 0 2px 5px rgba(20, 20, 19, 0.14), 0 10px 18px -12px rgba(20, 20, 19, 0.5);
+    }
 }

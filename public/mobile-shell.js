@@ -68,6 +68,11 @@
     function carrusel(deck, autoMs) {
         if (!deck || !deck.parentNode) return;
 
+        /* Marca de "hay más a este lado": la usa el CSS para desvanecer
+           el borde por donde el contenido se sale, en vez de cortarlo a
+           cuchillo. */
+        deck.classList.add('mcut');
+
         var puntos = document.createElement('div');
         puntos.className = 'mdots';
         /* Decorativo: el contenido real ya está en las tarjetas y se
@@ -115,6 +120,13 @@
             Array.prototype.forEach.call(puntos.children, function (p, i) {
                 p.classList.toggle('is-on', i === act);
             });
+
+            /* El desvanecido sólo se enciende en el lado que de verdad
+               esconde algo: al principio del mazo, con la primera tarjeta
+               pegada al margen, un velo a la izquierda sólo la ensuciaría. */
+            var tope = deck.scrollWidth - deck.clientWidth;
+            deck.classList.toggle('is-cut-l', deck.scrollLeft > 4);
+            deck.classList.toggle('is-cut-r', deck.scrollLeft < tope - 4);
         }
 
         function irA(i) {
