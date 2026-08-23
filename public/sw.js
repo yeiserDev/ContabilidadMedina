@@ -1,6 +1,7 @@
 // ====== CONTA MEDINA — SERVICE WORKER (Modo Metro) ======
 // Versión: bump this string to force a cache refresh after updates
-// v60 — el precio cuelga de la escena como la etiqueta de una oferta.
+// v61 — las ocho escenas que faltaban, redibujadas con sitio y movimiento.
+// Antes: v60 el precio cuelga de la escena,
 // Antes: v59 la chapa del rubro en cristal teñido,
 // Antes: v58 el rubro sube al lado del título,
 // Antes: v57 la escena del taller,
@@ -43,7 +44,7 @@
 // v15 banda KPI, v14 modal de detalle, v13 logo CM, v12 rediseño estético.
 // La estrategia del shell es cache-first: sin este bump, las instalaciones
 // existentes seguirían sirviendo los assets viejos.
-const CACHE_NAME = 'contamedina-v60';
+const CACHE_NAME = 'contamedina-v61';
 
 // All app shell files to pre-cache on install
 const SHELL = [

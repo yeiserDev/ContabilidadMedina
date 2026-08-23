@@ -308,112 +308,226 @@
             'fill="#B0AAA0"/>' +
             '</g>',
 
-        /* Birrete y libro */
+        /* El aula: la escuela al fondo y el pupitre con los libros delante */
         educacion:
             SUELO +
-            '<g class="es-flota">' +
-            '<path d="M160 30 l72 26 -72 26 -72 -26 z" fill="#3860BE"/>' +
-            '<path d="M112 66 v22 q48 22 96 0 v-22 l-48 18 z" fill="#2A4E96"/>' +
-            '<path d="M232 56 v30" stroke="#CF4500" stroke-width="4" stroke-linecap="round"/>' +
-            '<circle cx="232" cy="90" r="5" fill="#CF4500"/>' +
+            '<g stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            /* fachada */
+            '<path d="M198 108 V52 h108 v56 z" fill="#FFF3E6"/>' +
+            '<path d="M190 52 L 252 24 l 62 28 z" fill="#3860BE"/>' +
+            '<path d="M240 74 h28 v34 h-28 z" fill="#8A4A20"/>' +
+            '<circle cx="262" cy="92" r="2" fill="#FFF3E6" stroke="none"/>' +
+            '<path d="M212 66 h18 v16 h-18 z M278 66 h18 v16 h-18 z" fill="#CBDCE9" stroke-width="2.4"/>' +
+            '<path d="M252 24 v-14" stroke-width="2.6"/>' +
+            '<path class="es-bandera" d="M252 10 h20 l-5 6 5 6 h-20 z" fill="#CF4500" stroke-width="2.4" ' +
+            'style="transform-box:fill-box;transform-origin:left center"/>' +
+            /* pupitre */
+            '<path d="M40 108 V78 h96 v30 z" fill="#C8A87C"/>' +
+            '<path d="M36 74 h104 v8 h-104 z" fill="#A9855A"/>' +
+            /* libros */
+            '<path d="M52 74 h58 v-12 h-58 z" fill="#3860BE"/>' +
+            '<path d="M58 62 h58 v-12 h-58 z" fill="#15803D"/>' +
+            '<path d="M50 50 h58 v-12 h-58 z" fill="#CF4500"/>' +
             '</g>' +
-            '<path d="M62 94 h44 v-30 h-44 z M62 94 q-10 -6 0 -12 v-24 q10 -6 44 0 v30" fill="#EFE9E2" stroke="#C9BFB2" stroke-width="3" stroke-linejoin="round"/>',
+            /* birrete */
+            '<g class="es-flota" stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            '<path d="M78 38 l38 -14 -38 -14 -38 14 z" fill="#2A3D6B"/>' +
+            '<path d="M62 30 v10 q16 8 32 0 v-10" fill="#3860BE"/>' +
+            '</g>' +
+            '<g class="es-borla" style="transform-box:fill-box;transform-origin:top center">' +
+            '<path d="M116 24 v14" stroke="#17130F" stroke-width="3" stroke-linecap="round"/>' +
+            '<circle cx="116" cy="42" r="5" fill="#CF4500" stroke="#17130F" stroke-width="2.6"/>' +
+            '</g>',
 
-        /* Cruz de salud y jeringa */
+        /* La farmacia: el cartel de la cruz y el botiquín abierto */
         salud:
             SUELO +
-            '<g class="es-flota">' +
-            '<path d="M112 34 h34 v26 h26 v34 h-26 v14 h-34 v-14 h-26 v-34 h26 z" fill="#DCE7DA"/>' +
-            '<path d="M120 42 h18 v26 h26 v18 h-26 v14 h-18 v-14 h-26 v-18 h26 z" fill="#15803D"/>' +
+            '<g stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            /* local */
+            '<path d="M188 108 V44 h124 v64 z" fill="#EFF6F1"/>' +
+            '<path d="M182 44 h136 v-8 q0 -6 -6 -6 h-124 q-6 0 -6 6 z" fill="#15803D"/>' +
+            '<path d="M242 68 h30 v40 h-30 z" fill="#9FC3A8"/>' +
+            '<path d="M198 60 h30 v24 h-30 z" fill="#CBDCE9" stroke-width="2.4"/>' +
+            '<path d="M286 60 h18 v24 h-18 z" fill="#CBDCE9" stroke-width="2.4"/>' +
+            /* cartel de la cruz */
+            '<path d="M158 22 h6 v-6 h12 v6 h6 v12 h-6 v6 h-12 v-6 h-6 z" fill="#15803D" class="es-cruz" ' +
+            'style="transform-box:fill-box;transform-origin:center"/>' +
+            '<path d="M170 40 v10" stroke-width="2.6"/>' +
+            /* botiquín */
+            '<path d="M30 108 V70 h84 v38 z" fill="#FFF6EE"/>' +
+            '<path d="M26 62 h92 v10 h-92 z" fill="#DCE7DA"/>' +
+            '<path d="M62 62 v-8 q0 -4 4 -4 h12 q4 0 4 4 v8" fill="none"/>' +
+            '<path d="M64 84 h16 v-10 h12 v16 h-12 v10 h-16 v-10 h-12 v-16 h12 z" fill="#15803D" stroke-width="2.6"/>' +
             '</g>' +
-            '<g class="es-entra">' +
-            '<path d="M196 92 l44 -44" stroke="#8A857C" stroke-width="12" stroke-linecap="round"/>' +
-            '<path d="M232 40 l16 16" stroke="#3D3A34" stroke-width="10" stroke-linecap="round"/>' +
-            '<path d="M186 102 l12 -12" stroke="#8A857C" stroke-width="5" stroke-linecap="round"/>' +
-            '<path d="M206 60 l10 10 M216 50 l10 10" stroke="#EFE9E2" stroke-width="4" stroke-linecap="round"/>' +
-            '</g>',
+            /* jeringa */
+            '<g class="es-jeringa">' +
+            '<g stroke="#17130F" stroke-width="2.8" stroke-linejoin="round">' +
+            '<path d="M120 34 h40 v14 h-40 z" fill="#FFF6EE"/>' +
+            '<path d="M126 36 h20 v10 h-20 z" fill="#9FC3A8" stroke="none"/>' +
+            '<path d="M160 39 h12" stroke-width="4" stroke-linecap="round"/>' +
+            '<path d="M112 30 h8 v22 h-8 z" fill="#8A857C"/>' +
+            '<path d="M104 36 h8 v10 h-8 z" fill="#8A857C"/>' +
+            '</g></g>',
 
-        /* La casa conectada y el recibo */
+        /* La casa conectada: el contador en la pared y el recibo en el buzón */
         servicios:
             SUELO +
-            '<path d="M64 96 v-38 l40 -28 40 28 v38 z" fill="#EFE9E2" stroke="#C9BFB2" stroke-width="3"/>' +
-            '<path d="M54 60 l50 -34 50 34" fill="none" stroke="#3D3A34" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
-            '<rect x="90" y="70" width="28" height="26" rx="3" fill="#CF4500"/>' +
-            '<g class="es-onda">' +
-            '<path d="M176 74 a10 10 0 0 1 16 0" fill="none" stroke="#3860BE" stroke-width="5" stroke-linecap="round"/>' +
-            '<path d="M168 62 a22 22 0 0 1 32 0" fill="none" stroke="#3860BE" stroke-width="5" stroke-linecap="round" opacity="0.7"/>' +
-            '<path d="M160 50 a34 34 0 0 1 48 0" fill="none" stroke="#3860BE" stroke-width="5" stroke-linecap="round" opacity="0.4"/>' +
-            '<circle cx="184" cy="86" r="5" fill="#3860BE"/>' +
+            '<g stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            /* casa */
+            '<path d="M46 108 V58 h92 v50 z" fill="#FFF3E6"/>' +
+            '<path d="M34 58 L 92 22 l 58 36 z" fill="#B8460A"/>' +
+            '<path d="M78 108 V80 h28 v28 z" fill="#8A4A20"/>' +
+            '<circle cx="100" cy="94" r="2" fill="#FFF3E6" stroke="none"/>' +
+            '<path d="M54 66 h18 v16 h-18 z" fill="#F7C24A" stroke-width="2.4"/>' +
+            /* contador de luz */
+            '<path d="M116 62 h20 v22 h-20 z" fill="#DDE5F2" stroke-width="2.4"/>' +
+            '<circle cx="126" cy="70" r="5" fill="#FFF6EE" stroke-width="2.2"/>' +
+            '<path class="es-aguja" d="M126 70 v-4" stroke-width="2.2" stroke-linecap="round" ' +
+            'style="transform-box:fill-box;transform-origin:bottom center"/>' +
+            '<path d="M120 78 h12" stroke-width="2.2"/>' +
+            /* poste y antena */
+            '<path d="M92 22 v-8" stroke-width="2.6"/>' +
+            '<circle cx="92" cy="12" r="3.5" fill="#3860BE" stroke-width="2.4"/>' +
             '</g>' +
-            '<g class="es-flota">' +
-            '<path d="M228 30 h48 v66 l-8 -6 -8 6 -8 -6 -8 6 -8 -6 -8 6 z" fill="#FDF3EC" stroke="#E7C7B0" stroke-width="3"/>' +
-            '<path d="M238 46 h28 M238 58 h28 M238 70 h16" stroke="#CF4500" stroke-width="4" stroke-linecap="round"/>' +
+            /* ondas */
+            '<g class="es-onda" fill="none" stroke="#3860BE" stroke-linecap="round">' +
+            '<path d="M104 14 a16 16 0 0 1 0 -6" stroke-width="4"/>' +
+            '<path d="M114 20 a26 26 0 0 0 0 -18" stroke-width="4" opacity="0.65"/>' +
+            '<path d="M124 26 a36 36 0 0 0 0 -30" stroke-width="4" opacity="0.4"/>' +
+            '</g>' +
+            /* buzón con el recibo asomando */
+            '<g class="es-flota" stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            '<path d="M226 46 h56 v14 h-56 z" fill="#FDF3EC"/>' +
+            '<path d="M232 40 h44 v6 h-44 z" fill="#FDF3EC"/>' +
+            '<path d="M238 46 h32 M238 52 h20" stroke="#CF4500" stroke-width="2.6" stroke-linecap="round"/>' +
+            '<path d="M212 60 h84 v46 q0 4 -4 4 h-76 q-4 0 -4 -4 z" fill="#3860BE"/>' +
+            '<path d="M228 74 h52 v12 h-52 z" fill="#2A4E96" stroke-width="2.4"/>' +
+            '<path d="M254 110 v-10" stroke-width="2.6"/>' +
             '</g>',
 
-        /* El banco y su moneda */
+        /* El banco: la fachada y el cajero soltando un billete */
         banco:
             SUELO +
-            '<path d="M76 46 l52 -24 52 24 z" fill="#3D3A34"/>' +
-            '<rect x="76" y="46" width="104" height="8" fill="#5A554C"/>' +
-            '<rect x="88" y="58" width="12" height="34" fill="#8A857C"/>' +
-            '<rect x="122" y="58" width="12" height="34" fill="#8A857C"/>' +
-            '<rect x="156" y="58" width="12" height="34" fill="#8A857C"/>' +
-            '<rect x="72" y="92" width="112" height="8" rx="3" fill="#3D3A34"/>' +
-            '<g class="es-flota">' +
-            '<circle cx="230" cy="62" r="28" fill="#F0A05A"/>' +
-            '<circle cx="230" cy="62" r="21" fill="#CF4500"/>' +
-            '<path d="M238 50 h-12 a6 6 0 0 0 0 12 h8 a6 6 0 0 1 0 12 h-12" fill="none" stroke="#FDF3EC" stroke-width="4" stroke-linecap="round"/>' +
-            '</g>',
+            '<g stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            /* fachada */
+            '<path d="M22 46 L 92 18 l 70 28 z" fill="#3D3A34"/>' +
+            '<path d="M26 46 h132 v8 h-132 z" fill="#5A554C"/>' +
+            '<path d="M42 54 h14 v46 h-14 z M78 54 h14 v46 h-14 z M114 54 h14 v46 h-14 z" fill="#EFE9E2"/>' +
+            '<path d="M18 100 h148 v8 h-148 z" fill="#3D3A34"/>' +
+            '<path d="M84 30 h16 v10 h-16 z" fill="#F0A05A" stroke-width="2.4"/>' +
+            /* cajero */
+            '<path d="M214 108 V38 q0 -6 6 -6 h64 q6 0 6 6 v70 z" fill="#DDE5F2"/>' +
+            '<path d="M228 48 h48 v24 h-48 z" fill="#2A4E96" stroke-width="2.4"/>' +
+            '<path d="M234 56 h24 M234 64 h32" stroke="#9DB8F7" stroke-width="2.6" stroke-linecap="round"/>' +
+            '<path d="M232 82 h26" stroke-width="4" stroke-linecap="round"/>' +
+            '<circle cx="278" cy="84" r="5" fill="#15803D" stroke-width="2.4"/>' +
+            '</g>' +
+            /* el billete que sale por la ranura */
+            '<g class="es-billete">' +
+            '<g stroke="#17130F" stroke-width="2.6" stroke-linejoin="round">' +
+            '<path d="M226 88 h40 v20 h-40 z" fill="#DCE7DA"/>' +
+            '<circle cx="246" cy="98" r="6" fill="#15803D"/>' +
+            '</g></g>',
 
-        /* La papeleta con su sello */
+        /* La papeleta en el parabrisas, con su cono al lado */
         multa:
             SUELO +
-            '<g class="es-flota">' +
-            '<path d="M96 22 h122 q8 0 8 8 v72 q0 8 -8 8 h-122 q-8 0 -8 -8 v-72 q0 -8 8 -8 z" fill="#FDF3EC" stroke="#E7C7B0" stroke-width="3"/>' +
-            '<path d="M104 42 h72 M104 56 h94 M104 70 h58" stroke="#C9BFB2" stroke-width="5" stroke-linecap="round"/>' +
-            '<circle cx="196" cy="80" r="22" fill="none" stroke="#CF4500" stroke-width="4" opacity="0.9"/>' +
-            '<path d="M196 68 v14" stroke="#CF4500" stroke-width="5" stroke-linecap="round"/>' +
-            '<circle cx="196" cy="90" r="3" fill="#CF4500"/>' +
-            '</g>',
+            '<g stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            /* señal de prohibido */
+            '<path d="M266 108 V52" stroke-width="5"/>' +
+            '<circle cx="266" cy="38" r="18" fill="#FDF3EC"/>' +
+            '<circle cx="266" cy="38" r="13" fill="none" stroke="#CF4500" stroke-width="5"/>' +
+            '<path d="M256 48 L 276 28" stroke="#CF4500" stroke-width="5" stroke-linecap="round"/>' +
+            /* coche */
+            '<path d="M34 96 V78 q0 -6 8 -8 l16 -18 q3 -4 9 -4 h44 q6 0 9 4 l16 18 q8 2 8 8 v18 z" fill="#3860BE"/>' +
+            '<path d="M66 52 h38 l10 16 h-58 z" fill="#CFE0FA"/>' +
+            '<path d="M34 76 h110" stroke-width="2.6" opacity="0.5"/>' +
+            '<circle cx="58" cy="98" r="12" fill="#17130F"/>' +
+            '<circle cx="120" cy="98" r="12" fill="#17130F"/>' +
+            '<circle cx="58" cy="98" r="5" fill="#FFF6EE" stroke-width="2.4"/>' +
+            '<circle cx="120" cy="98" r="5" fill="#FFF6EE" stroke-width="2.4"/>' +
+            /* cono */
+            '<path d="M170 104 l14 -40 h8 l14 40 z" fill="#F0783A"/>' +
+            '<path d="M176 88 h24 M172 96 h32" stroke="#FFF6EE" stroke-width="4"/>' +
+            '<path d="M164 104 h48 v6 h-48 z" fill="#B8460A"/>' +
+            '</g>' +
+            /* la papeleta, sujeta en el limpiaparabrisas */
+            '<g class="es-papel" style="transform-box:fill-box;transform-origin:bottom left">' +
+            '<g stroke="#17130F" stroke-width="2.6" stroke-linejoin="round">' +
+            '<path d="M78 30 h44 q3 0 3 3 v30 q0 3 -3 3 h-44 q-3 0 -3 -3 v-30 q0 -3 3 -3 z" fill="#FDF3EC"/>' +
+            '<path d="M86 40 h28 M86 48 h20 M86 56 h24" stroke="#CF4500" stroke-width="2.6" stroke-linecap="round"/>' +
+            '</g></g>',
 
-        /* El billete que va y vuelve */
+        /* El billete que pasa de una mano a la otra */
         prestamo:
             SUELO +
-            '<g class="es-flota">' +
-            '<rect x="92" y="44" width="136" height="52" rx="8" fill="#DCE7DA" stroke="#9FC3A8" stroke-width="3"/>' +
-            '<circle cx="160" cy="70" r="15" fill="#15803D"/>' +
-            '<path d="M166 62 h-8 a5 5 0 0 0 0 10 h4 a5 5 0 0 1 0 10 h-8" fill="none" stroke="#DCE7DA" stroke-width="3" stroke-linecap="round"/>' +
-            '<circle cx="110" cy="58" r="5" fill="#9FC3A8"/><circle cx="210" cy="82" r="5" fill="#9FC3A8"/>' +
+            '<defs><linearGradient id="esArcoColor" x1="0" y1="0" x2="1" y2="0">' +
+            '<stop offset="0" stop-color="#9FC3A8"/><stop offset="1" stop-color="#15803D"/>' +
+            '</linearGradient></defs>' +
+            /* el arco del trayecto */
+            '<path d="M84 66 C 122 18 198 18 236 66" fill="none" stroke="url(#esArcoColor)" ' +
+            'stroke-width="4" stroke-linecap="round" stroke-dasharray="9 8"/>' +
+            '<g stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            /* mano que da */
+            '<path d="M22 108 V88 q0 -8 10 -8 h34 q10 0 10 8 v20 z" fill="#F6C9A6"/>' +
+            '<path d="M40 80 v-10 q0 -5 6 -5 t6 5 v10" fill="#F6C9A6"/>' +
+            '<path d="M52 80 v-14 q0 -5 6 -5 t6 5 v14" fill="#F6C9A6"/>' +
+            /* mano que recibe */
+            '<path d="M244 108 V88 q0 -8 10 -8 h34 q10 0 10 8 v20 z" fill="#E8B48A"/>' +
+            '<path d="M262 80 v-14 q0 -5 6 -5 t6 5 v14" fill="#E8B48A"/>' +
+            '<path d="M274 80 v-10 q0 -5 6 -5 t6 5 v10" fill="#E8B48A"/>' +
             '</g>' +
-            '<path class="es-ruta" d="M64 34 q96 -22 192 0" fill="none" stroke="#CF4500" stroke-width="4" stroke-linecap="round" stroke-dasharray="9 8"/>' +
-            '<path d="M250 28 l10 6 -10 6" fill="none" stroke="#CF4500" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>',
+            /* el billete recorriendo el arco */
+            '<g class="es-viaja" style="offset-path:path(\'M84 66 C 122 18 198 18 236 66\');offset-rotate:0deg">' +
+            '<g stroke="#17130F" stroke-width="2.4" stroke-linejoin="round">' +
+            '<path d="M-22 -11 h44 v22 h-44 z" fill="#DCE7DA"/>' +
+            '<circle cx="0" cy="0" r="7" fill="#15803D"/>' +
+            '<path d="M3 -4 h-4 a3 3 0 0 0 0 5 h2 a3 3 0 0 1 0 5 h-4" fill="none" stroke="#DCE7DA" stroke-width="1.8" stroke-linecap="round"/>' +
+            '</g></g>',
 
-        /* Respaldo para cualquier gasto: la bolsa de la compra */
+        /* La caja registradora soltando el ticket, con la bolsa al lado */
         compras:
             SUELO +
-            '<g class="es-flota">' +
-            '<path d="M112 44 h96 l10 54 q1 8 -8 8 h-100 q-9 0 -8 -8 z" fill="#CF4500"/>' +
-            '<path d="M136 50 v-8 a24 24 0 0 1 48 0 v8" fill="none" stroke="#9A3A0A" stroke-width="6" stroke-linecap="round"/>' +
-            '<path d="M150 68 h20 M144 80 h32" stroke="#FBD9C4" stroke-width="5" stroke-linecap="round"/>' +
+            '<g stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            /* mostrador */
+            '<path d="M14 100 h292 v10 h-292 z" fill="#C8A87C"/>' +
+            /* bolsa */
+            '<path d="M40 100 V56 h60 v44 z" fill="#CF4500"/>' +
+            '<path d="M56 56 v-8 a14 14 0 0 1 28 0 v8" fill="none" stroke-width="5"/>' +
+            '<path d="M56 74 h28" stroke="#FBD9C4" stroke-width="5" stroke-linecap="round"/>' +
+            /* registradora */
+            '<path d="M176 100 V64 q0 -6 6 -6 h94 q6 0 6 6 v36 z" fill="#3860BE"/>' +
+            '<path d="M190 70 h44 v16 h-44 z" fill="#CFE0FA" stroke-width="2.4"/>' +
+            '<path d="M248 74 h8 v8 h-8 z M262 74 h8 v8 h-8 z M248 88 h8 v8 h-8 z M262 88 h8 v8 h-8 z" ' +
+            'fill="#2A4E96" stroke-width="2.2"/>' +
+            '<path d="M186 58 v-10 h58 v10" fill="#2A4E96"/>' +
             '</g>' +
-            '<g class="es-entra">' +
-            '<path d="M222 34 h34 v34 l-30 30 -34 -34 z" fill="#F0A05A"/>' +
-            '<circle cx="240" cy="52" r="7" fill="#FDF3EC"/>' +
-            '</g>',
+            /* el ticket saliendo */
+            '<g class="es-ticket" style="transform-box:fill-box;transform-origin:bottom center">' +
+            '<g stroke="#17130F" stroke-width="2.6" stroke-linejoin="round">' +
+            '<path d="M196 46 h40 v-38 h-40 z" fill="#FDF3EC"/>' +
+            '<path d="M204 18 h24 M204 28 h16 M204 38 h20" stroke="#CF4500" stroke-width="2.4" stroke-linecap="round"/>' +
+            '</g></g>',
 
-        /* Los ingresos: la alcancía */
+        /* La alcancía en la mesa, con la moneda cayendo */
         ingreso:
             SUELO +
-            '<g class="es-flota">' +
-            '<path d="M96 62 q0 -26 40 -26 h30 q40 0 40 30 q0 14 -12 24 v14 h-18 v-8 q-10 2 -20 2 h-10 v6 h-18 v-10 q-16 -8 -22 -20 h-10 q-8 0 -8 -8 v-8 z" fill="#3860BE"/>' +
-            '<circle cx="188" cy="62" r="5" fill="#EAF0FC"/>' +
-            '<path d="M132 44 h34" stroke="#2A4E96" stroke-width="6" stroke-linecap="round"/>' +
-            '<path d="M206 46 q14 -4 16 -14" fill="none" stroke="#3860BE" stroke-width="6" stroke-linecap="round"/>' +
+            '<g stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            /* alcancía */
+            '<path d="M92 66 q0 -26 42 -26 h30 q42 0 42 30 q0 15 -13 25 v13 h-19 v-8 q-10 2 -20 2 h-10 v6 h-19 v-11 ' +
+            'q-16 -8 -22 -20 h-10 q-8 0 -8 -8 v-3 z" fill="#3860BE"/>' +
+            '<circle cx="190" cy="64" r="4.5" fill="#EAF0FC" stroke-width="2.4"/>' +
+            '<path d="M132 46 h34" stroke-width="6" stroke-linecap="round"/>' +
+            '<path d="M206 50 q14 -4 16 -14" fill="none" stroke-width="6" stroke-linecap="round"/>' +
+            /* torre de monedas */
+            '<path d="M236 108 h44 v-8 h-44 z M236 100 h44 v-8 h-44 z M236 92 h44 v-8 h-44 z" fill="#F0A05A"/>' +
             '</g>' +
+            /* la moneda que entra */
             '<g class="es-cae">' +
-            '<circle cx="150" cy="24" r="14" fill="#F0A05A"/>' +
-            '<path d="M156 16 h-8 a4 4 0 0 0 0 9 h4 a4 4 0 0 1 0 9 h-8" fill="none" stroke="#FDF3EC" stroke-width="3" stroke-linecap="round"/>' +
-            '</g>'
+            '<g stroke="#17130F" stroke-width="2.6">' +
+            '<circle cx="150" cy="20" r="13" fill="#F0A05A"/>' +
+            '<path d="M156 12 h-8 a4 4 0 0 0 0 9 h4 a4 4 0 0 1 0 9 h-8" fill="none" stroke="#FDF3EC" stroke-width="2.6" stroke-linecap="round"/>' +
+            '</g></g>'
     };
 
     /* Cada familia con su fondo, para que la escena no flote sobre la nada */

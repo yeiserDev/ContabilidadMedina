@@ -8718,3 +8718,52 @@ body.modal-open { overflow: hidden; }
     .vr-precio { right: 8px; padding: 8px 13px 8px 10px; }
     .vr-precio .vr-amount { font-size: var(--text-lg); }
 }
+
+/* ---- Escenas nuevas: cada una con su gesto ----
+   Un solo movimiento por escena, el que cuenta de qué va: la bandera de la
+   escuela ondea, la cruz de la farmacia respira, el émbolo de la jeringa
+   baja, la aguja del contador avanza y el cajero suelta el billete. */
+.vr-scene .es-bandera  { animation: esBandera 2.4s ease-in-out infinite; }
+.vr-scene .es-borla    { transform-box: fill-box; transform-origin: top center; animation: esBorla 2.6s ease-in-out infinite; }
+.vr-scene .es-cruz     { animation: esCruz 2.2s ease-in-out infinite; }
+.vr-scene .es-jeringa  { transform-box: fill-box; animation: esJeringa 2.4s ease-in-out infinite; }
+.vr-scene .es-aguja    { animation: esAguja 3s linear infinite; }
+.vr-scene .es-billete  { transform-box: fill-box; animation: esBillete 3.2s ease-in-out infinite; }
+
+@keyframes esBandera { 0%, 100% { transform: skewY(0deg); } 50% { transform: skewY(-6deg); } }
+@keyframes esBorla   { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+@keyframes esCruz    { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.06); opacity: 0.86; } }
+@keyframes esJeringa { 0%, 100% { transform: translateX(0); } 55% { transform: translateX(7px); } }
+@keyframes esAguja   { to { transform: rotate(360deg); } }
+@keyframes esBillete {
+    0%, 12%  { transform: translateY(-14px); opacity: 0; }
+    35%, 78% { transform: translateY(0); opacity: 1; }
+    100%     { transform: translateY(6px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vr-scene .es-bandera,
+    .vr-scene .es-borla,
+    .vr-scene .es-cruz,
+    .vr-scene .es-jeringa,
+    .vr-scene .es-aguja,
+    .vr-scene .es-billete { animation: none; }
+}
+
+/* ---- Segundo lote de escenas ----
+   La papeleta aletea en el parabrisas, el billete recorre el arco de una mano
+   a la otra —montado sobre la misma curva que dibuja el trazo—, el ticket va
+   saliendo de la registradora y la moneda cae en la alcancía. */
+.vr-scene .es-papel  { animation: esPapel 2.2s ease-in-out infinite; }
+.vr-scene .es-viaja  { animation: esViaja 3.4s ease-in-out infinite; }
+.vr-scene .es-ticket { animation: esTicket 3s ease-in-out infinite; }
+
+@keyframes esPapel  { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(4deg); } }
+@keyframes esViaja  { 0% { offset-distance: 0%; } 100% { offset-distance: 100%; } }
+@keyframes esTicket { 0%, 100% { transform: scaleY(0.35); } 55% { transform: scaleY(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .vr-scene .es-papel,
+    .vr-scene .es-viaja,
+    .vr-scene .es-ticket { animation: none; }
+}
