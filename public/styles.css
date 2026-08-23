@@ -8196,3 +8196,22 @@ body.modal-open { overflow: hidden; }
         .bottom-nav .bnav-btn .material-symbols-outlined { transition: none; }
     }
 }
+
+/* ---- El arrastre de la hoja de detalle ----
+   Mientras el dedo la lleva no hay transición: la hoja va donde va la mano.
+   Al soltar vuelven las dos —la de la hoja y la del velo— y el viaje sale
+   desde donde quedó.
+
+   El velo dura un pelo más que la hoja: con la misma duración se apagaba
+   antes de que la hoja terminase de salir y el último tramo se veía sobre
+   la página desnuda. */
+@media (max-width: 768px) {
+    #viewRecordModal { transition: opacity 0.38s ease, visibility 0.38s; }
+
+    #viewRecordModal .modal {
+        transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    #viewRecordModal.is-drag,
+    #viewRecordModal .modal.is-drag { transition: none; }
+}

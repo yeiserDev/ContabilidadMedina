@@ -317,8 +317,9 @@
        HOJA DE DETALLE — arrastrar hacia abajo para cerrar
        --------------------------------------------------------
        El asa que dibuja el CSS promete este gesto; esto lo cumple.
-       Sólo cuenta si la hoja está arriba del todo: si el dedo baja
-       con la hoja desplazada, lo que quiere es leer, no cerrar.
+       La hoja va pegada al dedo mientras baja y el velo se aclara
+       con ella: al soltar, o se marcha o vuelve a su sitio. Antes
+       no se movía nada y la hoja desaparecía de golpe.
        ======================================================== */
     function hojaDetalle() {
         var fondo = document.getElementById('viewRecordModal');
@@ -326,26 +327,81 @@
         var hoja = fondo.querySelector('.modal');
         if (!hoja) return;
 
-        var y0 = 0, x0 = 0, sigue = false;
+        var y0 = 0, x0 = 0, t0 = 0;
+        var eje = 0;          /* 0 sin decidir · 1 vertical · -1 horizontal */
+        var activo = false;
+
+        function arrastrar(dy) {
+            hoja.style.transform = 'translateY(' + dy + 'px)';
+            /* Sólo se aclara el velo, no la hoja: si se desvaneciera entera
+               parecería que se apaga, y lo que hace es marcharse. */
+            var p = Math.min(1, dy / (hoja.offsetHeight || 400));
+            fondo.style.background = 'rgba(20, 20, 19, ' + (0.3 * (1 - p * 0.85)).toFixed(3) + ')';
+        }
+
+        function limpiar() {
+            hoja.classList.remove('is-drag');
+            fondo.classList.remove('is-drag');
+            hoja.style.transform = '';
+            fondo.style.background = '';
+        }
 
         hoja.addEventListener('touchstart', function (e) {
-            if (e.touches.length !== 1) { sigue = false; return; }
-            y0 = e.touches[0].clientY;
-            x0 = e.touches[0].clientX;
-            sigue = MQ.matches && hoja.scrollTop <= 0;
+            if (e.touches.length !== 1) { activo = false; return; }
+            var t = e.touches[0];
+            y0 = t.clientY; x0 = t.clientX; t0 = Date.now();
+            eje = 0;
+            /* Sólo cuenta con la hoja arriba del todo: si el dedo baja con el
+               contenido desplazado, lo que quiere es leer, no cerrar. */
+            activo = MQ.matches && hoja.scrollTop <= 0;
         }, { passive: true });
 
-        hoja.addEventListener('touchend', function (e) {
-            if (!sigue) return;
-            sigue = false;
+        hoja.addEventListener('touchmove', function (e) {
+            if (!activo) return;
+            var t = e.touches[0];
+            var dy = t.clientY - y0;
+            var dx = t.clientX - x0;
+
+            if (!eje) {
+                if (Math.abs(dy) < 8 && Math.abs(dx) < 8) return;
+                eje = Math.abs(dy) > Math.abs(dx) * 1.3 ? 1 : -1;
+                /* Hacia arriba no hay nada que hacer: eso es desplazar la
+                   ficha, no cerrarla. */
+                if (eje !== 1 || dy < 0) { activo = false; return; }
+                hoja.classList.add('is-drag');
+                fondo.classList.add('is-drag');
+            }
+
+            if (e.cancelable) e.preventDefault();
+            /* Resistencia al principio del recorrido: los primeros píxeles
+               cuestan, así que un roce no arranca la hoja. */
+            arrastrar(dy < 0 ? dy * 0.2 : dy);
+        }, { passive: false });
+
+        function soltar(e) {
+            if (!activo) return;
+            activo = false;
+            if (eje !== 1) return;
+
             var t = e.changedTouches && e.changedTouches[0];
-            if (!t) return;
-            if (t.clientY - y0 < 90 || Math.abs(t.clientX - x0) > 60) return;
-            /* Se cierra por el mismo botón que ya sabe cerrarlo, en vez de
-               replicar aquí lo que hace closeM. */
-            var x = fondo.querySelector('.modal-x');
-            if (x) x.click();
-        }, { passive: true });
+            if (!t) { limpiar(); return; }
+            var dy = Math.max(0, t.clientY - y0);
+            var v = dy / Math.max(1, Date.now() - t0);   /* px por ms */
+
+            /* Devolver la transición antes de soltar el estilo en línea: así
+               la hoja viaja desde donde la dejó el dedo, en vez de saltar. */
+            limpiar();
+
+            if ((v > 0.5 && dy > 40) || dy > 110) {
+                /* Se cierra por el mismo botón que ya sabe cerrarlo, en vez
+                   de repetir aquí lo que hace closeM. */
+                var x = fondo.querySelector('.modal-x');
+                if (x) x.click();
+            }
+        }
+
+        hoja.addEventListener('touchend', soltar, { passive: true });
+        hoja.addEventListener('touchcancel', soltar, { passive: true });
     }
 
     function init() {
