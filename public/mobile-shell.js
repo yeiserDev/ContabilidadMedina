@@ -197,6 +197,48 @@
             document.body.style.overflow = si ? 'hidden' : '';
         }
 
+        /* ---- El buscador de la cabecera ----
+           No abre otra pantalla: el campo se despliega sobre la misma
+           pastilla. Lo que escribe va al buscador que ya existe, así que
+           filtra por el mismo camino de siempre y las dos cajas quedan
+           diciendo lo mismo. */
+        var bus = document.getElementById('mbus');
+        var busInp = document.getElementById('mbusInput');
+        var busBtn = document.getElementById('mbusBtn');
+        var busCiclo = document.getElementById('mbusCiclo');
+        var espejo = document.getElementById('mobileSearchInput');
+
+        function buscar(texto) {
+            if (!espejo) return;
+            espejo.value = texto;
+            espejo.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        if (bus && busInp && busBtn) {
+            busBtn.addEventListener('click', function () {
+                var abriendo = !bus.classList.contains('is-buscando');
+                bus.classList.toggle('is-buscando', abriendo);
+                busBtn.querySelector('.material-symbols-outlined').textContent = abriendo ? 'close' : 'search';
+                busBtn.setAttribute('aria-label', abriendo ? 'Cerrar búsqueda' : 'Buscar');
+                if (abriendo) {
+                    busInp.focus();
+                } else {
+                    /* Al cerrar se limpia: dejar un filtro puesto y esconder
+                       el texto que lo puso es la forma más rápida de que
+                       alguien crea que perdió movimientos. */
+                    busInp.value = '';
+                    buscar('');
+                }
+            });
+            busInp.addEventListener('input', function () { buscar(busInp.value); });
+        }
+        /* abre() vive en init(), no aquí: el filtro se abre por su propio
+           botón de la barra, que es el que ya sabe hacerlo. */
+        if (busCiclo) busCiclo.addEventListener('click', function () {
+            var f = document.getElementById('bnavFilter');
+            if (f) f.click();
+        });
+
         var btn = document.getElementById('mhistOpen');
         if (btn) btn.addEventListener('click', function () { abrir(true); });
         var x = document.getElementById('mhistClose');
@@ -461,10 +503,15 @@
         var sel = document.getElementById('monthFilter');
         var chip = document.getElementById('mcardCycle');
         if (sel && chip) {
+            var enBusca = document.getElementById('mbusCicloTxt');
             var pintarCiclo = function () {
                 var o = sel.selectedOptions && sel.selectedOptions[0];
                 var t = o ? o.textContent.trim() : '';
-                chip.textContent = t && t !== 'Todos los ciclos' ? t : 'Todos los ciclos';
+                t = t || 'Todos los ciclos';
+                chip.textContent = t;
+                /* La misma etiqueta manda en la cartera y en el buscador del
+                   historial: dos sitios, una sola fuente. */
+                if (enBusca) enBusca.textContent = t;
             };
             sel.addEventListener('change', pintarCiclo);
             new MutationObserver(pintarCiclo).observe(sel, { childList: true, subtree: true });

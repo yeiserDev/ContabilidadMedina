@@ -7383,13 +7383,6 @@ body.modal-open { overflow: hidden; }
         background: var(--canvas-cream);
     }
 
-    .mhist-title {
-        font-size: var(--text-md);
-        font-weight: 700;
-        letter-spacing: var(--tracking-tight);
-        color: var(--ink-black);
-    }
-
     .mhist-x {
         display: grid;
         place-items: center;
@@ -8343,4 +8336,145 @@ body.modal-open { overflow: hidden; }
     .evd { animation: none; }
     .evd-brillo { animation: none; opacity: 0.5; }
     .evd-aro { animation-duration: 2.4s; }
+}
+
+
+/* ============================================================
+   BUSCADOR DEL HISTORIAL
+   ------------------------------------------------------------
+   La cabecera del panel era un título y ya está. Ahora es la
+   pastilla que hace las dos cosas que se piden ahí: ver de qué
+   ciclo es lo que se está mirando —y cambiarlo— y buscar dentro.
+
+   La lupa no abre otra pantalla: el campo se despliega sobre la
+   misma pastilla, así que el sitio donde escribes es el sitio
+   donde tocaste.
+   ============================================================ */
+@media (max-width: 768px) {
+
+    .mhist-hd { gap: 10px; }
+
+    .mbus {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 6px 6px 12px;
+        border-radius: var(--radius-pill);
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.62));
+        backdrop-filter: blur(14px) saturate(1.5);
+        -webkit-backdrop-filter: blur(14px) saturate(1.5);
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        box-shadow:
+            0 4px 14px rgba(20, 20, 19, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    /* ---- Lado del ciclo ---- */
+    .mbus-ciclo {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 0;
+        border: none;
+        background: none;
+        font-family: inherit;
+        text-align: left;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mbus-ic {
+        font-size: 20px !important;
+        color: var(--signal-orange);
+        flex-shrink: 0;
+    }
+    .mbus-txt { display: flex; flex-direction: column; min-width: 0; }
+    .mbus-lbl {
+        font-size: var(--text-micro);
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--signal-orange);
+        line-height: 1.2;
+    }
+    .mbus-val {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        min-width: 0;
+        font-size: var(--text-sm);
+        font-weight: 600;
+        color: var(--ink-black);
+        line-height: 1.25;
+    }
+    .mbus-val > span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .mbus-chev { font-size: 16px !important; color: var(--slate-gray); flex-shrink: 0; }
+
+    /* ---- El campo, escondido hasta que se pide ---- */
+    .mbus-input {
+        position: absolute;
+        left: 14px;
+        right: 46px;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 34px;
+        border: none;
+        background: none;
+        font-family: inherit;
+        font-size: var(--text-base);
+        color: var(--ink-black);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+    .mbus-input:focus { outline: none; }
+    .mbus-input::placeholder { color: var(--dust-taupe); }
+
+    .mbus.is-buscando .mbus-ciclo { opacity: 0; pointer-events: none; }
+    .mbus.is-buscando .mbus-input { opacity: 1; pointer-events: auto; }
+    .mbus-ciclo { transition: opacity 0.2s ease; }
+
+    /* ---- La lupa ---- */
+    .mbus-btn {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        border: none;
+        border-radius: var(--radius-circle);
+        background: var(--ink-black);
+        color: var(--canvas-cream);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.2s var(--ease-spring), background 0.2s ease;
+    }
+    .mbus-btn:active { transform: scale(0.92); }
+    .mbus-btn .material-symbols-outlined { font-size: 19px; }
+
+    /* ---- Oscuro ---- */
+    [data-theme="dark"] .mbus {
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow:
+            0 4px 14px rgba(0, 0, 0, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.13);
+    }
+    [data-theme="dark"] .mbus-btn { background: var(--canvas-cream); color: var(--ink-black); }
+
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        .mbus { background: rgba(255, 255, 255, 0.96); }
+        [data-theme="dark"] .mbus { background: rgba(255, 255, 255, 0.12); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .mbus-input, .mbus-ciclo, .mbus-btn { transition: none; }
+    }
 }

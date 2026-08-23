@@ -421,8 +421,26 @@
          aquí dentro y lo devuelve al centro al pasar a escritorio. -->
     <div class="mhist-ov" id="mhistOverlay"></div>
     <aside class="mhist" id="mhist" aria-hidden="true">
+        <!-- La cabecera es la barra de búsqueda: el ciclo que se está
+             mirando a la izquierda —se toca y abre el filtro— y la lupa a la
+             derecha, que despliega el campo sobre la misma pastilla. -->
         <div class="mhist-hd">
-            <span class="mhist-title">Historial del ciclo</span>
+            <div class="mbus" id="mbus">
+                <button type="button" class="mbus-ciclo" id="mbusCiclo">
+                    <span class="material-symbols-outlined mbus-ic">receipt_long</span>
+                    <span class="mbus-txt">
+                        <span class="mbus-lbl">Historial de</span>
+                        <span class="mbus-val">
+                            <span id="mbusCicloTxt">Ciclo actual</span>
+                            <span class="material-symbols-outlined mbus-chev">expand_more</span>
+                        </span>
+                    </span>
+                </button>
+                <input type="text" class="mbus-input" id="mbusInput" placeholder="Buscar movimiento..." aria-label="Buscar en el historial">
+                <button type="button" class="mbus-btn" id="mbusBtn" aria-label="Buscar">
+                    <span class="material-symbols-outlined">search</span>
+                </button>
+            </div>
             <button type="button" class="mhist-x" id="mhistClose" aria-label="Cerrar historial">
                 <span class="material-symbols-outlined">close</span>
             </button>
