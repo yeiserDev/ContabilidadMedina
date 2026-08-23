@@ -7967,3 +7967,27 @@ body.modal-open { overflow: hidden; }
     .vr-scene .es-gota { animation: none; }
     .vr-scene .es-gota { opacity: 0; }
 }
+
+/* ---- El camión recorriendo la ruta ----
+   Va montado sobre la misma curva del trazo con offset-path, así que no hay
+   dos caminos que mantener sincronizados. offset-rotate:0 lo deja siempre
+   derecho: es un dibujo de perfil, y girándolo con la curva acabaría boca
+   abajo en las bajadas.
+
+   Donde no haya soporte de offset-path el camión se queda quieto al
+   principio de la ruta, que sigue siendo una escena correcta. */
+.vr-scene .es-camion { animation: esCamion 5.4s linear infinite; }
+.vr-scene .es-pulso  { transform-box: fill-box; transform-origin: center; animation: esPulso 2.2s ease-out infinite; }
+
+@keyframes esCamion { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes esPulso  {
+    0%   { transform: scale(0.6); opacity: 0.7; }
+    70%  { opacity: 0; }
+    100% { transform: scale(2.2); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vr-scene .es-camion,
+    .vr-scene .es-pulso { animation: none; }
+    .vr-scene .es-pulso { opacity: 0; }
+}

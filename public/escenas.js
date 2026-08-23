@@ -197,44 +197,62 @@
             '</g>' +
             '</g>',
 
-        /* El mapa con la ruta trazada, al modo del widget de mapas: calles
-           finas de fondo, el recorrido por encima y los dos extremos
-           marcados. Verde donde arranca, naranja donde termina —los mismos
-           dos colores con los que la app dice entra y sale. */
-        viaje:
-            '<defs>' +
-            '<clipPath id="esMapaCorte"><rect x="8" y="8" width="304" height="114" rx="14"/></clipPath>' +
-            '<linearGradient id="esRutaColor" x1="0" y1="0" x2="0" y2="1">' +
-            '<stop offset="0" stop-color="#F5934F"/><stop offset="1" stop-color="#CF4500"/>' +
-            '</linearGradient>' +
-            '</defs>' +
-            '<g clip-path="url(#esMapaCorte)">' +
-            '<rect x="8" y="8" width="304" height="114" fill="#EAE3DA"/>' +
-            /* manzanas verdes y el río, por debajo del callejero */
-            '<rect x="26" y="80" width="44" height="28" rx="5" fill="#D8E4D6"/>' +
-            '<rect x="212" y="16" width="52" height="26" rx="5" fill="#D8E4D6"/>' +
-            '<path d="M304 4 C 272 38 296 72 262 126" fill="none" stroke="#CBDCE9" stroke-width="10" stroke-linecap="round"/>' +
-            /* avenidas y calles */
-            '<path d="M4 42 H316 M4 82 H316 M58 4 V126 M132 4 V126 M204 4 V126" stroke="#DCD2C4" stroke-width="3.5"/>' +
-            '<path d="M4 22 H316 M4 62 H316 M4 102 H316 M26 4 V126 M92 4 V126 M166 4 V126 M240 4 V126 M284 4 V126" ' +
-            'stroke="#E4DCD0" stroke-width="1.8"/>' +
-            '<path d="M92 62 L 132 22 M166 102 L 204 62" stroke="#E4DCD0" stroke-width="1.8"/>' +
-            '</g>' +
-            /* el recorrido: primero el reborde claro, que lo despega del callejero */
-            '<path d="M150 34 C 140 50 162 56 156 70 C 150 84 168 88 162 100" fill="none" ' +
-            'stroke="#FBF8F4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>' +
-            '<path class="es-traza" d="M150 34 C 140 50 162 56 156 70 C 150 84 168 88 162 100" fill="none" ' +
-            'stroke="url(#esRutaColor)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-            '<g class="es-entra">' +
-            '<circle cx="150" cy="34" r="9" fill="#FBF8F4"/><circle cx="150" cy="34" r="6" fill="#15803D"/>' +
-            '<circle cx="162" cy="100" r="9" fill="#FBF8F4"/><circle cx="162" cy="100" r="6" fill="#CF4500"/>' +
-            '</g>' +
-            /* la chapa del sitio, arriba a la izquierda */
-            '<g class="es-flota">' +
-            '<rect x="18" y="16" width="52" height="19" rx="7" fill="#141413" opacity="0.72"/>' +
-            '<text x="44" y="30" text-anchor="middle" font-family="Sofia Sans, Arial" font-size="11" ' +
-            'font-weight="700" fill="#F3F0EE">RUTA</text>' +
-            '</g>',
+        /* El mapa con la ruta y el camión recorriéndola. El vehículo va
+           montado sobre la misma curva que dibuja el trazo (offset-path),
+           así que camino y recorrido no pueden descuadrarse: si mañana se
+           retoca la curva, el camión la sigue sin tocar nada más.
+
+           Verde donde arranca, naranja donde termina: los dos colores con
+           los que la app dice entra y sale. */
+        viaje: (function () {
+            var RUTA = 'M62 94 C 96 94 88 64 122 62 C 152 60 152 40 188 38 C 216 36 232 44 254 44';
+            return '<defs>' +
+                '<clipPath id="esMapaCorte"><rect x="8" y="8" width="304" height="114" rx="14"/></clipPath>' +
+                '<linearGradient id="esRutaColor" x1="0" y1="0" x2="1" y2="0">' +
+                '<stop offset="0" stop-color="#F5934F"/><stop offset="1" stop-color="#CF4500"/>' +
+                '</linearGradient>' +
+                '</defs>' +
+                '<g clip-path="url(#esMapaCorte)">' +
+                '<rect x="8" y="8" width="304" height="114" fill="#EAE3DA"/>' +
+                '<rect x="26" y="80" width="44" height="28" rx="5" fill="#D8E4D6"/>' +
+                '<rect x="212" y="16" width="52" height="26" rx="5" fill="#D8E4D6"/>' +
+                '<path d="M304 4 C 272 38 296 72 262 126" fill="none" stroke="#CBDCE9" stroke-width="10" stroke-linecap="round"/>' +
+                '<path d="M4 42 H316 M4 82 H316 M58 4 V126 M132 4 V126 M204 4 V126" stroke="#DCD2C4" stroke-width="3.5"/>' +
+                '<path d="M4 22 H316 M4 62 H316 M4 102 H316 M26 4 V126 M92 4 V126 M166 4 V126 M240 4 V126 M284 4 V126" ' +
+                'stroke="#E4DCD0" stroke-width="1.8"/>' +
+                '<path d="M92 62 L 132 22 M166 102 L 204 62" stroke="#E4DCD0" stroke-width="1.8"/>' +
+                '</g>' +
+                /* el recorrido: reborde claro y encima el trazo de color */
+                '<path d="' + RUTA + '" fill="none" stroke="#FBF8F4" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>' +
+                '<path class="es-traza" d="' + RUTA + '" fill="none" stroke="url(#esRutaColor)" ' +
+                'stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+                /* extremos */
+                '<g class="es-entra">' +
+                '<circle class="es-pulso" cx="254" cy="44" r="9" fill="none" stroke="#CF4500" stroke-width="3"/>' +
+                '<circle cx="62" cy="94" r="9" fill="#FBF8F4"/><circle cx="62" cy="94" r="6" fill="#15803D"/>' +
+                '<circle cx="254" cy="44" r="9" fill="#FBF8F4"/><circle cx="254" cy="44" r="6" fill="#CF4500"/>' +
+                '</g>' +
+                /* el camión, montado sobre la curva */
+                '<g class="es-camion" style="offset-path:path(\'' + RUTA + '\');offset-rotate:0deg">' +
+                /* La escala va en el grupo de dentro: el de fuera lo mueve
+                   offset-path y ahí un transform propio se pisaría con él. */
+                '<g transform="scale(1.18)" stroke="#17130F" stroke-width="1.5" stroke-linejoin="round">' +
+                '<path d="M-16 -8 h20 v14 h-20 z" fill="#E05E10"/>' +
+                '<path d="M4 -6 h6 l5 6 v6 h-11 z" fill="#B8460A"/>' +
+                '<path d="M6 -4 h4 l3 4 h-7 z" fill="#FBD9C4"/>' +
+                '<path d="M-12 -4 h12" stroke-width="1.4" opacity="0.5"/>' +
+                '<circle cx="-9" cy="7" r="3.4" fill="#17130F"/>' +
+                '<circle cx="8" cy="7" r="3.4" fill="#17130F"/>' +
+                '<circle cx="-9" cy="7" r="1.2" fill="#FFF6EE" stroke="none"/>' +
+                '<circle cx="8" cy="7" r="1.2" fill="#FFF6EE" stroke="none"/>' +
+                '</g></g>' +
+                /* la chapa del sitio */
+                '<g class="es-flota">' +
+                '<rect x="18" y="16" width="52" height="19" rx="7" fill="#141413" opacity="0.72"/>' +
+                '<text x="44" y="30" text-anchor="middle" font-family="Sofia Sans, Arial" font-size="11" ' +
+                'font-weight="700" fill="#F3F0EE">RUTA</text>' +
+                '</g>';
+        })(),
 
         /* El carro en el taller, con la llave */
         taller:
