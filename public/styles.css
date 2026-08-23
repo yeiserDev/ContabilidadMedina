@@ -6754,7 +6754,6 @@ body.modal-open { overflow: hidden; }
     /* ---- Métodos de pago: tarjetas más bajas bajo la de saldo ---- */
     .pm-deck--header { margin-bottom: 22px; }
     .pm-card { min-height: 128px; border-radius: var(--radius-xl); }
-    .pm-card-name { font-size: var(--text-base); }
 
     .charts-section { margin-top: 4px; }
 }
@@ -6916,7 +6915,7 @@ body.modal-open { overflow: hidden; }
     }
 
     .pm-card-name {
-        font-size: var(--text-lg);
+        font-size: var(--text-md);
         letter-spacing: -0.03em;
     }
 
@@ -6927,8 +6926,8 @@ body.modal-open { overflow: hidden; }
     }
 
     .pm-f--main .pm-f-v {
-        font-size: var(--text-xl);
-        letter-spacing: -0.035em;
+        font-size: var(--text-lg);
+        letter-spacing: -0.03em;
         line-height: 1;
     }
 
@@ -6937,11 +6936,12 @@ body.modal-open { overflow: hidden; }
     .pm-card-ft .pm-f:not(.pm-f--main) {
         align-items: center;
         gap: 1px;
-        padding: 5px 10px;
-        border-radius: var(--radius-pill);
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
         background: rgba(255, 255, 255, 0.15);
         border: 1px solid rgba(255, 255, 255, 0.16);
     }
+    .pm-card-ft .pm-f:not(.pm-f--main) .pm-f-v { font-size: var(--text-xs); }
 
     /* ---- La línea de abajo ----
        Era una raya blanca pegada al filo, y a esa altura parecía un borde
