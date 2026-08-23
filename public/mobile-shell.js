@@ -3,9 +3,9 @@
    ------------------------------------------------------------
    Debajo de 768px la página deja de ser "escritorio encogido":
    la cabecera flotante se apaga y arriba del centro aparece el
-   bloque #mshell con barra propia, tarjeta de saldo y dos accesos
-   rápidos. Los métodos de pago y los gráficos pasan a carruseles
-   con puntos.
+   bloque #mshell con barra propia y tarjeta de saldo. Los métodos
+   de pago y los gráficos pasan a carruseles con puntos, y el feed
+   del día se va a un panel que entra desde la derecha.
 
    Principio: NADA se duplica. Los tres bloques que la portada
    necesita ya existen en el HTML de escritorio, así que se MUEVEN
@@ -175,12 +175,88 @@
         }, autoMs);
     }
 
+    /* ========================================================
+       HISTORIAL — panel derecho y gesto
+       --------------------------------------------------------
+       La portada acaba en los gráficos; el feed del día entra
+       desde la derecha, deslizando sobre cualquier zona libre o
+       con el botón del final de la portada.
+       ======================================================== */
+    function historial() {
+        var panel = document.getElementById('mhist');
+        var velo = document.getElementById('mhistOverlay');
+        if (!panel || !velo) return;
+
+        function abrir(si) {
+            panel.classList.toggle('is-open', si);
+            velo.classList.toggle('is-open', si);
+            panel.setAttribute('aria-hidden', si ? 'false' : 'true');
+            document.body.classList.toggle('is-mhist-open', si);
+            /* El scroll del fondo se bloquea mientras el panel está fuera:
+               si no, el dedo mueve la portada por detrás del historial. */
+            document.body.style.overflow = si ? 'hidden' : '';
+        }
+
+        var btn = document.getElementById('mhistOpen');
+        if (btn) btn.addEventListener('click', function () { abrir(true); });
+        var x = document.getElementById('mhistClose');
+        if (x) x.addEventListener('click', function () { abrir(false); });
+        velo.addEventListener('click', function () { abrir(false); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && panel.classList.contains('is-open')) abrir(false);
+        });
+
+        /* ---- El gesto ----
+           Sólo cuenta como deslizamiento lateral si el dedo avanza bastante
+           en horizontal y poco en vertical: cualquier otra cosa es alguien
+           desplazando la página, y robarle ese movimiento sería peor que no
+           tener gesto. */
+        var x0 = 0, y0 = 0, valido = false;
+
+        function zonaLibre(destino) {
+            if (!destino || !destino.closest) return true;
+            /* Los carruseles ya usan el desplazamiento horizontal para lo
+               suyo, y sobre un modal abierto no manda esta página. */
+            return !destino.closest('.pm-deck--header, .charts-section, .modal-bg.active, .sidebar-left');
+        }
+
+        document.addEventListener('touchstart', function (e) {
+            if (e.touches.length !== 1) { valido = false; return; }
+            var t = e.touches[0];
+            x0 = t.clientX; y0 = t.clientY;
+            valido = MQ.matches &&
+                !document.querySelector('.modal-bg.active') &&
+                zonaLibre(e.target);
+        }, { passive: true });
+
+        document.addEventListener('touchend', function (e) {
+            if (!valido) return;
+            valido = false;
+            var t = e.changedTouches && e.changedTouches[0];
+            if (!t) return;
+            var dx = t.clientX - x0;
+            var dy = t.clientY - y0;
+            if (Math.abs(dx) < 70 || Math.abs(dy) > 45) return;
+            var abierto = panel.classList.contains('is-open');
+            /* Hacia la izquierda trae el panel —viene de la derecha—; hacia
+               la derecha lo devuelve a su sitio. */
+            if (dx < 0 && !abierto) abrir(true);
+            else if (dx > 0 && abierto) abrir(false);
+        }, { passive: true });
+
+        /* Al volver a escritorio el feed se va del panel: dejarlo abierto
+           sería dejar un cajón vacío tapando media pantalla. */
+        if (MQ.addEventListener) MQ.addEventListener('change', function (e) { if (!e.matches) abrir(false); });
+        else if (MQ.addListener) MQ.addListener(function (e) { if (!e.matches) abrir(false); });
+    }
+
     function init() {
         var shell = document.getElementById('mshell');
         if (!shell) return;
 
         registrar(document.querySelector('.header-actions'), document.getElementById('mshellActions'));
         registrar(document.querySelector('.bal-pill'), document.getElementById('mcardBal'));
+        registrar(document.getElementById('dailyView'), document.getElementById('mhistBody'));
 
         /* Cada botón del shell reutiliza el que ya abre ese modal en el
            HTML de escritorio, así no hay una segunda ruta que mantener. */
@@ -239,6 +315,8 @@
         /* 6,5s: lo bastante lento como para leer una tarjeta entera
            antes de que pase a la siguiente. Los gráficos no giran solos:
            ahí el usuario está comparando, no ojeando. */
+        historial();
+
         carrusel(document.getElementById('payMethods'), 6500);
         carrusel(document.querySelector('.charts-section'), 0);
 

@@ -1071,7 +1071,12 @@ h1, h2, h3, h4, h5, h6,
 .day-foot-val.neg { color: var(--signal-orange); }
 
 /* ===== EMPTY STATE ===== */
+/* app.js lo enciende con display:flex, así que sin dirección los tres
+   hijos se ponían en fila y el mensaje salía partido al lado del icono. */
 .empty {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     padding: 60px 20px;
 }
@@ -7222,4 +7227,135 @@ body.modal-open { overflow: hidden; }
     .pm-card {
         box-shadow: 0 2px 5px rgba(20, 20, 19, 0.14), 0 10px 18px -12px rgba(20, 20, 19, 0.5);
     }
+}
+
+
+/* ============================================================
+   HISTORIAL EN PANEL DERECHO (móvil)
+   ------------------------------------------------------------
+   La portada termina en los gráficos y el feed del día se muda a
+   un panel que entra desde la derecha: se abre deslizando hacia
+   la izquierda sobre cualquier zona libre, o con el botón que
+   cierra la portada.
+
+   El feed no se duplica; mobile-shell.js muda el #dailyView de
+   siempre y lo devuelve al centro en escritorio.
+   ============================================================ */
+.mhist,
+.mhist-ov,
+.mhist-open { display: none; }
+
+@media (max-width: 768px) {
+
+    /* ---- La puerta visible ----
+       El gesto solo no basta: nadie descubre un deslizamiento que no se
+       anuncia, y el historial es lo que más se consulta. */
+    .mhist-open {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        margin: 4px 0 8px;
+        padding: 15px 16px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background: var(--white);
+        box-shadow: var(--shadow-flat);
+        font-family: inherit;
+        font-size: var(--text-base);
+        font-weight: 700;
+        color: var(--ink-black);
+        text-align: left;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.18s var(--ease-out), box-shadow 0.18s ease;
+    }
+    .mhist-open:active { transform: scale(0.985); box-shadow: none; }
+    .mhist-open-t { flex: 1; }
+    .mhist-open .material-symbols-outlined { font-size: 22px; color: var(--signal-orange); }
+    .mhist-open-go { color: var(--slate-gray) !important; font-size: 20px !important; }
+
+    [data-theme="dark"] .mhist-open {
+        background: var(--white);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    /* ---- El panel ---- */
+    .mhist {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1200;
+        width: min(93vw, 440px);
+        background: var(--canvas-cream);
+        box-shadow: -18px 0 44px rgba(20, 20, 19, 0.20);
+        transform: translateX(100%);
+        transition: transform 0.34s var(--ease-out);
+        will-change: transform;
+    }
+    .mhist.is-open { transform: none; }
+
+    .mhist-ov {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 1150;
+        background: rgba(20, 20, 19, 0.42);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    .mhist-ov.is-open { opacity: 1; pointer-events: auto; }
+
+    .mhist-hd {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-shrink: 0;
+        padding: calc(16px + env(safe-area-inset-top)) 16px 14px;
+        border-bottom: 1px solid var(--line);
+        background: var(--canvas-cream);
+    }
+
+    .mhist-title {
+        font-size: var(--text-md);
+        font-weight: 700;
+        letter-spacing: var(--tracking-tight);
+        color: var(--ink-black);
+    }
+
+    .mhist-x {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+        border-radius: var(--radius-circle);
+        background: var(--white);
+        border: 1px solid var(--line);
+        color: var(--charcoal);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mhist-x .material-symbols-outlined { font-size: 20px; }
+
+    /* overscroll-behavior: sin esto, al llegar al final de la lista el
+       gesto sigue y arrastra la página de debajo. */
+    .mhist-bd {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        padding: 14px 14px calc(28px + env(safe-area-inset-bottom));
+    }
+
+    /* Con el panel abierto la barra inferior estorba: sus botones abren
+       modales sobre un panel que ya ocupa la pantalla. */
+    body.is-mhist-open .bottom-nav { opacity: 0; pointer-events: none; }
+    .bottom-nav { transition: opacity 0.2s ease; }
 }

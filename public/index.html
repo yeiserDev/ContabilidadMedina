@@ -338,6 +338,14 @@
                 </div>
             </section>
 
+            <!-- Puerta al historial. En móvil el feed vive en el panel
+                 derecho; este botón es la vía visible, además del gesto. -->
+            <button type="button" class="mhist-open" id="mhistOpen">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <span class="mhist-open-t">Ver historial del ciclo</span>
+                <span class="material-symbols-outlined mhist-open-go">chevron_right</span>
+            </button>
+
             <!-- DAILY FEED -->
             <section id="dailyView" class="feed">
                 <!-- SKELETON LOADERS -->
@@ -407,6 +415,20 @@
             </div>
         </aside>
     </div>
+
+    <!-- HISTORIAL (móvil) — panel derecho.
+         El feed no se duplica: mobile-shell.js muda el #dailyView de siempre
+         aquí dentro y lo devuelve al centro al pasar a escritorio. -->
+    <div class="mhist-ov" id="mhistOverlay"></div>
+    <aside class="mhist" id="mhist" aria-hidden="true">
+        <div class="mhist-hd">
+            <span class="mhist-title">Historial del ciclo</span>
+            <button type="button" class="mhist-x" id="mhistClose" aria-label="Cerrar historial">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="mhist-bd" id="mhistBody"></div>
+    </aside>
 
     <!-- FAB: Menu toggle bottom left (hidden on mobile, replaced by bottom nav) -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
