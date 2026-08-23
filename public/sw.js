@@ -1,6 +1,7 @@
 // ====== CONTA MEDINA — SERVICE WORKER (Modo Metro) ======
 // Versión: bump this string to force a cache refresh after updates
-// v58 — el rubro sube al lado del título del detalle, con su punto de color.
+// v59 — la chapa del rubro pasa a cristal teñido, al modo de iOS.
+// Antes: v58 el rubro sube al lado del título,
 // Antes: v57 la escena del taller,
 // Antes: v56 la cabecera del historial pasa a buscador,
 // Antes: v55 barra más abajo y compresión más rápida,
@@ -41,7 +42,7 @@
 // v15 banda KPI, v14 modal de detalle, v13 logo CM, v12 rediseño estético.
 // La estrategia del shell es cache-first: sin este bump, las instalaciones
 // existentes seguirían sirviendo los assets viejos.
-const CACHE_NAME = 'contamedina-v58';
+const CACHE_NAME = 'contamedina-v59';
 
 // All app shell files to pre-cache on install
 const SHELL = [

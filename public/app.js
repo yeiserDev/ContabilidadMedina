@@ -945,17 +945,20 @@ window.viewRecord = function(type, id) {
     };
     window.requestAnimationFrame(step);
     
+    // La chapa del rubro sólo recibe su color, en una variable. El material
+    // —cristal, filo, sombra— lo pone el CSS a partir de ella; pintarle aquí
+    // el fondo dejaba la lámina fuera de juego, porque un estilo en línea
+    // gana a cualquier regla.
     let badge = document.getElementById('viewRecordBadge');
+    badge.style.background = '';
+    badge.style.color = '';
     if(type === 'deposit') {
         badge.textContent = `Depósito ${rec.type || ''}`;
-        badge.style.background = '#eff6ff';
-        badge.style.color = '#2563eb';
+        badge.style.setProperty('--rubro', '#2563eb');
     } else {
         badge.textContent = rec.category;
         const ci = categories.indexOf(rec.category);
-        const col = COLORS[(ci>=0?ci:0)%COLORS.length];
-        badge.style.background = col + '20';
-        badge.style.color = col;
+        badge.style.setProperty('--rubro', COLORS[(ci>=0?ci:0)%COLORS.length]);
     }
     
     // Escena del movimiento: se elige por el rubro y, si el rubro no dice

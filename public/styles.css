@@ -6341,12 +6341,14 @@ body.modal-open { overflow: hidden; }
 }
 
 .vr-badge {
+    --rubro: var(--signal-orange);
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    /* Se encoge sola cuando no cabe, en vez de llevar un tope fijo: con el
-       46% de antes, "Devolución Dinero Prestado" salía cortada aunque
-       quedaran 90px libres hasta la X. */
+    /* Se encoge sola cuando no cabe, en vez de llevar un tope fijo: con un
+       46% fijo, "Devolución Dinero Prestado" salía cortada aunque quedaran
+       noventa píxeles libres hasta la X. */
     flex: 0 1 auto;
     min-width: 0;
     padding: 5px 12px 5px 10px;
@@ -6358,10 +6360,49 @@ body.modal-open { overflow: hidden; }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    /* El filo se tiñe del mismo color, un cuarto de fuerza. Donde no haya
-       color-mix se queda el hilo neutro de la casa. */
+    isolation: isolate;
+
+    /* Respaldo plano para navegadores sin color-mix */
+    color: var(--charcoal);
+    background: rgba(255, 255, 255, 0.7);
     border: 1px solid var(--line);
-    border-color: color-mix(in srgb, currentColor 28%, transparent);
+
+    /* ---- El cristal ----
+       El tinte del rubro va por debajo de una lámina clara y todo ello sobre
+       lo que haya detrás, desenfocado: el color se lee como algo teñido, no
+       como un relleno plano. */
+    color: color-mix(in srgb, var(--rubro) 78%, #141413);
+    background:
+        linear-gradient(158deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.34)),
+        color-mix(in srgb, var(--rubro) 15%, transparent);
+    backdrop-filter: blur(14px) saturate(1.9);
+    -webkit-backdrop-filter: blur(14px) saturate(1.9);
+    border-color: rgba(255, 255, 255, 0.72);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(20, 20, 19, 0.05),
+        0 3px 10px -3px color-mix(in srgb, var(--rubro) 38%, transparent);
+}
+
+/* El aro de luz del canto, la misma receta que la barra inferior: dos
+   máscaras que se restan para que el degradado pinte sólo el filo. */
+.vr-badge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: linear-gradient(150deg,
+        rgba(255, 255, 255, 0.95),
+        rgba(255, 255, 255, 0.15) 42%,
+        rgba(255, 255, 255, 0.06) 60%,
+        rgba(255, 255, 255, 0.7));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
 }
 
 .vr-badge::before {
@@ -6370,7 +6411,34 @@ body.modal-open { overflow: hidden; }
     width: 7px;
     height: 7px;
     border-radius: var(--radius-circle);
-    background: currentColor;
+    /* El punto va a color pleno: es lo único que dice el rubro sin mezcla */
+    background: var(--rubro);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--rubro) 22%, transparent);
+}
+
+[data-theme="dark"] .vr-badge {
+    color: color-mix(in srgb, var(--rubro) 55%, #FFFFFF);
+    background:
+        linear-gradient(158deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06)),
+        color-mix(in srgb, var(--rubro) 22%, transparent);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 3px 10px -3px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] .vr-badge::after {
+    background: linear-gradient(150deg,
+        rgba(255, 255, 255, 0.5),
+        rgba(255, 255, 255, 0.08) 45%,
+        rgba(255, 255, 255, 0.04) 62%,
+        rgba(255, 255, 255, 0.34));
+}
+
+/* Sin desenfoque la chapa se vuelve sólida: se pierde el material, nunca
+   el rubro. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .vr-badge { background: color-mix(in srgb, var(--rubro) 13%, #FFFFFF); }
+    [data-theme="dark"] .vr-badge { background: color-mix(in srgb, var(--rubro) 26%, #201E1C); }
 }
 
 /* Sin la chapa debajo, el importe manda solo en su franja */
