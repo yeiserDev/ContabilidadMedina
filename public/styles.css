@@ -6302,13 +6302,6 @@ body.modal-open { overflow: hidden; }
    sobre fondo oscuro = invisibles). Ahora va por clases y tokens.
    ============================================================ */
 
-.vr-hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    margin-bottom: 22px;
-}
 
 .vr-amount {
     font-size: 46px;
@@ -6441,8 +6434,6 @@ body.modal-open { overflow: hidden; }
     [data-theme="dark"] .vr-badge { background: color-mix(in srgb, var(--rubro) 26%, #201E1C); }
 }
 
-/* Sin la chapa debajo, el importe manda solo en su franja */
-.vr-hero { margin-bottom: 20px; }
 
 .vr-card {
     background: rgba(20, 20, 19, 0.035);
@@ -8605,4 +8596,125 @@ body.modal-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     .vr-scene .es-llave,
     .vr-scene .es-alza { animation: none; }
+}
+
+
+/* ============================================================
+   EL PRECIO, COLGADO DE LA ESCENA
+   ------------------------------------------------------------
+   Ocupaba una franja entera para él solo en mitad de la hoja.
+   Ahora cuelga de la esquina de la ilustración como el cartelito
+   de una oferta: se lee igual de rápido y devuelve ese alto a lo
+   que sí se lee seguido —fecha, método, descripción—.
+
+   Entra cayendo y se balancea hasta quedarse torcida, que es lo
+   que hace una etiqueta colgada de verdad, y un brillo la recorre
+   una vez.
+   ============================================================ */
+.vr-escena {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.vr-precio {
+    --precio: var(--signal-orange);
+    --precio-hondo: var(--clay-brown);
+    position: absolute;
+    right: 12px;
+    bottom: -16px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    max-width: calc(100% - 24px);
+    padding: 9px 16px 9px 11px;
+    /* Esquinas desiguales: el lado del agujero va más cuadrado, como el
+       cartón troquelado de una etiqueta. */
+    border-radius: 10px 18px 18px 10px;
+    background: linear-gradient(148deg, var(--precio), var(--precio-hondo));
+    color: #ffffff;
+    /* Filo troquelado, como el de una pegatina recortada: sin él, sobre las
+       escenas naranjas la etiqueta se fundía con el fondo. Usa el token de
+       superficie, así que en oscuro el filo es oscuro. */
+    box-shadow:
+        0 0 0 3px var(--white),
+        0 10px 20px -8px color-mix(in srgb, var(--precio) 65%, transparent),
+        0 2px 5px rgba(20, 20, 19, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    transform: rotate(-2deg);
+    overflow: hidden;
+    isolation: isolate;
+}
+
+/* Respaldo donde no haya color-mix */
+@supports not (color: color-mix(in srgb, red 50%, transparent)) {
+    .vr-precio {
+        box-shadow:
+            0 0 0 3px var(--white),
+            0 10px 20px -8px rgba(207, 69, 0, 0.55),
+            0 2px 5px rgba(20, 20, 19, 0.18);
+    }
+}
+
+.vr-precio--in {
+    --precio: #4C7DE0;
+    --precio-hondo: #2A4E96;
+}
+
+/* El agujero del colgante */
+.vr-precio::before {
+    content: '';
+    flex-shrink: 0;
+    width: 9px;
+    height: 9px;
+    border-radius: var(--radius-circle);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: inset 0 1px 2px rgba(20, 20, 19, 0.45);
+}
+
+/* El brillo que la recorre al aparecer */
+.vr-precio::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(104deg,
+        transparent 36%,
+        rgba(255, 255, 255, 0.5) 50%,
+        transparent 64%);
+    transform: translateX(-130%);
+}
+
+.vr-precio .vr-amount {
+    font-size: var(--text-xl);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    margin: 0;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ---- Entrada ---- */
+.vr-precio.is-in        { animation: precioCae 0.72s var(--ease-out) 0.14s both; }
+.vr-precio.is-in::after { animation: precioBrillo 0.9s var(--ease-out) 0.5s both; }
+
+@keyframes precioCae {
+    0%   { opacity: 0; transform: translateY(-22px) rotate(-14deg); }
+    55%  { opacity: 1; transform: translateY(2px) rotate(4deg); }
+    78%  { transform: translateY(0) rotate(-4deg); }
+    100% { opacity: 1; transform: rotate(-2deg); }
+}
+@keyframes precioBrillo { from { transform: translateX(-130%); } to { transform: translateX(130%); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .vr-precio.is-in,
+    .vr-precio.is-in::after { animation: none; }
+}
+
+@media (max-width: 480px) {
+    .vr-precio { right: 8px; padding: 8px 13px 8px 10px; }
+    .vr-precio .vr-amount { font-size: var(--text-lg); }
 }

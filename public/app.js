@@ -921,11 +921,19 @@ window.viewRecord = function(type, id) {
     document.getElementById('viewRecordTitle').textContent = type === 'deposit' ? 'Detalle de Ingreso' : 'Detalle de Gasto';
     const amtEl = document.getElementById('viewRecordAmount');
     const isDep = type === 'deposit';
-    amtEl.style.color = isDep ? 'var(--link-blue)' : 'var(--signal-orange)';
-    
-    amtEl.classList.remove('price-anim');
-    void amtEl.offsetWidth; 
-    amtEl.classList.add('price-anim');
+    // El color lo lleva la etiqueta entera, no sólo la cifra: va en una clase
+    // y no en un estilo en línea, porque de ella cuelgan el fondo, el filo y
+    // la sombra.
+    const precioEl = document.getElementById('viewRecordPrecio');
+    if (precioEl) {
+        amtEl.style.color = '';
+        precioEl.classList.toggle('vr-precio--in', isDep);
+        // Reinicio del vaivén de entrada: sin el reflow intermedio, una
+        // animación ya terminada no vuelve a empezar en el mismo elemento.
+        precioEl.classList.remove('is-in');
+        void precioEl.offsetWidth;
+        precioEl.classList.add('is-in');
+    }
     
     const targetAmt = Number(rec.amount);
     const prefix = isDep ? '+' : '-';

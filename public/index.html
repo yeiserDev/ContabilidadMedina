@@ -729,11 +729,16 @@
             <div class="modal-bd vr-grid" style="padding-top: 16px;">
                 <!-- IZQUIERDA: detalles -->
                 <div class="vr-main">
-                    <!-- La escena la dibuja escenas.js según el rubro -->
-                    <div class="vr-scene" id="viewRecordScene" aria-hidden="true"></div>
-
-                    <div class="vr-hero">
-                        <div id="viewRecordAmount" class="vr-amount">-S/ 0.00</div>
+                    <!-- La escena la dibuja escenas.js según el rubro; la
+                         etiqueta del precio cuelga de su esquina, como el
+                         cartelito de una oferta. Van en un envoltorio porque
+                         escenas.js reescribe el interior de .vr-scene en cada
+                         apertura y se llevaría la etiqueta por delante. -->
+                    <div class="vr-escena">
+                        <div class="vr-scene" id="viewRecordScene" aria-hidden="true"></div>
+                        <div class="vr-precio" id="viewRecordPrecio">
+                            <span id="viewRecordAmount" class="vr-amount">-S/ 0.00</span>
+                        </div>
                     </div>
 
                     <div class="vr-card">
