@@ -6839,3 +6839,174 @@ body.modal-open { overflow: hidden; }
 @media (max-width: 768px) and (display-mode: standalone) {
     .layout { padding-top: calc(12px + env(safe-area-inset-top)); }
 }
+
+
+/* ============================================================
+   MÓVIL — MÉTODOS DE PAGO Y GRÁFICOS COMO CARRUSELES
+   ------------------------------------------------------------
+   Las tarjetas de método pasan al mismo material que la tarjeta
+   de saldo de la portada: degradado sólido en diagonal con un
+   único brillo arriba a la derecha, en vez del cristal esmerilado
+   del escritorio. Sobre una portada que ya abre con esa tarjeta
+   naranja, dos materiales distintos seguidos se leen como dos
+   diseños pegados.
+
+   Sólo aplica en móvil: en escritorio el mazo sigue siendo de
+   cristal, que ahí convive con el panel lateral.
+   ============================================================ */
+/* Los puntos los crea mobile-shell.js siempre; en escritorio no pintan */
+.mdots { display: none; }
+
+@media (max-width: 768px) {
+
+    .pm-deck--header {
+        gap: 12px;
+        padding: 2px 0 0;
+        margin-bottom: 0;
+    }
+
+    .pm-deck--header .pm-card {
+        flex: 0 0 calc(100% - 40px);
+        min-height: 172px;
+        padding: 16px 18px 26px;
+        border-radius: var(--radius-2xl);
+    }
+
+    /* El cristal se apaga: ::before pasa a ser el degradado plano de la
+       tarjeta y ::after, un filo de luz en el borde. Sin desenfoque no hay
+       lámina que difuminar, y de paso se ahorra un backdrop-filter por
+       tarjeta en el elemento que más se desliza de la pantalla. */
+    .pm-card::before {
+        inset: 0;
+        filter: none;
+        background:
+            radial-gradient(72% 92% at 88% 6%, rgba(255, 255, 255, 0.22), transparent 62%),
+            linear-gradient(145deg, var(--pm-blob-1) 0%, var(--pm-blob-2) 58%, transparent 100%);
+    }
+
+    .pm-card::after {
+        background: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.26),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+    }
+
+    /* Apagada, no fantasma: el método sin movimientos sigue legible. */
+    .pm-card.is-idle { filter: saturate(0.55) brightness(0.92); }
+
+    /* El icono de marca manda a la izquierda, como el logotipo de la
+       tarjeta de saldo; el estado se va al otro extremo. */
+    .pm-card-hd {
+        flex-direction: row-reverse;
+        margin-bottom: 6px;
+    }
+
+    .pm-card-brand {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+
+    .pm-state {
+        padding: 5px 11px 5px 8px;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .pm-card-name {
+        font-size: var(--text-lg);
+        letter-spacing: -0.03em;
+    }
+
+    .pm-card-ft {
+        align-items: flex-end;
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+    .pm-f--main .pm-f-v {
+        font-size: var(--text-xl);
+        letter-spacing: -0.035em;
+        line-height: 1;
+    }
+
+    /* Gastos y % dejan de ser dos columnas sueltas y se agrupan en una
+       pastilla, igual que el chip de ciclo de la tarjeta de saldo. */
+    .pm-card-ft .pm-f:not(.pm-f--main) {
+        align-items: center;
+        gap: 1px;
+        padding: 5px 10px;
+        border-radius: var(--radius-pill);
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    /* ---- La línea de abajo ----
+       Era una raya blanca pegada al filo, y a esa altura parecía un borde
+       mal cortado más que un dato. Ahora es una barra redondeada metida
+       dentro de la tarjeta, con su carril visible: se lee como lo que es,
+       la parte del gasto del ciclo que se fue por este método. */
+    .pm-card-bar {
+        left: 18px;
+        right: 18px;
+        bottom: 13px;
+        height: 5px;
+        border-radius: var(--radius-pill);
+        /* El carril tiene que leerse como hueco, no como barra llena: al 20%
+           sobre la tarjeta negra de Efectivo parecía el 100%. */
+        background: rgba(255, 255, 255, 0.13);
+        overflow: hidden;
+    }
+    .pm-card-bar i {
+        border-radius: var(--radius-pill);
+        background: #ffffff;
+    }
+
+    /* ---- Gráficos en una sola fila deslizable ----
+       Apilados ocupaban dos pantallas enteras de alto. En fila se compara
+       uno u otro con un gesto, y el hueco recuperado sube el historial. */
+    .charts-section {
+        display: flex;
+        flex-direction: row;
+        gap: 12px;
+        padding: 2px 0 0;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+    }
+    .charts-section::-webkit-scrollbar { display: none; }
+
+    .charts-section > .chart-card {
+        flex: 0 0 100%;
+        scroll-snap-align: start;
+        padding: 14px 16px 16px;
+    }
+    .chart-card:hover { transform: none; }
+
+    /* ---- Puntos de los dos carruseles ---- */
+    .mdots {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        margin: 10px 0 22px;
+    }
+    .mdot {
+        width: 6px;
+        height: 6px;
+        border-radius: var(--radius-pill);
+        background: var(--line-strong);
+        cursor: pointer;
+        transition: width 0.3s var(--ease-out), background 0.3s ease;
+    }
+    .mdot.is-on {
+        width: 18px;
+        background: var(--signal-orange);
+    }
+
+    /* El margen inferior ya lo pone .mdots */
+    .charts-section + .mdots { margin-bottom: 18px; }
+}

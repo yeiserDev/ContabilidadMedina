@@ -3,8 +3,9 @@
    ------------------------------------------------------------
    Debajo de 768px la página deja de ser "escritorio encogido":
    la cabecera flotante se apaga y arriba del centro aparece el
-   bloque #mshell con barra propia, tarjeta de saldo, dos accesos
-   rápidos y el resumen del ciclo como lista de filas.
+   bloque #mshell con barra propia, tarjeta de saldo y dos accesos
+   rápidos. Los métodos de pago y los gráficos pasan a carruseles
+   con puntos.
 
    Principio: NADA se duplica. Los tres bloques que la portada
    necesita ya existen en el HTML de escritorio, así que se MUEVEN
@@ -49,6 +50,119 @@
         document.body.classList.toggle('is-mshell', esMovil);
     }
 
+    /* ========================================================
+       CARRUSELES CON PUNTOS
+       --------------------------------------------------------
+       Dos filas deslizables comparten la misma mecánica: los
+       métodos de pago y los dos gráficos. En vez de dos scripts
+       casi iguales, una sola función que añade los puntos, los
+       mantiene sincronizados con el desplazamiento y —si se le
+       pide— pasa de tarjeta sola cada cierto tiempo.
+
+       El giro automático se detiene en cuanto el usuario toca:
+       una tarjeta que se mueve sola bajo el dedo es lo contrario
+       de una ayuda. Vuelve a arrancar tras unos segundos quieto.
+       ======================================================== */
+    var REDUCIDO = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function carrusel(deck, autoMs) {
+        if (!deck || !deck.parentNode) return;
+
+        var puntos = document.createElement('div');
+        puntos.className = 'mdots';
+        /* Decorativo: el contenido real ya está en las tarjetas y se
+           alcanza deslizando, así que el lector de pantalla no gana nada
+           anunciando cuatro botones "1 de 3". */
+        puntos.setAttribute('aria-hidden', 'true');
+        deck.parentNode.insertBefore(puntos, deck.nextSibling);
+
+        var pausaHasta = 0;   /* marca de tiempo hasta la que no se gira */
+        var propio = 0;       /* fin del último desplazamiento provocado por aquí */
+        var visible = true;
+
+        /* Las tarjetas ocultas (el tercer gráfico vive con display:none)
+           no cuentan: si contaran, un punto no llevaría a ninguna parte. */
+        function tarjetas() {
+            return Array.prototype.filter.call(deck.children, function (el) {
+                return el.offsetWidth > 0;
+            });
+        }
+
+        function inicio(el) {
+            return el.getBoundingClientRect().left -
+                deck.getBoundingClientRect().left + deck.scrollLeft;
+        }
+
+        function indice() {
+            var t = tarjetas(), i = 0, mejor = Infinity;
+            t.forEach(function (el, n) {
+                var d = Math.abs(inicio(el) - deck.scrollLeft);
+                if (d < mejor) { mejor = d; i = n; }
+            });
+            return i;
+        }
+
+        function pintar() {
+            var n = tarjetas().length;
+            if (puntos.children.length !== n) {
+                puntos.innerHTML = '';
+                for (var i = 0; i < n; i++) {
+                    puntos.appendChild(document.createElement('i')).className = 'mdot';
+                }
+            }
+            puntos.style.display = n > 1 ? '' : 'none';
+            var act = indice();
+            Array.prototype.forEach.call(puntos.children, function (p, i) {
+                p.classList.toggle('is-on', i === act);
+            });
+        }
+
+        function irA(i) {
+            var t = tarjetas();
+            if (!t[i]) return;
+            propio = Date.now() + 700;
+            deck.scrollTo({ left: inicio(t[i]), behavior: 'smooth' });
+        }
+
+        function pausar() { pausaHasta = Date.now() + 9000; }
+
+        deck.addEventListener('scroll', function () {
+            pintar();
+            /* Un desplazamiento que no salió de aquí es del usuario */
+            if (Date.now() > propio) pausar();
+        }, { passive: true });
+
+        ['pointerdown', 'touchstart', 'wheel'].forEach(function (ev) {
+            deck.addEventListener(ev, pausar, { passive: true });
+        });
+
+        puntos.addEventListener('click', function (e) {
+            var i = Array.prototype.indexOf.call(puntos.children, e.target);
+            if (i >= 0) { pausar(); irA(i); }
+        });
+
+        /* app.js reconstruye el mazo de métodos con innerHTML en cada
+           render: sin esto los puntos se quedarían con la cuenta vieja. */
+        new MutationObserver(pintar).observe(deck, { childList: true });
+
+        if (window.IntersectionObserver) {
+            new IntersectionObserver(function (e) {
+                visible = e[0].isIntersecting;
+            }, { threshold: 0.35 }).observe(deck);
+        }
+
+        pintar();
+
+        if (!autoMs) return;
+        setInterval(function () {
+            if (!MQ.matches || !visible || document.hidden) return;
+            if (REDUCIDO.matches || Date.now() < pausaHasta) return;
+            var t = tarjetas();
+            if (t.length < 2) return;
+            irA((indice() + 1) % t.length);
+        }, autoMs);
+    }
+
     function init() {
         var shell = document.getElementById('mshell');
         if (!shell) return;
@@ -84,6 +198,12 @@
             new MutationObserver(pintarCiclo).observe(sel, { childList: true, subtree: true });
             pintarCiclo();
         }
+
+        /* 6,5s: lo bastante lento como para leer una tarjeta entera
+           antes de que pase a la siguiente. Los gráficos no giran solos:
+           ahí el usuario está comparando, no ojeando. */
+        carrusel(document.getElementById('payMethods'), 6500);
+        carrusel(document.querySelector('.charts-section'), 0);
 
         aplicar(MQ.matches);
         /* addListener: Safari < 14 no tiene addEventListener en MediaQueryList */
