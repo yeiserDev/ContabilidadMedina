@@ -6494,9 +6494,50 @@ body.modal-open { overflow: hidden; }
     100% { box-shadow: 0 0 0 0 rgba(0, 229, 192, 0); }
 }
 
-/* Los demás métodos entran con un fundido sobrio: la animación completa
-   es de Yape, y si todo brillara igual dejaría de significar algo. */
-.vr-pay--bcp.is-in,
+/* ---- BCP: el brillo que cruza la tarjeta ----
+   Yape se anuncia con ondas porque es un pago que sale del teléfono. Lo de
+   BCP es una tarjeta que pasa por el lector, así que su gesto es otro: la
+   pastilla entra, un reflejo la recorre en diagonal y el azul da un pulso.
+
+   El reflejo es un ::after que se desliza; el chip recorta lo que sobra.
+   Sólo BCP lleva overflow oculto: las ondas de Yape se salen del chip a
+   propósito y ahí recortar las mataría. */
+.vr-pay--bcp {
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.vr-pay--bcp::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(104deg,
+        transparent 34%,
+        rgba(255, 255, 255, 0.14) 44%,
+        rgba(255, 255, 255, 0.6) 50%,
+        rgba(255, 255, 255, 0.14) 56%,
+        transparent 66%);
+    transform: translateX(-130%);
+}
+
+.vr-pay--bcp.is-in              { animation: bcpEntra 0.5s var(--ease-spring) both, bcpPulso 1.1s ease-out both; }
+.vr-pay--bcp.is-in::after       { animation: bcpBrillo 1.05s var(--ease-out) 0.18s both; }
+.vr-pay--bcp.is-in .vr-pay-ic   { animation: bcpFicha 0.7s var(--ease-spring) 0.08s both; }
+.vr-pay--bcp.is-in .vr-pay-nm   { animation: yapeName 0.42s var(--ease-out) 0.16s both; }
+
+@keyframes bcpEntra  { 0% { opacity: 0; transform: translateX(-10px) scale(0.94); } 100% { opacity: 1; transform: none; } }
+@keyframes bcpBrillo { 0% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }
+@keyframes bcpFicha  { 0% { transform: scale(0.6) rotate(-14deg); } 60% { transform: scale(1.08) rotate(3deg); } 100% { transform: none; } }
+@keyframes bcpPulso  {
+    0%   { box-shadow: 0 0 0 0 rgba(10, 63, 176, 0); }
+    35%  { box-shadow: 0 0 20px 4px rgba(10, 63, 176, 0.5); }
+    100% { box-shadow: 0 0 0 0 rgba(10, 63, 176, 0); }
+}
+
+/* Efectivo se queda con el fundido sobrio: no hay lector ni teléfono que
+   anunciar, y si todo brillara igual dejaría de significar algo. */
 .vr-pay--efectivo.is-in { animation: yapeName 0.32s var(--ease-out) both; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -6504,8 +6545,12 @@ body.modal-open { overflow: hidden; }
     .vr-pay--yape.is-in .vr-pay-ic,
     .vr-pay--yape.is-in .vr-pay-nm,
     .vr-pay--bcp.is-in,
+    .vr-pay--bcp.is-in::after,
+    .vr-pay--bcp.is-in .vr-pay-ic,
+    .vr-pay--bcp.is-in .vr-pay-nm,
     .vr-pay--efectivo.is-in { animation: none !important; }
     .vr-pay-ring { display: none; }
+    .vr-pay--bcp::after { display: none; }
 }
 
 @media (max-width: 480px) {
@@ -7876,4 +7921,42 @@ body.modal-open { overflow: hidden; }
         #viewRecordModal.active .vr-card .vr-side,
         #viewRecordModal.active .vr-actions { animation: none; }
     }
+}
+
+/* ---- La carga del camión ----
+   El nivel sube dentro de la cisterna, el marcador del surtidor avanza a la
+   par y cae una gota por la boca: los tres en el mismo compás, que es lo que
+   hace que se lea "está repostando" y no "hay un camión ahí". */
+.vr-scene .es-nivel,
+.vr-scene .es-marcador,
+.vr-scene .es-gota {
+    transform-box: fill-box;
+}
+
+.vr-scene .es-nivel {
+    transform-origin: bottom;
+    animation: esNivel 3.4s ease-in-out infinite;
+}
+.vr-scene .es-marcador {
+    transform-origin: left;
+    animation: esMarcador 3.4s ease-in-out infinite;
+}
+.vr-scene .es-gota {
+    transform-origin: center;
+    animation: esGota 1.1s ease-in infinite;
+}
+
+/* Hasta el 86% y no hasta arriba: con la cisterna entera de color ámbar se
+   perdía el naranja del camión y parecía otro vehículo. */
+@keyframes esNivel   { 0% { transform: scaleY(0.08); } 70%, 100% { transform: scaleY(0.86); } }
+@keyframes esMarcador{ 0% { transform: scaleX(0.06); } 70%, 100% { transform: scaleX(1); } }
+@keyframes esGota    { 0% { transform: translateY(-4px) scale(0.6); opacity: 0; }
+                       35% { opacity: 1; }
+                       100% { transform: translateY(10px) scale(1); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .vr-scene .es-nivel,
+    .vr-scene .es-marcador,
+    .vr-scene .es-gota { animation: none; }
+    .vr-scene .es-gota { opacity: 0; }
 }

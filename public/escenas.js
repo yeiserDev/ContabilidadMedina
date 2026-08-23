@@ -59,25 +59,54 @@
 
     var ESCENAS = {
 
-        /* Camión cisterna repostando en el surtidor */
+        /* El camión cisterna repostando de verdad: la manguera entra por la
+           boca del tanque, el nivel sube dentro de la cisterna y el
+           marcador del surtidor avanza con él. Mismo trazo de dibujo que
+           la escena del reparto: contorno negro y color plano. */
         combustible:
-            SUELO +
-            '<g class="es-entra">' +
-            '<rect x="40" y="44" width="34" height="54" rx="9" fill="#3D3A34"/>' +
-            '<rect x="46" y="52" width="22" height="15" rx="3" fill="#5FCB89"/>' +
-            '<rect x="50" y="74" width="14" height="4" rx="2" fill="#8A857C"/>' +
-            '<path d="M74 66 C 94 66 92 56 104 56" stroke="#3D3A34" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+            '<defs><clipPath id="esCisterna">' +
+            '<rect x="152" y="52" width="144" height="42" rx="21"/>' +
+            '</clipPath></defs>' +
+            /* mancha clara del fondo */
+            '<path d="M40 14 C 120 -8 250 -6 292 22 C 322 44 314 96 262 112 C 190 132 70 126 38 104 C 10 84 8 30 40 14 Z" ' +
+            'fill="#FFFFFF" opacity="0.38"/>' +
+
+            '<g stroke="#17130F" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">' +
+            /* ---- surtidor ---- */
+            '<path d="M18 108 V48 q0 -8 8 -8 h30 q8 0 8 8 v60 z" fill="#3D3A34"/>' +
+            '<path d="M12 108 h58 v8 h-58 z" fill="#2A2825"/>' +
+            '<path d="M26 50 h30 v22 h-30 z" fill="#0E2B1B"/>' +
+            '<rect class="es-marcador" x="29" y="62" width="24" height="6" rx="3" fill="#5FCB89" stroke="none"/>' +
+            '<circle cx="34" cy="56" r="2.5" fill="#5FCB89" stroke="none"/>' +
+            '<path d="M28 82 h26" stroke-width="2.6"/>' +
+            /* ---- manguera y pistola ---- */
+            '<path d="M66 62 C 104 62 100 30 134 28 C 148 27 156 32 162 38" fill="none" stroke-width="5"/>' +
+            '<path d="M158 30 h16 q4 0 4 4 v8 q0 4 -4 4 h-16 z" fill="#2A2825"/>' +
+            '<path d="M174 40 v8" stroke-width="5"/>' +
+
+            /* ---- camión ---- */
+            '<path d="M96 96 h204 v8 h-204 z" fill="#2A2825"/>' +
+            '<path d="M96 92 V60 q0 -8 8 -8 h30 q6 0 8 5 l10 27 v8 z" fill="#B8460A"/>' +
+            '<path d="M104 62 h24 l8 20 h-32 z" fill="#FBD9C4"/>' +
+            '<rect x="152" y="52" width="144" height="42" rx="21" fill="#E05E10"/>' +
+            /* el nivel, recortado por la silueta de la cisterna */
+            '<g clip-path="url(#esCisterna)" stroke="none">' +
+            '<rect class="es-nivel" x="152" y="52" width="144" height="42" fill="#F7C24A"/>' +
             '</g>' +
-            '<g class="es-flota">' +
-            '<rect x="150" y="50" width="118" height="36" rx="18" fill="#CF4500"/>' +
-            '<rect x="176" y="50" width="8" height="36" fill="#9A3A0A" opacity="0.5"/>' +
-            '<rect x="232" y="50" width="8" height="36" fill="#9A3A0A" opacity="0.5"/>' +
-            '<path d="M104 56 h44 v30 h-52 v-20 z" fill="#9A3A0A"/>' +
-            '<rect x="108" y="61" width="21" height="14" rx="3" fill="#FBD9C4"/>' +
-            '<rect x="96" y="86" width="172" height="6" rx="3" fill="#2A2825"/>' +
-            '<circle cx="120" cy="96" r="11" fill="#2A2825"/><circle cx="120" cy="96" r="4" fill="#8A857C"/>' +
-            '<circle cx="200" cy="96" r="11" fill="#2A2825"/><circle cx="200" cy="96" r="4" fill="#8A857C"/>' +
-            '<circle cx="240" cy="96" r="11" fill="#2A2825"/><circle cx="240" cy="96" r="4" fill="#8A857C"/>' +
+            '<rect x="152" y="52" width="144" height="42" rx="21" fill="none"/>' +
+            '<path d="M196 52 v42 M252 52 v42" stroke-width="2.6" opacity="0.55"/>' +
+            '<path d="M170 52 v-8 q0 -4 4 -4 h12 q4 0 4 4 v8 z" fill="#B8460A"/>' +
+            /* ---- ruedas ---- */
+            '<circle cx="124" cy="100" r="14" fill="#17130F"/>' +
+            '<circle cx="212" cy="100" r="14" fill="#17130F"/>' +
+            '<circle cx="248" cy="100" r="14" fill="#17130F"/>' +
+            '<g><circle cx="124" cy="100" r="6.5" fill="#FFF6EE"/></g>' +
+            '<g><circle cx="212" cy="100" r="6.5" fill="#FFF6EE"/></g>' +
+            '<g><circle cx="248" cy="100" r="6.5" fill="#FFF6EE"/></g>' +
+            '</g>' +
+            /* gotas que caen por la boca mientras carga */
+            '<g class="es-gota" fill="#F7C24A" stroke="none">' +
+            '<ellipse cx="178" cy="46" rx="3" ry="4"/>' +
             '</g>',
 
         /* El repartidor con la caja en alto, al modo de la ilustración de la
