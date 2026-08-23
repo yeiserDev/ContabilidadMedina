@@ -199,8 +199,56 @@
 
         <!-- CENTER CONTENT -->
         <main class="center">
+            <!-- ===== SHELL MÓVIL (<=768px) =====
+                 Portada tipo app de banca: barra propia, tarjeta de saldo,
+                 dos accesos rápidos y el resumen del ciclo como lista.
+
+                 No duplica datos: mobile-shell.js MUEVE los nodos reales
+                 (.header-actions, .bal-pill y la banda de KPIs) hasta aquí y
+                 los devuelve a su sitio al pasar a escritorio. Así todo app.js
+                 sigue encontrando los mismos ids y no hay que sincronizar
+                 nada a mano. -->
+            <section class="mshell" id="mshell" aria-label="Inicio">
+                <div class="mshell-top">
+                    <div class="mshell-id">
+                        <span class="mshell-avatar"><img src="icon.svg" alt="" width="26" height="26"></span>
+                        <span class="mshell-who">
+                            <span class="mshell-hi">Bienvenido</span>
+                            <span class="mshell-name">Conta Medina</span>
+                        </span>
+                    </div>
+                    <div class="mshell-actions" id="mshellActions"></div>
+                </div>
+
+                <article class="mcard" id="mcard">
+                    <div class="mcard-hd">
+                        <span class="mcard-mark">
+                            <span class="material-symbols-outlined">graphic_eq</span>
+                        </span>
+                        <span class="mcard-brand">Conta <b>Medina</b></span>
+                    </div>
+                    <div class="mcard-ft">
+                        <div class="mcard-bal" id="mcardBal"></div>
+                        <span class="mcard-cycle" id="mcardCycle">Ciclo actual</span>
+                    </div>
+                </article>
+
+                <div class="mquick">
+                    <button type="button" class="mq mq--in" id="mqDeposit">
+                        <span class="material-symbols-outlined">savings</span>
+                        <span>Depósito</span>
+                    </button>
+                    <button type="button" class="mq mq--out" id="mqExpense">
+                        <span class="material-symbols-outlined">shopping_cart</span>
+                        <span>Gasto</span>
+                    </button>
+                </div>
+
+            </section>
+
             <!-- Métodos de pago en cabecera. En móvil se desliza en horizontal
                  para no empujar el feed del día fuera de la primera pantalla. -->
+            <div class="msec-title msec-title--solo">Métodos de pago</div>
             <section id="payMethods" class="pm-deck pm-deck--header" aria-label="Métodos de pago"></section>
 
             <!-- CHARTS -->
@@ -687,6 +735,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="app.js"></script>
     <script src="ui-controls.js"></script>
+    <script src="mobile-shell.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

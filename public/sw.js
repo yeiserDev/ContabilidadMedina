@@ -1,6 +1,8 @@
 // ====== CONTA MEDINA — SERVICE WORKER (Modo Metro) ======
 // Versión: bump this string to force a cache refresh after updates
-// v27 — filas del historial en móvil: rubro completo y ••• bien colocado.
+// v29 — portada móvil sin el resumen del ciclo (vuelve al cajón lateral).
+// Antes: v28 portada móvil: barra propia y tarjeta de saldo,
+// Antes: v27 filas del historial en móvil,
 // Antes: v26 tarjetas de método de pago en cristal,
 // Antes: v25 carrusel móvil alineado y fin del desborde a 320px,
 // Antes: v24 intercambio métodos de pago / KPIs,
@@ -10,7 +12,7 @@
 // v15 banda KPI, v14 modal de detalle, v13 logo CM, v12 rediseño estético.
 // La estrategia del shell es cache-first: sin este bump, las instalaciones
 // existentes seguirían sirviendo los assets viejos.
-const CACHE_NAME = 'contamedina-v27';
+const CACHE_NAME = 'contamedina-v29';
 
 // All app shell files to pre-cache on install
 const SHELL = [
@@ -19,6 +21,7 @@ const SHELL = [
     './styles.css',
     './app.js',
     './ui-controls.js',
+    './mobile-shell.js',
     './firebase-config.js',
     './icon.svg',
     './icon.png',
