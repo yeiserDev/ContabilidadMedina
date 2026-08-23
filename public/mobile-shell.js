@@ -292,6 +292,11 @@
         registrar(document.querySelector('.header-actions'), document.getElementById('mshellActions'));
         registrar(document.querySelector('.bal-pill'), document.getElementById('mcardBal'));
         registrar(document.getElementById('dailyView'), document.getElementById('mhistBody'));
+        /* Los comprobantes, dentro de la misma ficha que fecha, método y
+           descripción. Sueltos debajo alargaban la hoja de detalle casi el
+           doble en cuanto el gasto llevaba una foto. */
+        registrar(document.getElementById('viewRecordImageWrap'),
+                  document.querySelector('#viewRecordModal .vr-card'));
 
         /* Cada botón del shell reutiliza el que ya abre ese modal en el
            HTML de escritorio, así no hay una segunda ruta que mantener. */

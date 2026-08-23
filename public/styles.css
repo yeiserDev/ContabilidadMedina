@@ -7702,3 +7702,43 @@ body.modal-open { overflow: hidden; }
     .vr-scene .es-humo,
     .vr-scene .es-brillo { animation: none; }
 }
+
+
+/* ============================================================
+   COMPROBANTES DENTRO DE LA FICHA (móvil)
+   ------------------------------------------------------------
+   Con la foto a 150px de alto y su propio bloque, un gasto con
+   comprobante estiraba la hoja casi el doble que uno sin él. Aquí
+   las miniaturas entran en la misma ficha que la fecha y el método,
+   como una fila más: se ven, se tocan y la hoja no cambia de tamaño
+   de un movimiento a otro.
+
+   Siguen abriendo la foto a pantalla completa al tocarlas, que es
+   donde se lee un comprobante de verdad.
+   ============================================================ */
+@media (max-width: 768px) {
+    #viewRecordModal .vr-card .vr-side {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px dashed var(--line);
+    }
+
+    #viewRecordModal .vr-card #viewRecordImgLabel {
+        margin-bottom: 8px !important;
+    }
+
+    #viewRecordModal .vr-card .vr-photos {
+        gap: 8px;
+        padding-bottom: 0;
+        scrollbar-width: none;
+    }
+    #viewRecordModal .vr-card .vr-photos::-webkit-scrollbar { display: none; }
+
+    #viewRecordModal .vr-card .vr-photo {
+        width: 58px;
+        min-width: 58px;
+        height: 58px;
+        border-radius: var(--radius-md);
+        object-fit: cover;
+    }
+}
