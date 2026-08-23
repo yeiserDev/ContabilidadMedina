@@ -6536,10 +6536,15 @@ body.modal-open { overflow: hidden; }
         padding-top: calc(10px + env(safe-area-inset-top));
         padding-left: 0;
         padding-right: 0;
+        /* El hueco para la barra flotante lo pone .center y sólo .center.
+           Antes lo ponían los dos —92px heredados aquí y 104px allí— y con
+           el historial fuera de la portada esos 200px de nada quedaban a la
+           vista al final del desplazamiento. */
+        padding-bottom: 0;
     }
 
     .center {
-        padding: 0 14px calc(104px + env(safe-area-inset-bottom));
+        padding: 0 14px calc(96px + env(safe-area-inset-bottom));
     }
 
     .mshell { display: block; }
