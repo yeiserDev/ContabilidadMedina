@@ -6640,27 +6640,27 @@ body.modal-open { overflow: hidden; }
     /* La de más atrás sólo asoma: un canto de color que cuenta que hay
        más de una. */
     .mcard-slip--back {
-        width: 72%;
-        height: 16px;
+        width: 86%;
+        height: 13px;
         margin: 0 auto;
         border-radius: 14px 14px 0 0;
-        background: linear-gradient(150deg, #F7B389, #EE8E5C);
+        background: linear-gradient(150deg, #FDCBA6, #F8B183);
     }
 
     /* Colores fijos, no tokens: en oscuro --signal-orange se aclara hasta
-       #F2783C y el texto blanco encima caía a 2.9:1. La cartera es una
-       superficie de color con voz propia; no tiene por qué seguir al tema.
+       #F2783C y el blanco encima caía a 2.9:1. La cartera es una superficie
+       de color con voz propia; no tiene por qué seguir al tema.
 
-       El degradado baja de claro a oscuro para que la fila de abajo —la que
-       lleva el dato real, el ciclo— se apoye en el extremo profundo (5,1:1).
-       El nombre de marca vive arriba, en el claro: es identidad, no dato. */
+       Las tarjetas van claras y el cuero oscuro, como en la referencia: es
+       esa escalera de tono la que hace que una entre en el otro. Antes la
+       tarjeta era más oscura que el bolsillo y el orden se leía al revés. */
     .mcard-slip--front {
-        width: 91%;
-        margin: -5px auto 0;
+        width: 94%;
+        margin: -4px auto 0;
         padding: 14px 18px 30px;
         background:
-            radial-gradient(70% 90% at 88% 0%, rgba(255, 255, 255, 0.22), transparent 62%),
-            linear-gradient(180deg, #E5813E 0%, #C4520F 100%);
+            radial-gradient(70% 90% at 88% 0%, rgba(255, 255, 255, 0.30), transparent 62%),
+            linear-gradient(180deg, #FBB98B 0%, #F0925A 100%);
     }
 
     .mcard-slip-row {
@@ -6675,9 +6675,9 @@ body.modal-open { overflow: hidden; }
         font-size: var(--text-base);
         font-weight: 450;
         letter-spacing: var(--tracking-tight);
-        color: rgba(255, 255, 255, 0.94);
+        color: rgba(74, 26, 0, 0.72);
     }
-    .mcard-brand b { font-weight: 700; color: #ffffff; }
+    .mcard-brand b { font-weight: 700; color: #4A1A00; }
 
     .mcard-mark {
         display: grid;
@@ -6685,17 +6685,17 @@ body.modal-open { overflow: hidden; }
         width: 30px;
         height: 30px;
         border-radius: 9px;
-        background: rgba(255, 255, 255, 0.22);
-        border: 1px solid rgba(255, 255, 255, 0.26);
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.7);
     }
-    .mcard-mark .material-symbols-outlined { font-size: 18px; color: #ffffff; }
+    .mcard-mark .material-symbols-outlined { font-size: 18px; color: #A63E0B; }
 
     .mcard-slip-l {
         font-size: var(--text-micro);
         text-transform: uppercase;
         letter-spacing: 0.09em;
         font-weight: 700;
-        color: rgba(255, 255, 255, 0.80);
+        color: rgba(74, 26, 0, 0.62);
     }
 
     /* Aquí la referencia pone la fecha de caducidad. Este ciclo es el dato
@@ -6705,43 +6705,68 @@ body.modal-open { overflow: hidden; }
         max-width: 62%;
         font-size: var(--text-xs);
         font-weight: 700;
-        color: #ffffff;
+        color: #4A1A00;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
-    /* ---- El bolsillo ---- */
-    .mcard-pocket {
+    /* ---- El cuerpo de la cartera ----
+       Aquí estaba la pieza que faltaba para que se leyera como cartera y no
+       como dos tarjetas apiladas: un marco de cuero, más oscuro que el
+       bolsillo, que asoma 7px por los cuatro lados. Sin ese canto no hay
+       objeto, sólo capas de color. */
+    .mcard-body {
         position: relative;
-        /* Sube sobre las tarjetas: son ellas las que entran en el bolsillo,
-           no el bolsillo el que se apoya debajo. */
-        margin-top: -18px;
-        padding: 20px 20px 20px;
-        border-radius: var(--radius-2xl);
-        background:
-            radial-gradient(70% 90% at 88% 6%, rgba(255, 255, 255, 0.18), transparent 60%),
-            linear-gradient(145deg, #F37338 0%, #CF4500 48%, #9A3A0A 100%);
+        /* Sube sobre las tarjetas: son ellas las que entran en la cartera,
+           no la cartera la que se apoya debajo. */
+        margin-top: -20px;
+        padding: 7px;
+        border-radius: 30px;
+        background: linear-gradient(160deg, #A63E0B 0%, #7E2F06 100%);
         /* La sombra hacia arriba es lo que vende que las tarjetas pasan por
-           detrás; sin ella el bolsillo parece pegado encima. */
+           detrás; sin ella el marco parece pegado encima. */
         box-shadow:
-            0 -9px 16px -8px rgba(110, 32, 0, 0.55),
-            inset 0 1px 0 rgba(255, 255, 255, 0.30);
+            0 -10px 18px -10px rgba(80, 24, 0, 0.6),
+            inset 0 1px 0 rgba(255, 255, 255, 0.22);
     }
 
-    /* Las dos costuras del canto, como los remaches de una cartera */
-    .mcard-pocket::before,
-    .mcard-pocket::after {
+    /* Los dos remaches del canto */
+    .mcard-body::before,
+    .mcard-body::after {
         content: '';
         position: absolute;
-        top: 13px;
+        top: 15px;
+        z-index: 1;
         width: 5px;
         height: 5px;
         border-radius: var(--radius-circle);
-        background: rgba(255, 255, 255, 0.45);
+        background: rgba(255, 255, 255, 0.5);
     }
-    .mcard-pocket::before { left: 14px; }
-    .mcard-pocket::after  { right: 14px; }
+    .mcard-body::before { left: 13px; }
+    .mcard-body::after  { right: 13px; }
+
+    /* ---- El bolsillo ---- */
+    .mcard-pocket {
+        position: relative;
+        padding: 18px 16px 16px;
+        border-radius: 23px;
+        background:
+            radial-gradient(70% 90% at 88% 6%, rgba(255, 255, 255, 0.18), transparent 60%),
+            linear-gradient(145deg, #F37338 0%, #CF4500 52%, #B03C02 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30);
+    }
+
+    /* La costura: una línea de puntada por dentro del bolsillo, como la
+       que recorre el cuero de una cartera de verdad. */
+    .mcard-pocket::after {
+        content: '';
+        position: absolute;
+        inset: 6px;
+        border: 1.5px dashed rgba(255, 255, 255, 0.30);
+        border-radius: 18px;
+        pointer-events: none;
+    }
 
     /* El chip de saldo de la cabecera, ya dentro del bolsillo: pierde
        fondo y borde y pasa a ser la cifra principal. */
@@ -6788,7 +6813,7 @@ body.modal-open { overflow: hidden; }
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-top: 18px;
+        margin-top: 20px;
     }
 
     .mcard-cta {
