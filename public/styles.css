@@ -7653,3 +7653,16 @@ body.modal-open { overflow: hidden; }
     #viewRecordModal .modal { max-height: 94vh; }
     .vr-scene { margin-bottom: 18px; }
 }
+
+/* La ruta del mapa se dibuja sola al abrir: el trazo avanza de un extremo
+   al otro y se queda. 400 es holgura de sobra para el largo real del
+   camino; lo que sobra sólo adelanta el arranque. */
+.vr-scene .es-traza {
+    stroke-dasharray: 400;
+    animation: esTraza 1.1s var(--ease-out) 0.1s both;
+}
+@keyframes esTraza { from { stroke-dashoffset: 400; } to { stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .vr-scene .es-traza { animation: none; stroke-dasharray: none; }
+}

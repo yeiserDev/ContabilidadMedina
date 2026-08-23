@@ -104,19 +104,43 @@
             '<circle class="es-rueda" cx="128" cy="92" r="16" fill="none" stroke="#2A2825" stroke-width="7" stroke-dasharray="10 8"/>' +
             '<circle class="es-rueda" cx="224" cy="92" r="16" fill="none" stroke="#2A2825" stroke-width="7" stroke-dasharray="10 8"/>',
 
-        /* La ruta marcada sobre el mapa, de origen a destino */
+        /* El mapa con la ruta trazada, al modo del widget de mapas: calles
+           finas de fondo, el recorrido por encima y los dos extremos
+           marcados. Verde donde arranca, naranja donde termina —los mismos
+           dos colores con los que la app dice entra y sale. */
         viaje:
-            '<rect x="30" y="18" width="260" height="94" rx="14" fill="#EFE9E2"/>' +
-            '<path d="M30 78 h260 M118 18 v94 M212 18 v94" stroke="#DDD3C7" stroke-width="4"/>' +
-            '<rect x="140" y="30" width="46" height="30" rx="6" fill="#DCE7DA"/>' +
-            '<rect x="226" y="86" width="48" height="20" rx="6" fill="#DCE7DA"/>' +
-            '<path class="es-ruta" d="M74 92 C 74 58 128 66 132 44 C 136 24 220 30 244 56" ' +
-            'fill="none" stroke="#CF4500" stroke-width="5" stroke-linecap="round" stroke-dasharray="10 9"/>' +
+            '<defs>' +
+            '<clipPath id="esMapaCorte"><rect x="8" y="8" width="304" height="114" rx="14"/></clipPath>' +
+            '<linearGradient id="esRutaColor" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0" stop-color="#F5934F"/><stop offset="1" stop-color="#CF4500"/>' +
+            '</linearGradient>' +
+            '</defs>' +
+            '<g clip-path="url(#esMapaCorte)">' +
+            '<rect x="8" y="8" width="304" height="114" fill="#EAE3DA"/>' +
+            /* manzanas verdes y el río, por debajo del callejero */
+            '<rect x="26" y="80" width="44" height="28" rx="5" fill="#D8E4D6"/>' +
+            '<rect x="212" y="16" width="52" height="26" rx="5" fill="#D8E4D6"/>' +
+            '<path d="M304 4 C 272 38 296 72 262 126" fill="none" stroke="#CBDCE9" stroke-width="10" stroke-linecap="round"/>' +
+            /* avenidas y calles */
+            '<path d="M4 42 H316 M4 82 H316 M58 4 V126 M132 4 V126 M204 4 V126" stroke="#DCD2C4" stroke-width="3.5"/>' +
+            '<path d="M4 22 H316 M4 62 H316 M4 102 H316 M26 4 V126 M92 4 V126 M166 4 V126 M240 4 V126 M284 4 V126" ' +
+            'stroke="#E4DCD0" stroke-width="1.8"/>' +
+            '<path d="M92 62 L 132 22 M166 102 L 204 62" stroke="#E4DCD0" stroke-width="1.8"/>' +
+            '</g>' +
+            /* el recorrido: primero el reborde claro, que lo despega del callejero */
+            '<path d="M150 34 C 140 50 162 56 156 70 C 150 84 168 88 162 100" fill="none" ' +
+            'stroke="#FBF8F4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '<path class="es-traza" d="M150 34 C 140 50 162 56 156 70 C 150 84 168 88 162 100" fill="none" ' +
+            'stroke="url(#esRutaColor)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>' +
             '<g class="es-entra">' +
-            '<path d="M74 96 c-9 -12 -13 -18 -13 -24 a13 13 0 0 1 26 0 c0 6 -4 12 -13 24 z" fill="#3860BE"/>' +
-            '<circle cx="74" cy="72" r="5" fill="#EFE9E2"/>' +
-            '<path d="M244 60 c-9 -12 -13 -18 -13 -24 a13 13 0 0 1 26 0 c0 6 -4 12 -13 24 z" fill="#CF4500"/>' +
-            '<circle cx="244" cy="36" r="5" fill="#FDF3EC"/>' +
+            '<circle cx="150" cy="34" r="9" fill="#FBF8F4"/><circle cx="150" cy="34" r="6" fill="#15803D"/>' +
+            '<circle cx="162" cy="100" r="9" fill="#FBF8F4"/><circle cx="162" cy="100" r="6" fill="#CF4500"/>' +
+            '</g>' +
+            /* la chapa del sitio, arriba a la izquierda */
+            '<g class="es-flota">' +
+            '<rect x="18" y="16" width="52" height="19" rx="7" fill="#141413" opacity="0.72"/>' +
+            '<text x="44" y="30" text-anchor="middle" font-family="Sofia Sans, Arial" font-size="11" ' +
+            'font-weight="700" fill="#F3F0EE">RUTA</text>' +
             '</g>',
 
         /* El carro en el taller, con la llave */
@@ -245,7 +269,7 @@
     var FONDOS = {
         combustible: ['#FFF0E4', '#FBDCC6'],
         comida: ['#FFF1E8', '#FAD9C8'],
-        viaje: ['#F1F5FF', '#DFE7FA'],
+        viaje: ['#F6F1EA', '#E7DFD3'],
         taller: ['#EFF4FF', '#DAE4F8'],
         educacion: ['#F1F4FF', '#DEE5FA'],
         salud: ['#EFF8F1', '#D9EDDF'],
