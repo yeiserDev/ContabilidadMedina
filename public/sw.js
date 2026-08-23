@@ -1,6 +1,7 @@
 // ====== CONTA MEDINA — SERVICE WORKER (Modo Metro) ======
 // Versión: bump this string to force a cache refresh after updates
-// v49 — el camión repostando de verdad y el brillo de BCP.
+// v50 — el historial sigue al dedo al arrastrarlo.
+// Antes: v49 el camión repostando y el brillo de BCP,
 // Antes: v48 la ficha del detalle en dos columnas,
 // Antes: v47 los comprobantes entran en la ficha,
 // Antes: v46 el repartidor sale de su local,
@@ -32,7 +33,7 @@
 // v15 banda KPI, v14 modal de detalle, v13 logo CM, v12 rediseño estético.
 // La estrategia del shell es cache-first: sin este bump, las instalaciones
 // existentes seguirían sirviendo los assets viejos.
-const CACHE_NAME = 'contamedina-v49';
+const CACHE_NAME = 'contamedina-v50';
 
 // All app shell files to pre-cache on install
 const SHELL = [

@@ -7348,10 +7348,17 @@ body.modal-open { overflow: hidden; }
         background: var(--canvas-cream);
         box-shadow: -18px 0 44px rgba(20, 20, 19, 0.20);
         transform: translateX(100%);
-        transition: transform 0.34s var(--ease-out);
+        /* Curva de iOS: sale rápido y frena largo. Con --ease-out el panel
+           llegaba y se plantaba, y el gesto se sentía cortado. */
+        transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1);
         will-change: transform;
     }
     .mhist.is-open { transform: none; }
+
+    /* Mientras el dedo arrastra no hay transición: el panel va donde va la
+       mano, sin ir persiguiéndola con un retraso. */
+    .mhist.is-drag,
+    .mhist-ov.is-drag { transition: none; }
 
     .mhist-ov {
         display: block;
@@ -7361,7 +7368,7 @@ body.modal-open { overflow: hidden; }
         background: rgba(20, 20, 19, 0.42);
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.42s cubic-bezier(0.32, 0.72, 0, 1);
     }
     .mhist-ov.is-open { opacity: 1; pointer-events: auto; }
 

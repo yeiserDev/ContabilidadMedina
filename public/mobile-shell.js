@@ -207,11 +207,18 @@
         });
 
         /* ---- El gesto ----
-           Sólo cuenta como deslizamiento lateral si el dedo avanza bastante
-           en horizontal y poco en vertical: cualquier otra cosa es alguien
-           desplazando la página, y robarle ese movimiento sería peor que no
-           tener gesto. */
-        var x0 = 0, y0 = 0, valido = false;
+           El panel sigue al dedo mientras se arrastra, en vez de esperar a
+           que se suelte para decidir. Eso es lo que hace que se sienta
+           conectado: se ve cuánto llevas abierto y se puede echar atrás a
+           mitad de camino.
+
+           Al soltar manda la velocidad antes que la distancia: un lanzamiento
+           corto pero rápido abre igual, que es lo que espera la mano. Si el
+           dedo iba despacio, decide por dónde quedó: pasada la mitad, abre. */
+        var x0 = 0, y0 = 0, t0 = 0;
+        var eje = 0;          /* 0 sin decidir · 1 horizontal · -1 vertical */
+        var activo = false;
+        var partiaAbierto = false;
 
         function zonaLibre(destino) {
             if (!destino || !destino.closest) return true;
@@ -220,29 +227,85 @@
             return !destino.closest('.pm-deck--header, .charts-section, .modal-bg.active, .sidebar-left');
         }
 
+        function ancho() { return panel.offsetWidth || window.innerWidth || 1; }
+
+        /* p: 0 = fuera de pantalla · 1 = del todo dentro */
+        function arrastrar(p) {
+            panel.style.transform = 'translateX(' + ((1 - p) * 100) + '%)';
+            velo.style.opacity = p.toFixed(3);
+        }
+
         document.addEventListener('touchstart', function (e) {
-            if (e.touches.length !== 1) { valido = false; return; }
+            if (e.touches.length !== 1) { activo = false; return; }
             var t = e.touches[0];
-            x0 = t.clientX; y0 = t.clientY;
-            valido = MQ.matches &&
+            x0 = t.clientX; y0 = t.clientY; t0 = Date.now();
+            eje = 0;
+            partiaAbierto = panel.classList.contains('is-open');
+            activo = MQ.matches &&
                 !document.querySelector('.modal-bg.active') &&
                 zonaLibre(e.target);
         }, { passive: true });
 
-        document.addEventListener('touchend', function (e) {
-            if (!valido) return;
-            valido = false;
+        document.addEventListener('touchmove', function (e) {
+            if (!activo) return;
+            var t = e.touches[0];
+            var dx = t.clientX - x0;
+            var dy = t.clientY - y0;
+
+            /* Primero se decide el eje y luego ya no se cambia: sin este
+               bloqueo, un desplazamiento vertical con algo de temblor
+               lateral empezaría a mover el panel a media lectura. */
+            if (!eje) {
+                if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+                eje = Math.abs(dx) > Math.abs(dy) * 1.3 ? 1 : -1;
+                if (eje !== 1) { activo = false; return; }
+                /* Nada de arrastrar el panel hacia dentro si ya está dentro,
+                   ni hacia fuera si ya está fuera: ese gesto no es para aquí. */
+                if ((!partiaAbierto && dx > 0) || (partiaAbierto && dx < 0)) { activo = false; return; }
+                panel.classList.add('is-drag');
+                velo.classList.add('is-drag', 'is-open');
+            }
+
+            /* Con el eje ya bloqueado, el movimiento es nuestro: si no, el
+               navegador seguiría desplazando la página por debajo. */
+            if (e.cancelable) e.preventDefault();
+
+            /* Cerrado, el dedo hacia la izquierda mete el panel; abierto,
+               hacia la derecha lo saca. Un solo signo para los dos casos. */
+            var p = (partiaAbierto ? 1 : 0) - dx / ancho();
+            /* Banda elástica en los topes, para que no se sienta un muro */
+            if (p > 1) p = 1 + (p - 1) * 0.18;
+            if (p < 0) p = p * 0.18;
+            arrastrar(Math.max(-0.08, Math.min(1.08, p)));
+        }, { passive: false });
+
+        function soltar(e) {
+            if (!activo) return;
+            activo = false;
+            if (eje !== 1) return;
+
             var t = e.changedTouches && e.changedTouches[0];
             if (!t) return;
             var dx = t.clientX - x0;
-            var dy = t.clientY - y0;
-            if (Math.abs(dx) < 70 || Math.abs(dy) > 45) return;
-            var abierto = panel.classList.contains('is-open');
-            /* Hacia la izquierda trae el panel —viene de la derecha—; hacia
-               la derecha lo devuelve a su sitio. */
-            if (dx < 0 && !abierto) abrir(true);
-            else if (dx > 0 && abierto) abrir(false);
-        }, { passive: true });
+            var v = dx / Math.max(1, Date.now() - t0);   /* px por ms */
+            var p = (partiaAbierto ? 1 : 0) - dx / ancho();
+
+            /* El lanzamiento manda, pero pidiéndole también un mínimo de
+               recorrido: si no, un roce rápido de 20px abriría el panel. */
+            var quedaAbierto = (Math.abs(v) > 0.4 && Math.abs(dx) > 24) ? v < 0 : p > 0.5;
+
+            /* Primero se devuelve la transición y luego se sueltan los
+               estilos en línea: así el panel viaja desde donde lo dejó el
+               dedo hasta su sitio, en vez de saltar. */
+            panel.classList.remove('is-drag');
+            velo.classList.remove('is-drag');
+            panel.style.transform = '';
+            velo.style.opacity = '';
+            abrir(quedaAbierto);
+        }
+
+        document.addEventListener('touchend', soltar, { passive: true });
+        document.addEventListener('touchcancel', soltar, { passive: true });
 
         /* Al volver a escritorio el feed se va del panel: dejarlo abierto
            sería dejar un cajón vacío tapando media pantalla. */
