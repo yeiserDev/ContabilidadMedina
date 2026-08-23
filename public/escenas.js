@@ -254,18 +254,58 @@
                 '</g>';
         })(),
 
-        /* El carro en el taller, con la llave */
+        /* El camión en el taller: la nave con su pared de herramientas, el
+           carro de cajones, el gato levantando el morro y la llave apretando.
+           Antes era un coche y una llave sueltos sobre el fondo; esto es un
+           sitio, que es lo que cuenta el gasto. */
         taller:
             SUELO +
-            '<g class="es-flota">' +
-            '<path d="M74 88 v-16 q0 -8 10 -10 l14 -16 q3 -4 9 -4 h44 q6 0 9 4 l14 16 q10 2 10 10 v16 z" fill="#3860BE"/>' +
-            '<path d="M108 48 h40 l10 14 h-60 z" fill="#CFE0FA"/>' +
-            '<rect x="74" y="66" width="110" height="6" rx="3" fill="#2A4E96"/>' +
-            '<circle cx="100" cy="90" r="12" fill="#2A2825"/><circle cx="100" cy="90" r="4" fill="#8A857C"/>' +
-            '<circle cx="158" cy="90" r="12" fill="#2A2825"/><circle cx="158" cy="90" r="4" fill="#8A857C"/>' +
+            /* ---- la nave ---- */
+            '<g stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            '<path d="M196 108 V26 q0 -6 6 -6 h104 q6 0 6 6 v82 z" fill="#DDE5F2"/>' +
+            '<path d="M196 40 h116" stroke-width="2.6"/>' +
+            /* panel de herramientas */
+            '<path d="M208 48 h52 v34 h-52 z" fill="#C7D3E6" stroke-width="2.4"/>' +
+            '<path d="M216 56 l10 10 M226 56 l-10 10" stroke-width="2.6"/>' +
+            '<path d="M240 54 v14 M236 68 h8 v8 h-8 z" stroke-width="2.4" fill="#8A857C"/>' +
+            '<path d="M252 54 a5 5 0 1 1 -0.1 0 z" fill="#8A857C" stroke-width="2.4"/>' +
+            '<path d="M252 62 v14" stroke-width="2.6"/>' +
+            /* carro de cajones */
+            '<path d="M270 66 h34 v42 h-34 z" fill="#3860BE"/>' +
+            '<path d="M270 80 h34 M270 94 h34" stroke-width="2.4"/>' +
+            '<path d="M280 73 h14 M280 87 h14 M280 101 h14" stroke-width="2.6" stroke="#CFE0FA"/>' +
             '</g>' +
-            '<g class="es-gira" style="transform-origin:228px 60px">' +
-            '<path d="M212 34 a16 16 0 0 0 12 28 l22 30 a9 9 0 0 0 14 -10 l-22 -30 a16 16 0 0 0 -12 -28 l8 11 -6 10 -12 1 z" fill="#8A857C"/>' +
+
+            /* ---- el camión, con el morro en alto ----
+               La escala va fuera: el grupo de dentro lo mece la animación y
+               ahí un transform propio se pisaría con ella. */
+            '<g transform="translate(-6 4) scale(0.9)">' +
+            '<g class="es-alza" stroke="#17130F" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">' +
+            '<path d="M28 96 h140 v8 h-146 z" fill="#2A2825"/>' +
+            '<path d="M24 92 V62 q0 -6 6 -6 h34 v36 z" fill="#B8460A"/>' +
+            '<path d="M30 64 h26 v18 h-30 z" fill="#FBD9C4"/>' +
+            '<path d="M64 56 h96 q6 0 6 6 v30 h-102 z" fill="#E05E10"/>' +
+            '<path d="M78 56 v36 M120 56 v36" stroke-width="2.4" opacity="0.5"/>' +
+            /* capó levantado sobre el morro */
+            '<path d="M26 60 L 14 36 l 28 -6 l 18 26 z" fill="#C9520C"/>' +
+            '<circle cx="52" cy="100" r="14" fill="#17130F"/>' +
+            '<circle cx="150" cy="100" r="14" fill="#17130F"/>' +
+            '<circle cx="52" cy="100" r="6.5" fill="#FFF6EE"/>' +
+            '<circle cx="150" cy="100" r="6.5" fill="#FFF6EE"/>' +
+            '</g>' +
+
+            /* ---- el gato que lo sostiene ---- */
+            '<g stroke="#17130F" stroke-width="3" stroke-linejoin="round">' +
+            '<path d="M74 108 h30 l-6 -10 h-18 z" fill="#8A857C"/>' +
+            '<path d="M84 98 h10 v-8 h-10 z" fill="#8A857C" stroke-width="2.4"/>' +
+            '</g>' +
+            '</g>' +
+
+            /* ---- la llave apretando ---- */
+            '<g class="es-llave" stroke="#17130F" stroke-width="3" stroke-linejoin="round" ' +
+            'style="transform-box:fill-box;transform-origin:74% 78%">' +
+            '<path d="M150 24 a13 13 0 0 0 10 23 l20 26 a8 8 0 0 0 12 -9 l-20 -26 a13 13 0 0 0 -10 -23 l7 9 -5 9 -10 1 z" ' +
+            'fill="#B0AAA0"/>' +
             '</g>',
 
         /* Birrete y libro */

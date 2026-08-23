@@ -8478,3 +8478,18 @@ body.modal-open { overflow: hidden; }
         .mbus-input, .mbus-ciclo, .mbus-btn { transition: none; }
     }
 }
+
+/* ---- El taller ----
+   La llave aprieta y suelta, y el camión se mece un pelo sobre el gato. Nada
+   más: es una escena de algo quieto que están arreglando, no de algo que
+   circula. */
+.vr-scene .es-llave { animation: esLlave 1.7s ease-in-out infinite; }
+.vr-scene .es-alza  { transform-box: fill-box; transform-origin: right bottom; animation: esAlza 3.2s ease-in-out infinite; }
+
+@keyframes esLlave { 0%, 100% { transform: rotate(-16deg); } 55% { transform: rotate(6deg); } }
+@keyframes esAlza  { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-1.1deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .vr-scene .es-llave,
+    .vr-scene .es-alza { animation: none; }
+}
