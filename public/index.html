@@ -719,8 +719,11 @@
     <!-- MODAL: VIEW RECORD -->
     <div class="modal-bg" id="viewRecordModal">
         <div class="modal modal--detail">
-            <div class="modal-hd" style="border-bottom: none; padding-bottom: 0;">
-                <h2 id="viewRecordTitle" style="font-size: 22px; color: var(--ink-black);">Gasto</h2>
+            <div class="modal-hd vr-hd" style="border-bottom: none; padding-bottom: 0;">
+                <div class="vr-hd-l">
+                    <h2 id="viewRecordTitle">Gasto</h2>
+                    <span id="viewRecordBadge" class="vr-badge">Categoría</span>
+                </div>
                 <button class="modal-x" data-close="viewRecordModal"><span class="material-symbols-outlined">close</span></button>
             </div>
             <div class="modal-bd vr-grid" style="padding-top: 16px;">
@@ -731,7 +734,6 @@
 
                     <div class="vr-hero">
                         <div id="viewRecordAmount" class="vr-amount">-S/ 0.00</div>
-                        <div id="viewRecordBadge" class="vr-badge">Categoría</div>
                     </div>
 
                     <div class="vr-card">

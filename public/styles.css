@@ -6319,17 +6319,62 @@ body.modal-open { overflow: hidden; }
     font-variant-numeric: tabular-nums;
 }
 
+/* ---- Cabecera del detalle: título y rubro juntos ----
+   La chapa del rubro estaba suelta bajo el importe, en versalitas y sin
+   nada que la atara a nada: una etiqueta genérica flotando. Sube al lado
+   del título, que es donde se dice de qué va esto, y se queda en caja baja
+   con un punto del color del rubro delante. El punto usa currentColor, así
+   que se pinta solo con el color que viewRecord ya le da a la chapa. */
+.vr-hd { align-items: center; gap: 12px; }
+
+.vr-hd-l {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.vr-hd-l h2 {
+    font-size: var(--text-lg);
+    color: var(--ink-black);
+    white-space: nowrap;
+}
+
 .vr-badge {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    padding: 5px 14px;
+    gap: 7px;
+    /* Se encoge sola cuando no cabe, en vez de llevar un tope fijo: con el
+       46% de antes, "Devolución Dinero Prestado" salía cortada aunque
+       quedaran 90px libres hasta la X. */
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 5px 12px 5px 10px;
     border-radius: var(--radius-pill);
     font-size: var(--text-xs);
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    text-transform: none;
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* El filo se tiñe del mismo color, un cuarto de fuerza. Donde no haya
+       color-mix se queda el hilo neutro de la casa. */
+    border: 1px solid var(--line);
+    border-color: color-mix(in srgb, currentColor 28%, transparent);
 }
+
+.vr-badge::before {
+    content: '';
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-circle);
+    background: currentColor;
+}
+
+/* Sin la chapa debajo, el importe manda solo en su franja */
+.vr-hero { margin-bottom: 20px; }
 
 .vr-card {
     background: rgba(20, 20, 19, 0.035);
