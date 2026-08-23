@@ -706,6 +706,9 @@
             <div class="modal-bd vr-grid" style="padding-top: 16px;">
                 <!-- IZQUIERDA: detalles -->
                 <div class="vr-main">
+                    <!-- La escena la dibuja escenas.js según el rubro -->
+                    <div class="vr-scene" id="viewRecordScene" aria-hidden="true"></div>
+
                     <div class="vr-hero">
                         <div id="viewRecordAmount" class="vr-amount">-S/ 0.00</div>
                         <div id="viewRecordBadge" class="vr-badge">Categoría</div>
@@ -788,6 +791,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="escenas.js"></script>
     <script src="app.js"></script>
     <script src="ui-controls.js"></script>
     <script src="mobile-shell.js"></script>

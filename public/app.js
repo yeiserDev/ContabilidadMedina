@@ -958,6 +958,13 @@ window.viewRecord = function(type, id) {
         badge.style.color = col;
     }
     
+    // Escena del movimiento: se elige por el rubro y, si el rubro no dice
+    // nada, por la descripción. Vive en escenas.js.
+    const escena = document.getElementById('viewRecordScene');
+    if (escena && window.escenaMovimiento) {
+        escena.innerHTML = window.escenaMovimiento(type, rec.category || rec.type || '', rec.description || '');
+    }
+
     document.getElementById('viewRecordDate').textContent = fmtDate(rec.date);
     document.getElementById('viewRecordDesc').textContent = rec.description || 'Sin descripción adicional.';
     

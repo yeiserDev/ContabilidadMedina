@@ -1,6 +1,7 @@
 // ====== CONTA MEDINA — SERVICE WORKER (Modo Metro) ======
 // Versión: bump this string to force a cache refresh after updates
-// v42 — el detalle sale delante del historial y sube como hoja inferior.
+// v43 — cada gasto estrena su escena en el detalle.
+// Antes: v42 el detalle sale delante y sube como hoja inferior,
 // Antes: v41 el historial en lista con logotipos redondos,
 // Antes: v40 fuera el hueco doble al final de la portada,
 // Antes: v39 el historial se va a un panel derecho con gesto,
@@ -25,7 +26,7 @@
 // v15 banda KPI, v14 modal de detalle, v13 logo CM, v12 rediseño estético.
 // La estrategia del shell es cache-first: sin este bump, las instalaciones
 // existentes seguirían sirviendo los assets viejos.
-const CACHE_NAME = 'contamedina-v42';
+const CACHE_NAME = 'contamedina-v43';
 
 // All app shell files to pre-cache on install
 const SHELL = [
@@ -35,6 +36,7 @@ const SHELL = [
     './app.js',
     './ui-controls.js',
     './mobile-shell.js',
+    './escenas.js',
     './firebase-config.js',
     './icon.svg',
     './icon.png',

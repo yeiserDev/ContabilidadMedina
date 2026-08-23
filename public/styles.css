@@ -7581,3 +7581,75 @@ body.modal-open { overflow: hidden; }
 
     #viewRecordModal .modal-hd h2 { font-size: var(--text-lg) !important; }
 }
+
+
+/* ============================================================
+   ESCENA DEL DETALLE
+   ------------------------------------------------------------
+   Banda ilustrada arriba del detalle. El dibujo lo elige escenas.js
+   por el rubro del movimiento; aquí sólo se le da sitio, canto y el
+   poco movimiento que admite sin distraer de la cifra.
+   ============================================================ */
+.vr-scene {
+    margin-bottom: 16px;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    line-height: 0;
+    border: 1px solid var(--line-faint);
+}
+
+.vr-scene .es {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.es-suelo {
+    stroke: rgba(20, 20, 19, 0.14);
+    stroke-width: 4;
+    stroke-dasharray: 22 14;
+}
+
+/* En oscuro las escenas se apagan un punto: a pantalla completa y de
+   noche, doce colores planos a plena saturación deslumbran. */
+[data-theme="dark"] .vr-scene {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme="dark"] .vr-scene .es { filter: saturate(0.85) brightness(0.88); }
+
+/* ---- Movimiento ----
+   Entra una vez y se queda: nada que siga moviéndose al lado de un
+   número que se está leyendo. La ruta es la excepción, porque su
+   discontinua avanzando es lo que la hace ruta y no una raya. */
+.vr-scene .es-flota { animation: esFlota 0.7s var(--ease-out) both; }
+.vr-scene .es-entra { animation: esEntra 0.7s var(--ease-out) 0.08s both; }
+.vr-scene .es-cae   { animation: esCae 0.8s var(--ease-out) 0.15s both; }
+.vr-scene .es-gira  { animation: esGira 0.8s var(--ease-out) 0.1s both; }
+.vr-scene .es-onda  { animation: esOnda 0.7s var(--ease-out) 0.12s both; }
+.vr-scene .es-rueda { animation: esRueda 0.9s linear infinite; transform-box: fill-box; transform-origin: center; }
+.vr-scene .es-ruta  { animation: esRuta 1.6s linear infinite; }
+
+@keyframes esFlota { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes esEntra { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+@keyframes esCae   { from { opacity: 0; transform: translateY(-18px); } to { opacity: 1; transform: none; } }
+@keyframes esGira  { from { opacity: 0; transform: rotate(-24deg); } to { opacity: 1; transform: none; } }
+@keyframes esOnda  { from { opacity: 0; transform: scale(0.82); } to { opacity: 1; transform: none; } }
+@keyframes esRueda { to { transform: rotate(360deg); } }
+@keyframes esRuta  { to { stroke-dashoffset: -38; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .vr-scene .es-flota,
+    .vr-scene .es-entra,
+    .vr-scene .es-cae,
+    .vr-scene .es-gira,
+    .vr-scene .es-onda,
+    .vr-scene .es-rueda,
+    .vr-scene .es-ruta { animation: none; }
+}
+
+@media (max-width: 768px) {
+    /* La hoja da algo más de sí: con la escena arriba, cortarla a 92vh
+       dejaba la ficha justa contra el borde. */
+    #viewRecordModal .modal { max-height: 94vh; }
+    .vr-scene { margin-bottom: 18px; }
+}
