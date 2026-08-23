@@ -973,7 +973,10 @@ window.viewRecord = function(type, id) {
     if (type === 'expense') {
         const w = rec.wallet || 'efectivo';
         walletDiv.innerHTML = window.getPayChip(w);
-        if (walletWrap) walletWrap.style.display = 'block';
+        if (walletWrap) {
+            walletWrap.style.display = 'block';
+            walletWrap.className = 'vr-field vr-field--end vr-pago vr-pago--' + w;
+        }
         // Relanzar la animación en cada apertura: sin el reflow intermedio el
         // navegador no reinicia una animación que ya terminó en ese elemento.
         const chip = walletDiv.querySelector('.vr-pay');
@@ -1000,7 +1003,7 @@ window.viewRecord = function(type, id) {
             });
             imgWrap.style.display = '';
             const lbl = document.getElementById('viewRecordImgLabel');
-            if (lbl) lbl.textContent = imgs.length > 1 ? `Comprobantes adjuntos · ${imgs.length}` : 'Comprobantes adjuntos';
+            if (lbl) lbl.textContent = imgs.length > 1 ? `Comprobantes · ${imgs.length}` : 'Comprobante';
             multiWrap.scrollLeft = 0;
         } else {
             imgWrap.style.display = 'none';

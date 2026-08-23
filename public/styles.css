@@ -7705,40 +7705,175 @@ body.modal-open { overflow: hidden; }
 
 
 /* ============================================================
-   COMPROBANTES DENTRO DE LA FICHA (móvil)
+   FICHA DEL DETALLE — dos columnas, cristal y color de pago (móvil)
    ------------------------------------------------------------
-   Con la foto a 150px de alto y su propio bloque, un gasto con
-   comprobante estiraba la hoja casi el doble que uno sin él. Aquí
-   las miniaturas entran en la misma ficha que la fecha y el método,
-   como una fila más: se ven, se tocan y la hoja no cambia de tamaño
-   de un movimiento a otro.
+   Los datos a la izquierda en una columna que se lee de arriba
+   abajo, y el comprobante a la derecha en vertical, que es la
+   proporción de una captura de móvil. Así la foto se ve entera y
+   la hoja no crece cada vez que un gasto lleva adjunto.
 
-   Siguen abriendo la foto a pantalla completa al tocarlas, que es
-   donde se lee un comprobante de verdad.
+   El bloque del método va envuelto en el color de su marca: de un
+   vistazo se sabe con qué se pagó sin leer el nombre. La clase la
+   pone viewRecord, porque el CSS no puede saberlo solo.
    ============================================================ */
 @media (max-width: 768px) {
+
+    /* ---- La ficha, en cristal ----
+       Misma receta que la banda de KPIs y las tarjetas de gráfico. */
+    #viewRecordModal .vr-card {
+        display: grid;
+        /* auto y no 108px: cuando el gasto no lleva comprobante el bloque
+           está en display:none, la columna se queda en cero y la ficha
+           vuelve a ser de una sola columna. El aire lo pone el margen del
+           propio bloque, que también desaparece con él. */
+        grid-template-columns: 1fr auto;
+        column-gap: 0;
+        align-items: start;
+        padding: 16px;
+        border-radius: var(--radius-xl);
+        background:
+            radial-gradient(75% 60% at 95% 0%, rgba(207, 69, 0, 0.06), transparent 62%),
+            linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
+        backdrop-filter: blur(14px) saturate(1.5);
+        -webkit-backdrop-filter: blur(14px) saturate(1.5);
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        box-shadow:
+            0 4px 14px rgba(20, 20, 19, 0.07),
+            inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+
+    [data-theme="dark"] #viewRecordModal .vr-card {
+        background:
+            radial-gradient(75% 60% at 95% 0%, rgba(242, 120, 60, 0.10), transparent 62%),
+            linear-gradient(160deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.05));
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow:
+            0 4px 14px rgba(0, 0, 0, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.13);
+    }
+
+    /* Sin backdrop-filter el cristal cae a superficie opaca */
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        #viewRecordModal .vr-card { background: rgba(255, 255, 255, 0.94); }
+        [data-theme="dark"] #viewRecordModal .vr-card { background: rgba(255, 255, 255, 0.11); }
+    }
+
+    /* ---- Columna izquierda: fecha, método y descripción ---- */
+    #viewRecordModal .vr-card .vr-row {
+        grid-column: 1;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    #viewRecordModal .vr-card .vr-field--end { text-align: left; }
+    #viewRecordModal .vr-card .vr-field--end .vr-value { justify-content: flex-start; }
+
+    #viewRecordModal .vr-card .vr-sep {
+        grid-column: 1;
+        margin-top: 12px;
+        padding-top: 12px;
+    }
+
+    /* ---- El método, envuelto en el color con el que se pagó ---- */
+    .vr-pago {
+        padding: 10px 12px;
+        border-radius: var(--radius-lg);
+        border: 1px solid transparent;
+    }
+    .vr-pago .vr-label { margin-bottom: 8px; }
+
+    .vr-pago--yape {
+        background: rgba(142, 42, 158, 0.10);
+        border-color: rgba(142, 42, 158, 0.24);
+    }
+    .vr-pago--yape .vr-label { color: #8E2A9E; }
+
+    .vr-pago--bcp {
+        background: rgba(10, 63, 176, 0.09);
+        border-color: rgba(10, 63, 176, 0.22);
+    }
+    .vr-pago--bcp .vr-label { color: #0A3FB0; }
+
+    .vr-pago--efectivo {
+        background: rgba(20, 20, 19, 0.05);
+        border-color: rgba(20, 20, 19, 0.12);
+    }
+
+    [data-theme="dark"] .vr-pago--yape    { background: rgba(196, 92, 214, 0.16); border-color: rgba(196, 92, 214, 0.3); }
+    [data-theme="dark"] .vr-pago--yape .vr-label { color: #D592E4; }
+    [data-theme="dark"] .vr-pago--bcp     { background: rgba(110, 151, 242, 0.16); border-color: rgba(110, 151, 242, 0.3); }
+    [data-theme="dark"] .vr-pago--bcp .vr-label { color: #9DB8F7; }
+    [data-theme="dark"] .vr-pago--efectivo { background: rgba(255, 255, 255, 0.07); border-color: rgba(255, 255, 255, 0.14); }
+
+    /* ---- Columna derecha: el comprobante ----
+       Vertical y alto, que es como se ve una captura de móvil: en
+       miniatura cuadrada sólo se veía la mitad de arriba. */
     #viewRecordModal .vr-card .vr-side {
-        margin-top: 18px;
-        padding-top: 18px;
-        border-top: 1px dashed var(--line);
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        margin: 0 0 0 14px;
+        padding: 0;
+        border: none;
     }
 
     #viewRecordModal .vr-card #viewRecordImgLabel {
         margin-bottom: 8px !important;
+        font-size: 9px !important;
+        letter-spacing: 0.07em !important;
+        white-space: nowrap;
     }
 
     #viewRecordModal .vr-card .vr-photos {
+        display: flex;
+        flex-direction: column;
         gap: 8px;
+        max-height: 208px;
+        overflow-y: auto;
+        overflow-x: hidden;
         padding-bottom: 0;
+        scroll-snap-type: y proximity;
         scrollbar-width: none;
     }
     #viewRecordModal .vr-card .vr-photos::-webkit-scrollbar { display: none; }
 
     #viewRecordModal .vr-card .vr-photo {
-        width: 58px;
-        min-width: 58px;
-        height: 58px;
-        border-radius: var(--radius-md);
+        width: 108px;
+        min-width: 0;
+        height: 138px;
+        flex: 0 0 auto;
         object-fit: cover;
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        box-shadow: 0 4px 12px rgba(20, 20, 19, 0.12);
+        scroll-snap-align: start;
+    }
+    [data-theme="dark"] #viewRecordModal .vr-card .vr-photo { border-color: rgba(255, 255, 255, 0.14); }
+
+    /* ---- Entrada escalonada ----
+       Al abrir, las piezas llegan una detrás de otra en el mismo orden
+       en que se leen. Arranca con .active, así que se repite en cada
+       apertura sin tocar nada desde el JS. */
+    #viewRecordModal.active .vr-card .vr-row,
+    #viewRecordModal.active .vr-card .vr-sep,
+    #viewRecordModal.active .vr-card .vr-side,
+    #viewRecordModal.active .vr-actions {
+        animation: vrEntra 0.5s var(--ease-out) both;
+    }
+    #viewRecordModal.active .vr-card .vr-row  { animation-delay: 0.06s; }
+    #viewRecordModal.active .vr-card .vr-sep  { animation-delay: 0.13s; }
+    #viewRecordModal.active .vr-card .vr-side { animation-delay: 0.2s; }
+    #viewRecordModal.active .vr-actions       { animation-delay: 0.26s; }
+
+    @keyframes vrEntra {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #viewRecordModal.active .vr-card .vr-row,
+        #viewRecordModal.active .vr-card .vr-sep,
+        #viewRecordModal.active .vr-card .vr-side,
+        #viewRecordModal.active .vr-actions { animation: none; }
     }
 }
