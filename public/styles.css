@@ -6679,10 +6679,11 @@ body.modal-open { overflow: hidden; }
     }
     .mcard-brand b { font-weight: 700; color: #4A1A00; }
 
-    /* Donde la referencia pone la marca de la red va la nuestra, en el
-       mismo registro: palabra suelta, en versalitas apretadas, sin chip que
-       la encierre. El icono de la app aquí era un cuadro negro que rompía
-       la tarjeta en dos. */
+    /* La marca de la red, suelta sobre la tarjeta y sin chip que la
+       encierre, como en la referencia. Cursiva y negrita para leerse en ese
+       registro. Ojo: es una marca ajena sobre una tarjeta que no lo es;
+       decorativa en una app propia no molesta, pero si esto sale a un
+       público habría que quitarla. */
     .mcard-wordmark {
         flex-shrink: 0;
         font-size: var(--text-md);

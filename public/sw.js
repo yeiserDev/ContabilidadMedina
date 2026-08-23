@@ -1,6 +1,7 @@
 // ====== CONTA MEDINA — SERVICE WORKER (Modo Metro) ======
 // Versión: bump this string to force a cache refresh after updates
-// v37 — la cartera con el canto curvado y la costura dibujados en SVG.
+// v38 — la marca de la tarjeta pasa a VISA.
+// Antes: v37 canto curvado y costura en SVG,
 // Antes: v36 canto de cuero por los lados y marca suelta,
 // Antes: v35 fuera las fichas de Depósito/Gasto,
 // Antes: v34 cartera con marco de cuero y costura,
@@ -20,7 +21,7 @@
 // v15 banda KPI, v14 modal de detalle, v13 logo CM, v12 rediseño estético.
 // La estrategia del shell es cache-first: sin este bump, las instalaciones
 // existentes seguirían sirviendo los assets viejos.
-const CACHE_NAME = 'contamedina-v37';
+const CACHE_NAME = 'contamedina-v38';
 
 // All app shell files to pre-cache on install
 const SHELL = [
