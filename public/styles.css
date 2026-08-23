@@ -6937,7 +6937,9 @@ body.modal-open { overflow: hidden; }
         align-items: center;
         gap: 1px;
         padding: 4px 8px;
-        border-radius: var(--radius-sm);
+        /* Porcentaje, no píxeles: el radio se mide sobre cada lado, así que
+           la esquina es una elipse y acompaña al alto de la pastilla. */
+        border-radius: 25%;
         background: rgba(255, 255, 255, 0.15);
         border: 1px solid rgba(255, 255, 255, 0.16);
     }
@@ -6982,9 +6984,48 @@ body.modal-open { overflow: hidden; }
     .charts-section > .chart-card {
         flex: 0 0 100%;
         scroll-snap-align: start;
-        padding: 14px 16px 16px;
+        padding: 16px 18px 18px;
+        border-radius: var(--radius-2xl);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow-flat);
     }
     .chart-card:hover { transform: none; }
+
+    /* ---- Cabecera de cada gráfico ----
+       Era una línea de versalitas grises de 11px, del mismo peso que
+       cualquier etiqueta secundaria. Pasa al patrón del resto de la
+       portada: chip de icono a la izquierda y título en caja baja, como
+       en las tarjetas de método y en el resumen del ciclo.
+
+       El fondo de la tarjeta se queda claro a propósito: un degradado
+       de color detrás de una malla de ejes y una leyenda es justo donde
+       el material bonito se come el dato. */
+    .chart-header {
+        gap: 10px;
+        margin-bottom: 14px;
+        font-size: var(--text-base);
+        font-weight: 700;
+        text-transform: none;
+        letter-spacing: var(--tracking-tight);
+        color: var(--ink-black);
+        line-height: 1.25;
+    }
+
+    .chart-header .material-symbols-outlined {
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        font-size: 18px !important;
+        background: rgba(207, 69, 0, 0.12);
+        color: var(--signal-orange);
+    }
+
+    [data-theme="dark"] .chart-header .material-symbols-outlined {
+        background: rgba(242, 120, 60, 0.16);
+    }
 
     /* ---- Puntos de los dos carruseles ---- */
     .mdots {
