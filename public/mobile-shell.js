@@ -447,39 +447,129 @@
     }
 
     /* ========================================================
-       LA GOTA DE LA BARRA
+       LA LENTE DE LA BARRA
        --------------------------------------------------------
-       Coloca la gota bajo el botón tocado y la deja salir. Al
-       moverse entre botones el filtro hace el resto: el puente
-       con la barra se estira y se rompe solo.
+       Al apoyar el dedo aparece una lente de cristal debajo y lo
+       sigue mientras se desliza de un icono a otro; al soltar,
+       encaja en el más cercano.
 
-       Se retira sola: estos botones abren cosas, no son pestañas
-       donde uno se queda, y una gota parada bajo un botón diría
-       que estás "en" esa sección. Es un rastro del toque.
+       Dos capas se mueven con la misma medida: la gota, que va
+       bajo el filtro y hace que la forma se funda y se estire con
+       la barra, y la lente, que es la que desenfoca y satura lo
+       que pasa por debajo.
        ======================================================== */
     function gotaBarra() {
         var barra = document.getElementById('bottomNav');
         var capa = barra && barra.querySelector('.bnav-goo');
         var gota = document.getElementById('bnavGota');
-        if (!barra || !capa || !gota) return;
+        var lente = document.getElementById('bnavLente');
+        if (!barra || !capa || !gota || !lente) return;
 
-        var apagar = null;
+        var botones = Array.prototype.slice.call(barra.querySelectorAll('.bnav-btn'));
+        var arrastrando = false, movio = false, x0 = 0, apagar = null;
+        var tragar = false, soltarTragar = null;
 
-        function marcar(btn) {
-            if (!MQ.matches) return;
-            var rb = barra.getBoundingClientRect();
-            var r = btn.getBoundingClientRect();
-            gota.style.setProperty('--gota-x', (r.left - rb.left + r.width / 2) + 'px');
-            capa.classList.add('is-activa');
-            clearTimeout(apagar);
-            apagar = setTimeout(function () { capa.classList.remove('is-activa'); }, 900);
+        /* Si el arrastre empieza y acaba dentro del mismo botón, el navegador
+           manda además su clic nativo: sin este portero se abriría dos veces
+           lo que se haya tocado. Se traga uno y sólo uno. */
+        barra.addEventListener('click', function (e) {
+            if (!tragar) return;
+            tragar = false;
+            clearTimeout(soltarTragar);
+            e.stopPropagation();
+            e.preventDefault();
+        }, true);
+
+        function local(clientX) {
+            var r = barra.getBoundingClientRect();
+            /* Pegada a los extremos la lente se sale de la barra; se queda
+               dentro con el margen de su propio radio. */
+            return Math.max(30, Math.min(r.width - 30, clientX - r.left));
         }
 
-        /* pointerdown y no click: la gota tiene que salir con el dedo, no
-           cuando el modal ya está abriéndose encima. */
-        Array.prototype.forEach.call(barra.querySelectorAll('.bnav-btn'), function (btn) {
-            btn.addEventListener('pointerdown', function () { marcar(btn); });
+        function centro(btn) {
+            var r = barra.getBoundingClientRect();
+            var b = btn.getBoundingClientRect();
+            return b.left - r.left + b.width / 2;
+        }
+
+        function colocar(x) {
+            gota.style.setProperty('--gota-x', x + 'px');
+            lente.style.setProperty('--gota-x', x + 'px');
+        }
+
+        function cercano(x) {
+            var mejor = null, dist = Infinity;
+            botones.forEach(function (b) {
+                var d = Math.abs(centro(b) - x);
+                if (d < dist) { dist = d; mejor = b; }
+            });
+            return mejor;
+        }
+
+        function resaltar(btn) {
+            botones.forEach(function (b) { b.classList.toggle('is-bajo', b === btn); });
+        }
+
+        function encender(x) {
+            colocar(x);
+            resaltar(cercano(x));
+            capa.classList.add('is-activa');
+            barra.classList.add('is-tocando');
+        }
+
+        barra.addEventListener('pointerdown', function (e) {
+            if (!MQ.matches) return;
+            arrastrando = true;
+            movio = false;
+            x0 = e.clientX;
+            clearTimeout(apagar);
+            barra.classList.add('bnav--arrastre');
+            encender(local(e.clientX));
+            /* Con la captura, el dedo puede salirse de la barra y la lente
+               sigue respondiendo hasta que se suelta. */
+            if (barra.setPointerCapture) { try { barra.setPointerCapture(e.pointerId); } catch (err) {} }
         });
+
+        barra.addEventListener('pointermove', function (e) {
+            if (!arrastrando) return;
+            if (Math.abs(e.clientX - x0) > 8) movio = true;
+            encender(local(e.clientX));
+        });
+
+        function soltar(e) {
+            if (!arrastrando) return;
+            arrastrando = false;
+            /* Se devuelve la transición antes de colocarla en su sitio: así
+               la lente viaja hasta el icono en vez de saltar. */
+            barra.classList.remove('bnav--arrastre');
+
+            var btn = cercano(local(e.clientX));
+            if (btn) {
+                colocar(centro(btn));
+                resaltar(btn);
+                /* Sólo se dispara a mano si hubo arrastre. En un toque limpio
+                   el clic nativo del botón ya llega solo, y hacerlo aquí
+                   además abriría dos veces. */
+                if (movio) {
+                    btn.click();
+                    tragar = true;
+                    clearTimeout(soltarTragar);
+                    /* Si el clic nativo no llega —porque el dedo acabó en otro
+                       botón—, el portero se retira solo. */
+                    soltarTragar = setTimeout(function () { tragar = false; }, 400);
+                }
+            }
+
+            apagar = setTimeout(function () {
+                barra.classList.remove('is-tocando');
+                capa.classList.remove('is-activa');
+                resaltar(null);
+            }, 850);
+        }
+
+        barra.addEventListener('pointerup', soltar);
+        barra.addEventListener('pointercancel', soltar);
     }
 
     function init() {

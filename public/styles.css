@@ -8803,6 +8803,12 @@ body.modal-open { overflow: hidden; }
         background: #E9E2DA;
     }
 
+    /* Mientras el dedo arrastra, ni gota ni lente llevan transición: van
+       exactamente donde va la mano. Al soltar vuelve el muelle y las dos
+       encajan solas en el botón más cercano. */
+    .bottom-nav.bnav--arrastre .bnav-goo-gota,
+    .bottom-nav.bnav--arrastre .bnav-lente { transition: none; }
+
     .bnav-goo-gota {
         position: absolute;
         top: 50%;
@@ -8844,5 +8850,90 @@ body.modal-open { overflow: hidden; }
     @media (prefers-reduced-motion: reduce) {
         .bnav-goo-gota { transition: opacity 0.2s ease; }
         .bnav-goo.is-activa .bnav-goo-gota { transform: translate(var(--gota-x, 50%), 0) scale(1); }
+    }
+}
+
+
+/* ============================================================
+   BARRA INFERIOR — la lente que sigue al dedo
+   ------------------------------------------------------------
+   Al apoyar el dedo en la barra aparece una lente de cristal
+   bajo él y lo acompaña mientras se desliza de un icono a otro;
+   al soltar, encaja en el más cercano y ejecuta lo suyo.
+
+   Son dos capas moviéndose con la misma medida: la gota, que va
+   bajo el filtro y hace que la forma se funda y se estire con la
+   barra, y esta lente, que es la que de verdad desenfoca, satura
+   y aclara lo que pasa por debajo.
+   ============================================================ */
+@media (max-width: 768px) {
+
+    /* Sin esto, arrastrar por la barra desplaza la página */
+    .bottom-nav { touch-action: none; }
+
+    .bnav-lente {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        z-index: 1;
+        width: 56px;
+        height: 56px;
+        margin: -28px 0 0 -28px;
+        border-radius: var(--radius-circle);
+        pointer-events: none;
+
+        /* Poco velo y mucha óptica: lo que hace lente no es el blanco
+           encima, es lo de debajo saturado y aclarado. Con el velo al 42%
+           parecía una pegatina blanca sobre los iconos. */
+        background: linear-gradient(155deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04));
+        backdrop-filter: blur(1px) saturate(230%) brightness(1.16) contrast(1.04);
+        -webkit-backdrop-filter: blur(1px) saturate(230%) brightness(1.16) contrast(1.04);
+        box-shadow:
+            inset 0 1px 1px rgba(255, 255, 255, 0.9),
+            inset 0 -2px 3px rgba(20, 20, 19, 0.10),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+            0 6px 16px -6px rgba(20, 20, 19, 0.35);
+
+        transform: translate(var(--gota-x, 50%), 0) scale(0.4);
+        opacity: 0;
+        transition:
+            transform 0.42s cubic-bezier(0.34, 1.42, 0.5, 1),
+            opacity 0.2s ease;
+        will-change: transform;
+    }
+
+    .bottom-nav.is-tocando .bnav-lente {
+        opacity: 1;
+        transform: translate(var(--gota-x, 50%), 0) scale(1);
+    }
+
+    /* El icono que queda debajo se enciende: es lo que hace que la lente se
+       lea como una selección y no como un adorno que pasa por encima. */
+    .bottom-nav .bnav-btn.is-bajo { color: var(--ink-black); }
+    .bottom-nav .bnav-btn.is-bajo .material-symbols-outlined {
+        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        transform: translateY(-1px) scale(1.06);
+    }
+    .bottom-nav .bnav-btn--deposit.is-bajo { color: #15803d; }
+    .bottom-nav .bnav-btn--expense.is-bajo { color: var(--signal-orange); }
+
+    [data-theme="dark"] .bnav-lente {
+        background: linear-gradient(155deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+        box-shadow:
+            inset 0 1px 1px rgba(255, 255, 255, 0.28),
+            inset 0 -2px 3px rgba(0, 0, 0, 0.35),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+            0 6px 16px -6px rgba(0, 0, 0, 0.6);
+    }
+    [data-theme="dark"] .bottom-nav .bnav-btn.is-bajo { color: var(--ink-black); }
+
+    /* Sin desenfoque de fondo la lente sería un círculo lechoso encima de
+       los iconos: mejor dejar sólo la gota, que sí funciona sin él. */
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        .bnav-lente { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .bnav-lente { transition: opacity 0.2s ease; }
     }
 }

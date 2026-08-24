@@ -469,6 +469,12 @@
             <span class="bnav-goo-barra"></span>
             <span class="bnav-goo-gota" id="bnavGota"></span>
         </span>
+        <!-- La lente va aparte y sin filtro: es la que desenfoca y satura lo
+             que pasa por debajo. Un filtro SVG encima de un backdrop-filter
+             anula el desenfoque de fondo, así que la silueta que se funde
+             (arriba) y el cristal que refracta (aquí) tienen que ser dos
+             capas distintas, movidas a la vez. -->
+        <span class="bnav-lente" id="bnavLente" aria-hidden="true"></span>
         <button class="bnav-btn" id="bnavMenu">
             <span class="material-symbols-outlined">sell</span>
             <span class="bnav-label">Rubros</span>
