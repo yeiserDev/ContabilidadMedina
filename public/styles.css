@@ -8933,6 +8933,38 @@ body.modal-open { overflow: hidden; }
         .bnav-lente { display: none; }
     }
 
+    /* Mientras el dedo arrastra, sólo manda la lente.
+       -----------------------------------------------------------
+       Al capturar el puntero, el navegador deja :active clavado en
+       el botón que se pulsó primero: se quedaba su recuadro y su
+       icono relleno en el punto de partida mientras el dedo ya iba
+       por otro icono, dos selecciones a la vez. Durante el arrastre
+       se apaga :active y el único que marca es .is-bajo, el que
+       está de verdad bajo el cristal.
+
+       El recuadro se va en todos, también en el de partida: si no, volver
+       al primer icono lo pintaría distinto que a los demás. */
+    .bottom-nav.bnav--arrastre .bnav-btn:active,
+    .bottom-nav.bnav--arrastre .bnav-btn--deposit:active,
+    .bottom-nav.bnav--arrastre .bnav-btn--expense:active { background: none; }
+
+    .bottom-nav.bnav--arrastre .bnav-btn:active:not(.is-bajo) { color: var(--graphite); }
+    .bottom-nav.bnav--arrastre .bnav-btn--deposit:active:not(.is-bajo) { color: #15803d; }
+    .bottom-nav.bnav--arrastre .bnav-btn--expense:active:not(.is-bajo) { color: var(--signal-orange); }
+    .bottom-nav.bnav--arrastre .bnav-btn:active:not(.is-bajo) .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        transform: none;
+    }
+
+    [data-theme="dark"] .bottom-nav.bnav--arrastre .bnav-btn:active { background: none; }
+    [data-theme="dark"] .bottom-nav.bnav--arrastre .bnav-btn:active:not(.is-bajo) { color: var(--granite); }
+    [data-theme="dark"] .bottom-nav.bnav--arrastre .bnav-btn--deposit:active:not(.is-bajo) {
+        color: #5FCB89;
+    }
+    [data-theme="dark"] .bottom-nav.bnav--arrastre .bnav-btn--expense:active:not(.is-bajo) {
+        color: var(--light-signal-orange);
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .bnav-lente { transition: opacity 0.2s ease; }
     }
