@@ -561,11 +561,22 @@
                 }
             }
 
-            apagar = setTimeout(function () {
-                barra.classList.remove('is-tocando');
-                capa.classList.remove('is-activa');
-                resaltar(null);
-            }, 850);
+            /* En un toque limpio se retiran en cuanto se levanta el dedo: la
+               marca no tiene nada que decir una vez abierto lo que se tocó, y
+               dejarla casi un segundo colgando bajo la barra mientras la hoja
+               sube se leía como suciedad. Tras un arrastre se queda lo justo
+               para que se vea encajar en el icono. */
+            if (movio) {
+                apagar = setTimeout(retirar, 220);
+            } else {
+                retirar();
+            }
+        }
+
+        function retirar() {
+            barra.classList.remove('is-tocando');
+            capa.classList.remove('is-activa');
+            resaltar(null);
         }
 
         barra.addEventListener('pointerup', soltar);

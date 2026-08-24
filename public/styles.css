@@ -8839,8 +8839,6 @@ body.modal-open { overflow: hidden; }
     [data-theme="dark"] .bnav-goo-barra { background: #24211F; }
     [data-theme="dark"] .bnav-goo-gota  { background: #56504A; }
 
-    /* Sin filtros SVG la gota seguiría ahí, pero como un círculo duro que no
-       se funde con nada: mejor dejar sólo el relleno de la barra. */
     /* Sin filtros SVG la gota sería un círculo duro que no se funde con
        nada, así que se retira; el relleno de la barra se queda. */
     @supports not (filter: url(#gooNav)) {
