@@ -8763,12 +8763,18 @@ body.modal-open { overflow: hidden; }
         -webkit-filter: url(#gooNav);
     }
 
-    /* Metida cinco píxeles para que su halo desenfocado no se coma el filo
-       de cristal de la barra. */
+    /* Llega hasta el canto. Estaba metida cinco píxeles para que su halo
+       desenfocado no se comiera el aro de cristal, pero sin aro esa franja
+       era sólo la barra sin relleno: un anillo claro alrededor de la lámina.
+       El radio es el de la barra, no uno propio.
+
+       Puede hacerlo porque el filtro apenas mueve el filo: tras el
+       desenfoque, el contraste del alfa vuelve a cortar la forma casi donde
+       estaba, así que la lámina no se derrama fuera. */
     .bnav-goo-barra {
         position: absolute;
-        inset: 5px;
-        border-radius: 26px;
+        inset: 0;
+        border-radius: 30px;
         /* Un gris cálido y no blanco: la gota es blanca, y blanco sobre
            blanco no se ve por muy bien que se funda. */
         background: #E9E2DA;
