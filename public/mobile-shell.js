@@ -446,6 +446,42 @@
         hoja.addEventListener('touchcancel', soltar, { passive: true });
     }
 
+    /* ========================================================
+       LA GOTA DE LA BARRA
+       --------------------------------------------------------
+       Coloca la gota bajo el botón tocado y la deja salir. Al
+       moverse entre botones el filtro hace el resto: el puente
+       con la barra se estira y se rompe solo.
+
+       Se retira sola: estos botones abren cosas, no son pestañas
+       donde uno se queda, y una gota parada bajo un botón diría
+       que estás "en" esa sección. Es un rastro del toque.
+       ======================================================== */
+    function gotaBarra() {
+        var barra = document.getElementById('bottomNav');
+        var capa = barra && barra.querySelector('.bnav-goo');
+        var gota = document.getElementById('bnavGota');
+        if (!barra || !capa || !gota) return;
+
+        var apagar = null;
+
+        function marcar(btn) {
+            if (!MQ.matches) return;
+            var rb = barra.getBoundingClientRect();
+            var r = btn.getBoundingClientRect();
+            gota.style.setProperty('--gota-x', (r.left - rb.left + r.width / 2) + 'px');
+            capa.classList.add('is-activa');
+            clearTimeout(apagar);
+            apagar = setTimeout(function () { capa.classList.remove('is-activa'); }, 900);
+        }
+
+        /* pointerdown y no click: la gota tiene que salir con el dedo, no
+           cuando el modal ya está abriéndose encima. */
+        Array.prototype.forEach.call(barra.querySelectorAll('.bnav-btn'), function (btn) {
+            btn.addEventListener('pointerdown', function () { marcar(btn); });
+        });
+    }
+
     function init() {
         var shell = document.getElementById('mshell');
         if (!shell) return;
@@ -523,6 +559,7 @@
            ahí el usuario está comparando, no ojeando. */
         historial();
         hojaDetalle();
+        gotaBarra();
 
         carrusel(document.getElementById('payMethods'), 6500);
         carrusel(document.querySelector('.charts-section'), 0);

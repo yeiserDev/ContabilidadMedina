@@ -460,6 +460,15 @@
          tarjetas. Antes eran un + y un - dentro de un círculo, que sirven
          para cualquier cosa. -->
     <nav class="bottom-nav" id="bottomNav">
+        <!-- Capa de metaballs: la barra y la gota viven aquí dentro, bajo el
+             mismo filtro. El filtro desenfoca las dos y luego sube el
+             contraste del canal alfa, así que donde sus bordes difuminados se
+             tocan aparece un puente sólido: es lo que hace que la gota salga
+             de la barra estirándose en vez de aparecer y ya. -->
+        <span class="bnav-goo" aria-hidden="true">
+            <span class="bnav-goo-barra"></span>
+            <span class="bnav-goo-gota" id="bnavGota"></span>
+        </span>
         <button class="bnav-btn" id="bnavMenu">
             <span class="material-symbols-outlined">sell</span>
             <span class="bnav-label">Rubros</span>
@@ -854,6 +863,24 @@
             }, 1050);
         })();
     </script>
+
+<!-- Filtro del efecto gota. Va en su propio SVG, sin dibujar nada: sólo
+     define la receta que aplica el CSS. stdDeviation marca cuánto se funden
+     las formas y la última fila de la matriz es el contraste del alfa: sube
+     20 veces y resta 9, con lo que el degradado del desenfoque se convierte
+     en un borde limpio. -->
+<svg class="goo-def" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+        <filter id="gooNav" color-interpolation-filters="sRGB">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="borroso"/>
+            <feColorMatrix in="borroso" type="matrix"
+                values="1 0 0 0 0
+                        0 1 0 0 0
+                        0 0 1 0 0
+                        0 0 0 20 -9" result="gota"/>
+        </filter>
+    </defs>
+</svg>
 
 <!-- OFFLINE BANNER -->
 <div id="offlineBanner">

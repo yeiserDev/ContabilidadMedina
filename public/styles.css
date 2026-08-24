@@ -8201,26 +8201,6 @@ body.modal-open { overflow: hidden; }
 
     .bottom-nav .bnav-btn > * { position: relative; z-index: 1; }
 
-    /* La pastilla que aparece bajo el dedo: misma familia de cristal, un
-       peldaño más claro. Va en ::before para no tocar el marcado. */
-    .bottom-nav .bnav-btn::before {
-        content: '';
-        position: absolute;
-        inset: 2px;
-        z-index: 0;
-        border-radius: 20px;
-        background: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.72));
-        /* Con sólo el relleno claro, pastilla blanca sobre cristal blanco no
-           se veía. El aro fino y la sombra corta la levantan del material. */
-        box-shadow:
-            0 0 0 1px rgba(20, 20, 19, 0.07) inset,
-            0 1px 0 rgba(255, 255, 255, 0.95) inset,
-            0 6px 14px -6px rgba(20, 20, 19, 0.38);
-        opacity: 0;
-        transform: scale(0.82);
-        transition: opacity 0.22s var(--ease-out), transform 0.32s var(--ease-spring);
-    }
-    .bottom-nav .bnav-btn:active::before { opacity: 1; transform: none; }
 
     .bottom-nav .bnav-btn .material-symbols-outlined {
         font-size: 23px;
@@ -8766,4 +8746,103 @@ body.modal-open { overflow: hidden; }
     .vr-scene .es-papel,
     .vr-scene .es-viaja,
     .vr-scene .es-ticket { animation: none; }
+}
+
+
+/* ============================================================
+   BARRA INFERIOR — la gota (metaballs)
+   ------------------------------------------------------------
+   El realce que sigue al dedo no es una pastilla que aparece y
+   desaparece: es una gota que sale de la propia barra, se estira
+   hasta el botón que tocaste y vuelve a fundirse con ella.
+
+   La técnica es la de siempre para esto: dos formas en la misma
+   capa, un desenfoque que las une por los bordes y un contraste
+   fuerte del canal alfa que devuelve un filo limpio. Donde los
+   halos se rozan aparece un puente; al alejarse, el puente se
+   adelgaza y se rompe, que es lo que hace la tensión superficial
+   de una gota de verdad.
+
+   La capa va aparte del cristal a propósito: un filtro sobre el
+   elemento que lleva backdrop-filter le arruina el desenfoque de
+   fondo, porque ya no compone contra la página sino contra su
+   propio pintado.
+   ============================================================ */
+.goo-def { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+@media (max-width: 768px) {
+
+    /* La capa de gotas ES el relleno de la barra, no una lámina encima: si
+       fuera encima taparía el cristal, y si fuera detrás no se vería el
+       puente. Por eso la barra se queda sin fondo propio y conserva sólo el
+       desenfoque, el aro y las sombras.
+
+       El truco de la traslucidez: dentro del filtro los colores van opacos
+       —el contraste del alfa se come cualquier transparencia— y es la capa
+       entera la que luego se atenúa. */
+    .bottom-nav { background: none; }
+
+    .bnav-goo {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.8;
+        filter: url(#gooNav);
+        -webkit-filter: url(#gooNav);
+    }
+
+    /* Metida cinco píxeles para que su halo desenfocado no se coma el filo
+       de cristal de la barra. */
+    .bnav-goo-barra {
+        position: absolute;
+        inset: 5px;
+        border-radius: 26px;
+        /* Un gris cálido y no blanco: la gota es blanca, y blanco sobre
+           blanco no se ve por muy bien que se funda. */
+        background: #E9E2DA;
+    }
+
+    .bnav-goo-gota {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 56px;
+        height: 56px;
+        margin: -28px 0 0 -28px;
+        border-radius: var(--radius-circle);
+        /* Un punto más clara que la lámina: es lo que la hace visible cuando
+           las dos ya se han fundido en una sola forma. */
+        background: #FFFFFF;
+        /* La posición la escribe mobile-shell.js al tocar un botón */
+        transform: translate(var(--gota-x, 50%), 0) scale(0.2);
+        opacity: 0;
+        transition:
+            transform 0.52s cubic-bezier(0.34, 1.42, 0.5, 1),
+            opacity 0.24s ease;
+        will-change: transform;
+    }
+
+    /* Fuera: la gota asoma por debajo del canto y se ve el puente estirarse */
+    .bnav-goo.is-activa .bnav-goo-gota {
+        opacity: 1;
+        transform: translate(var(--gota-x, 50%), 15px) scale(1);
+    }
+
+    [data-theme="dark"] .bnav-goo { opacity: 0.82; }
+    [data-theme="dark"] .bnav-goo-barra { background: #24211F; }
+    [data-theme="dark"] .bnav-goo-gota  { background: #56504A; }
+
+    /* Sin filtros SVG la gota seguiría ahí, pero como un círculo duro que no
+       se funde con nada: mejor dejar sólo el relleno de la barra. */
+    /* Sin filtros SVG la gota sería un círculo duro que no se funde con
+       nada, así que se retira; el relleno de la barra se queda. */
+    @supports not (filter: url(#gooNav)) {
+        .bnav-goo-gota { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .bnav-goo-gota { transition: opacity 0.2s ease; }
+        .bnav-goo.is-activa .bnav-goo-gota { transform: translate(var(--gota-x, 50%), 0) scale(1); }
+    }
 }
