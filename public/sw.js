@@ -1,53 +1,5 @@
-// ====== CONTA MEDINA — SERVICE WORKER (Modo Metro) ======
-// Versión: bump this string to force a cache refresh after updates
-// v64 — el icono y el favicon pasan a la marca de barras sobre crema.
-// Antes: v63 el splash rehecho en cinco actos con el saldo en carretes.
-// Antes: v62 la barra inferior con gota: cristal líquido que se funde y se estira.
-// Antes: v61 las ocho escenas redibujadas,
-// Antes: v60 el precio cuelga de la escena,
-// Antes: v59 la chapa del rubro en cristal teñido,
-// Antes: v58 el rubro sube al lado del título,
-// Antes: v57 la escena del taller,
-// Antes: v56 la cabecera del historial pasa a buscador,
-// Antes: v55 barra más abajo y compresión más rápida,
-// Antes: v54 la hoja de detalle se va con el dedo,
-// Antes: v53 la barra inferior baja al borde,
-// Antes: v52 la barra inferior en cristal líquido,
-// Antes: v51 un camión recorre la ruta del mapa,
-// Antes: v50 el historial sigue al dedo al arrastrarlo,
-// Antes: v49 el camión repostando y el brillo de BCP,
-// Antes: v48 la ficha del detalle en dos columnas,
-// Antes: v47 los comprobantes entran en la ficha,
-// Antes: v46 el repartidor sale de su local,
-// Antes: v45 la escena de comida con el repartidor ilustrado,
-// Antes: v44 la escena de viaje pasa a mapa con el recorrido,
-// Antes: v43 cada gasto estrena su escena en el detalle,
-// Antes: v42 el detalle sale delante y sube como hoja inferior,
-// Antes: v41 el historial en lista con logotipos redondos,
-// Antes: v40 fuera el hueco doble al final de la portada,
-// Antes: v39 el historial se va a un panel derecho con gesto,
-// Antes: v38 la marca de la tarjeta pasa a VISA,
-// Antes: v37 canto curvado y costura en SVG,
-// Antes: v36 canto de cuero por los lados y marca suelta,
-// Antes: v35 fuera las fichas de Depósito/Gasto,
-// Antes: v34 cartera con marco de cuero y costura,
-// Antes: v33 la tarjeta de saldo pasa a cartera,
-// Antes: v32 gráficos en cristal y globos de datos con la paleta,
-// Antes: v31 bordes desvanecidos en los carruseles,
-// Antes: v30 métodos de pago y gráficos como carruseles,
-// Antes: v29 portada móvil sin el resumen del ciclo,
-// Antes: v28 portada móvil: barra propia y tarjeta de saldo,
-// Antes: v27 filas del historial en móvil,
-// Antes: v26 tarjetas de método de pago en cristal,
-// Antes: v25 carrusel móvil alineado y fin del desborde a 320px,
-// Antes: v24 intercambio métodos de pago / KPIs,
-// Antes: v23 reloj y calendario en cristal, v22 banda KPI de cristal, v21
-// cristal del panel derecho con la paleta, v19 último depósito y gastos,
-// v18 recordatorios con monto, v17 tarjetas en vertical, v16 mazo de métodos,
-// v15 banda KPI, v14 modal de detalle, v13 logo CM, v12 rediseño estético.
-// La estrategia del shell es cache-first: sin este bump, las instalaciones
-// existentes seguirían sirviendo los assets viejos.
-const CACHE_NAME = 'contamedina-v64';
+// v72 — fast comprobante caching + upgraded 2.5D visual scenes
+const CACHE_NAME = 'contamedina-v72';
 
 // All app shell files to pre-cache on install
 const SHELL = [
@@ -126,6 +78,40 @@ self.addEventListener('fetch', (e) => {
                 }).catch(() => null);
                 return cached || fetchPromise;
             })
+        );
+        return;
+    }
+
+    // 2.2 Comprobantes de Drive (/api/comprobantes/:id) — Cache-First (los fileId son inmutables)
+    if (url.pathname.startsWith('/api/comprobantes/')) {
+        e.respondWith(
+            caches.open('contamedina-comprobantes-v1').then(async (cache) => {
+                const cached = await cache.match(request);
+                if (cached) return cached;
+                try {
+                    const res = await fetch(request);
+                    if (res && res.ok) {
+                        cache.put(request, res.clone());
+                    }
+                    return res;
+                } catch (err) {
+                    return cached || new Response('Error cargando comprobante', { status: 502 });
+                }
+            })
+        );
+        return;
+    }
+
+    // 2.5 Localhost live development — Network-first
+    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+        e.respondWith(
+            fetch(request).then((res) => {
+                if (res && res.ok) {
+                    const clone = res.clone();
+                    caches.open(CACHE_NAME).then(c => c.put(request, clone));
+                }
+                return res;
+            }).catch(() => caches.match(request))
         );
         return;
     }

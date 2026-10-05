@@ -16,11 +16,17 @@ export async function GET(
 
   try {
     const { data, mimeType } = await fetchImage(id);
+    const etag = `"${id}-${data.length}"`;
+    const ifNoneMatch = _req.headers.get("if-none-match");
+    if (ifNoneMatch === etag) {
+      return new NextResponse(null, { status: 304 });
+    }
     return new NextResponse(new Uint8Array(data), {
       status: 200,
       headers: {
         "Content-Type": mimeType,
         "Cache-Control": "public, max-age=31536000, immutable",
+        "ETag": etag,
         "Access-Control-Allow-Origin": "*",
       },
     });
