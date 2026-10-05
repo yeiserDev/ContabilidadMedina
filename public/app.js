@@ -217,6 +217,7 @@ const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.
 const money = n => { const num = Number(n); const formatted = num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); return `S/ ${formatted}`; };
 
 function animateCount(el, targetNum, duration = 550) {
+    if (!el) return;
     const startNum = parseFloat(String(el.dataset.rawVal || '0').replace(/[^\d.-]/g, '')) || 0;
     el.dataset.rawVal = targetNum;
     const startTime = performance.now();
