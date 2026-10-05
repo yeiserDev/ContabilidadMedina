@@ -742,6 +742,44 @@ function renderMonthFilter(){
     if(mobSel) mobSel.value = newVal;
 }
 
+// ====== PRECARGA INTELIGENTE DE COMPROBANTES (0ms de espera) ======
+const preloadedReceiptUrls = new Set();
+
+window.preloadSingleUrl = function(url) {
+    if (!url || preloadedReceiptUrls.has(url)) return;
+    preloadedReceiptUrls.add(url);
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+};
+
+window.preloadExpenseReceipts = function(expId) {
+    if (!expenses) return;
+    const exp = expenses.find(e => e.id === expId);
+    if (!exp) return;
+    const imgs = exp.imageUrls || (exp.imageUrl ? [exp.imageUrl] : []);
+    imgs.forEach(u => window.preloadSingleUrl(u));
+};
+
+window.preloadRecentReceipts = function() {
+    if (!expenses || !expenses.length) return;
+    const urls = [];
+    for (let i = 0; i < expenses.length && urls.length < 25; i++) {
+        const exp = expenses[i];
+        const imgs = exp.imageUrls || (exp.imageUrl ? [exp.imageUrl] : []);
+        for (const u of imgs) {
+            if (u && !urls.includes(u)) urls.push(u);
+        }
+    }
+    const schedule = (typeof requestIdleCallback === 'function') 
+        ? (cb) => requestIdleCallback(cb, { timeout: 1500 })
+        : (cb) => setTimeout(cb, 400);
+
+    schedule(() => {
+        urls.forEach(u => window.preloadSingleUrl(u));
+    });
+};
+
 // ====== DAILY VIEW ======
 function renderDaily(){
     const container=document.getElementById('dailyView'),empty=document.getElementById('emptyState'),fv=document.getElementById('monthFilter').value;
@@ -784,7 +822,7 @@ function renderDaily(){
                 </button>`;
                 let styledDesc = (exp.description||'—').replace(/(#[a-zA-Z0-9_]+)/g, '<span style="display:inline-block; background:var(--canvas-cream); color:var(--ink-black); border:1px solid rgba(20,20,19,0.1); border-radius:4px; padding:0 4px; font-size:11px; margin-left:4px; font-weight:600;">$1</span>');
                 let walletHtml = window.getWalletIcon(exp.wallet, 20);
-                h+=`<div class="row-expense" onclick="viewRecord('expense','${exp.id}')" style="cursor:pointer"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span>${walletHtml}<div class="exp-desc"><span>${styledDesc}</span></div>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span>${rowMenu('expense',exp.id)}</div>`;
+                h+=`<div class="row-expense" onclick="viewRecord('expense','${exp.id}')" onmouseenter="window.preloadExpenseReceipts('${exp.id}')" ontouchstart="window.preloadExpenseReceipts('${exp.id}')" style="cursor:pointer"><span class="exp-badge" style="background:${col}12;color:${col};border:1px solid ${col}30">${exp.category}</span>${walletHtml}<div class="exp-desc"><span>${styledDesc}</span></div>${imgBtn}<span class="exp-amt">-${money(exp.amount)}</span>${rowMenu('expense',exp.id)}</div>`;
             });
             h+='</div>';
         }
@@ -797,6 +835,7 @@ function renderDaily(){
         }
         h+='</div>';card.innerHTML=h;container.insertBefore(card,empty);
     });
+    window.preloadRecentReceipts();
 }
 // ====== MENÚ DE FILA ======
 // Antes cada fila llevaba tres botones diminutos: en escritorio aparecían al
@@ -1007,9 +1046,19 @@ window.viewRecord = function(type, id) {
             imgs.forEach(url => {
                 const imgEl = document.createElement('img');
                 imgEl.src = url;
-                imgEl.className = 'vr-photo';
-                imgEl.loading = 'lazy';
+                imgEl.className = 'vr-photo vr-photo--loading';
+                imgEl.loading = 'eager';
+                imgEl.fetchPriority = 'high';
+                imgEl.decoding = 'async';
                 imgEl.alt = 'Comprobante';
+                imgEl.onload = () => {
+                    imgEl.classList.remove('vr-photo--loading');
+                    imgEl.classList.add('vr-photo--loaded');
+                };
+                imgEl.onerror = () => {
+                    imgEl.classList.remove('vr-photo--loading');
+                    imgEl.classList.add('vr-photo--error');
+                };
                 imgEl.onclick = () => window.openLightbox(url);
                 multiWrap.appendChild(imgEl);
             });
