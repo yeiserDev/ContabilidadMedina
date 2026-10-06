@@ -7600,159 +7600,395 @@ body.modal-open { overflow: hidden; }
    Dentro del panel el feed deja de ser una tarjeta por día con su
    marco, su cabecera de dos saldos y su pie: pasa a ser una lista
    corrida, con el día como simple encabezado de texto y cada
-   movimiento en una fila de logotipo redondo, concepto y monto.
-
-   Todo vive bajo .mhist: en escritorio el feed sigue siendo el de
-   siempre, que ahí convive con el panel derecho y las columnas.
    ============================================================ */
 @media (max-width: 768px) {
-
-    /* El panel es una lámina, no una pared: redondear el canto por el que
-       entra basta para que se lea como algo que se ha traído encima. */
-    .mhist {
-        border-radius: 26px 0 0 26px;
-        overflow: hidden;
+    /* ---- El día: encabezado compacto y refinado en una sola fila ---- */
+    .mhist .day-card,
+    #dailyView .day-card {
+        margin: 0 0 10px !important;
+        padding: 0 !important;
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        overflow: visible !important;
     }
 
-    /* ---- El día, sólo un encabezado ---- */
-    .mhist .day-card {
-        margin: 0 0 20px;
-        padding: 0;
-        background: none;
-        border: none;
-        box-shadow: none;
-        overflow: visible;
+    .mhist .day-head,
+    #dailyView .day-head {
+        padding: 3px 4px 6px !important;
+        background: none !important;
+        border: none !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
-    .mhist .day-head {
-        padding: 0 6px 6px;
-        background: none;
-        border: none;
+    .mhist .day-icon,
+    #dailyView .day-icon {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
     }
 
-    /* El cuadro de color con el número del día repetía la fecha que ya está
-       escrita al lado. */
-    .mhist .day-icon { display: none; }
-
-    .mhist .day-label {
-        font-size: var(--text-base);
-        font-weight: 700;
-        color: var(--ink-black);
+    .mhist .day-left,
+    #dailyView .day-left {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 6px !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
     }
-    .mhist .day-weekday { font-size: var(--text-xs); }
 
-    /* De los dos saldos se queda el de después: el de antes es el de después
-       del día anterior, que está tres centímetros más abajo. En 360px los dos
-       con sus etiquetas y la flecha ocupaban media cabecera. */
+    .mhist .day-left > div:not(.day-icon),
+    #dailyView .day-left > div:not(.day-icon) {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: baseline !important;
+        gap: 6px !important;
+        min-width: 0 !important;
+    }
+
+    .mhist .day-label,
+    #dailyView .day-label {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        color: var(--ink-black) !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+    }
+
+    .mhist .day-weekday,
+    #dailyView .day-weekday {
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        padding: 1px 5px !important;
+        border-radius: 4px !important;
+        background: rgba(20, 20, 19, 0.05) !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+        text-transform: capitalize !important;
+    }
+
+    [data-theme="dark"] .mhist .day-weekday,
+    [data-theme="dark"] #dailyView .day-weekday {
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+
     .mhist .day-right > .day-bal:first-child,
-    .mhist .day-arrow { display: none; }
+    .mhist .day-arrow,
+    #dailyView .day-right > .day-bal:first-child,
+    #dailyView .day-arrow { display: none !important; }
 
-    .mhist .day-bal-tag { font-size: 9px; }
-    .mhist .day-bal-val { font-size: var(--text-sm); }
-
-    /* Los movimientos del día van juntos sobre una sola lámina blanca, con
-       el encabezado fuera: así se ve de un vistazo dónde empieza y acaba
-       cada día sin encerrarlo todo en una tarjeta con marco. */
-    .mhist .day-body {
-        padding: 4px 6px;
-        background: var(--white);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-xl);
+    .mhist .day-right,
+    #dailyView .day-right {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        width: auto !important;
+        flex-shrink: 0 !important;
+        gap: 5px !important;
     }
-    .mhist .exp-table { display: block; }
 
-    /* ---- Cada movimiento ---- */
+    .mhist .day-bal,
+    #dailyView .day-bal {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: baseline !important;
+        gap: 4px !important;
+        text-align: right !important;
+        flex: none !important;
+    }
+
+    .mhist .day-bal-tag,
+    #dailyView .day-bal-tag {
+        font-size: 0 !important;
+        line-height: 0 !important;
+    }
+    .mhist .day-bal-tag::after,
+    #dailyView .day-bal-tag::after {
+        content: "Saldo" !important;
+        font-size: 8.5px !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.04em !important;
+        color: var(--slate-gray) !important;
+    }
+
+    .mhist .day-bal-val,
+    #dailyView .day-bal-val {
+        font-size: 11.5px !important;
+        font-weight: 700 !important;
+        font-variant-numeric: tabular-nums !important;
+    }
+
+    .mhist .day-toggle-btn,
+    #dailyView .day-toggle-btn {
+        width: 22px !important;
+        height: 22px !important;
+        border-radius: var(--radius-circle) !important;
+        background: rgba(20, 20, 19, 0.04) !important;
+        display: grid !important;
+        place-items: center !important;
+        border: none !important;
+        margin-left: 2px !important;
+        padding: 0 !important;
+        flex-shrink: 0 !important;
+    }
+    .mhist .day-toggle-icon,
+    #dailyView .day-toggle-icon {
+        font-size: 15px !important;
+    }
+
+    /* ---- Contenedor del día ---- */
+    .mhist .day-body,
+    #dailyView .day-body {
+        padding: 2px 6px !important;
+        background: var(--white) !important;
+        border: 1px solid var(--line) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    }
+    .mhist .exp-table,
+    #dailyView .exp-table { display: block !important; margin: 0 !important; }
+
+    /* ---- Filas de gasto: grid armónico con categoría bajo el nombre ---- */
     .mhist .row-expense,
-    .mhist .row-deposit {
-        column-gap: 12px;
-        padding: 9px 6px;
-        border-radius: var(--radius-lg);
-        border: none;
+    #dailyView .row-expense {
+        display: grid !important;
+        grid-template-columns: auto 1fr auto auto !important;
+        align-items: center !important;
+        column-gap: 8px !important;
+        row-gap: 1px !important;
+        padding: 5px 3px !important;
+        border-radius: 6px !important;
+        border: none !important;
     }
 
-    /* El logotipo del método, en burbuja redonda: es lo que se reconoce de
-       un vistazo antes de leer nada, como los iconos de la referencia.
-       El SVG conserva su proporción dentro del círculo, así que el billete
-       de Efectivo no sale estirado. */
-    .mhist .row-expense .wallet-icon {
-        width: 42px !important;
-        height: 42px !important;
-        padding: 6px;
+    .mhist .row-expense:not(:last-child),
+    .mhist .row-deposit:not(:last-child),
+    #dailyView .row-expense:not(:last-child),
+    #dailyView .row-deposit:not(:last-child) {
+        border-bottom: 1px solid rgba(20, 20, 19, 0.04) !important;
+    }
+
+    [data-theme="dark"] .mhist .row-expense:not(:last-child),
+    [data-theme="dark"] .mhist .row-deposit:not(:last-child),
+    [data-theme="dark"] #dailyView .row-expense:not(:last-child),
+    [data-theme="dark"] #dailyView .row-deposit:not(:last-child) {
+        border-bottom-color: rgba(255, 255, 255, 0.04) !important;
+    }
+
+    /* Icono redondo compacto del método (28px) */
+    .mhist .row-expense .wallet-icon,
+    #dailyView .row-expense .wallet-icon {
+        grid-column: 1 !important;
+        grid-row: 1 / span 2 !important;
+        width: 28px !important;
+        height: 28px !important;
+        padding: 3px !important;
         border-radius: var(--radius-circle) !important;
         background: var(--white);
         border: 1px solid var(--line);
         box-shadow: none !important;
-        align-self: center;
+        align-self: center !important;
+        flex-shrink: 0 !important;
+        margin: 0 !important;
     }
 
-    .mhist .row-expense .exp-desc {
-        font-size: var(--text-base);
-        font-weight: 600;
-        line-height: 1.25;
+    .mhist .row-expense .exp-desc,
+    #dailyView .row-expense .exp-desc {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        font-size: 12.5px !important;
+        font-weight: 600 !important;
+        line-height: 1.2 !important;
+        color: var(--ink-black) !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
     }
 
-    .mhist .row-expense .exp-badge {
-        font-size: var(--text-xs);
-        text-transform: none;
-        letter-spacing: 0;
+    .mhist .row-expense .exp-badge,
+    #dailyView .row-expense .exp-badge {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        font-size: 10px !important;
+        font-weight: 500 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
         color: var(--slate-gray) !important;
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        line-height: 1.2 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .mhist .row-expense .exp-img-btn,
+    #dailyView .row-expense .exp-img-btn {
+        display: none !important;
     }
 
     .mhist .row-expense .exp-amt,
-    .mhist .row-deposit .dep-amt {
-        font-size: var(--text-md);
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        font-variant-numeric: tabular-nums;
+    #dailyView .row-expense .exp-amt {
+        grid-column: 3 !important;
+        grid-row: 1 / span 2 !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+        font-variant-numeric: tabular-nums !important;
+        color: var(--signal-crimson, #ef4444) !important;
+        text-align: right !important;
+        white-space: nowrap !important;
     }
 
-    /* ---- Los depósitos, en la misma rejilla que los gastos ----
-       Antes eran una fila flex con otro reparto: dos ritmos distintos en
-       una lista que se lee de arriba abajo. */
-    .mhist .row-deposit {
-        display: grid;
-        /* Cuatro columnas y no tres: con tres, el ••• se caía a una fila
-           suya debajo del icono. */
-        grid-template-columns: auto 1fr auto auto;
-        align-items: center;
-        gap: 2px 10px;
+    .mhist .row-menu-btn,
+    #dailyView .row-menu-btn {
+        grid-column: 4 !important;
+        grid-row: 1 / span 2 !important;
+        width: 24px !important;
+        height: 24px !important;
+        display: grid !important;
+        place-items: center !important;
+        padding: 0 !important;
+        opacity: 0.65;
+    }
+    .mhist .row-menu-btn .material-symbols-outlined,
+    #dailyView .row-menu-btn .material-symbols-outlined {
+        font-size: 16px !important;
     }
 
-    .mhist .row-deposit .dep-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: var(--radius-circle);
-        display: grid;
-        place-items: center;
-        flex-shrink: 0;
+    /* ---- Filas de depósito: misma rejilla uniforme ---- */
+    .mhist .row-deposit,
+    #dailyView .row-deposit {
+        display: grid !important;
+        grid-template-columns: auto 1fr auto auto !important;
+        align-items: center !important;
+        column-gap: 8px !important;
+        row-gap: 1px !important;
+        padding: 5px 3px !important;
+        border-radius: 6px !important;
+        border: none !important;
     }
 
-    .mhist .row-deposit .dep-info { min-width: 0; }
-    .mhist .row-deposit .dep-type {
-        font-size: var(--text-base);
-        font-weight: 600;
-        text-transform: none;
-        letter-spacing: 0;
-        color: var(--ink-black);
+    .mhist .row-deposit .dep-icon,
+    #dailyView .row-deposit .dep-icon {
+        grid-column: 1 !important;
+        grid-row: 1 / span 2 !important;
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: var(--radius-circle) !important;
+        display: grid !important;
+        place-items: center !important;
+        flex-shrink: 0 !important;
     }
-    .mhist .row-deposit .dep-desc { font-size: var(--text-xs); color: var(--slate-gray); }
-
-    /* ---- El pie del día, ya dentro de la lámina ---- */
-    .mhist .day-foot {
-        margin: 4px 0 0;
-        padding: 10px 8px 6px;
-        background: none;
-        border-top: 1px solid var(--line-faint);
+    .mhist .row-deposit .dep-icon .material-symbols-outlined,
+    #dailyView .row-deposit .dep-icon .material-symbols-outlined {
+        font-size: 15px !important;
     }
 
-    [data-theme="dark"] .mhist .day-body {
-        background: var(--white);
-        border-color: rgba(255, 255, 255, 0.08);
+    .mhist .row-deposit .dep-info,
+    #dailyView .row-deposit .dep-info {
+        grid-column: 2 !important;
+        grid-row: 1 / span 2 !important;
+        min-width: 0 !important;
+    }
+    .mhist .row-deposit .dep-type,
+    #dailyView .row-deposit .dep-type {
+        font-size: 12.5px !important;
+        font-weight: 600 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        color: var(--ink-black) !important;
+        line-height: 1.2 !important;
+    }
+    .mhist .row-deposit .dep-desc,
+    #dailyView .row-deposit .dep-desc {
+        font-size: 10px !important;
+        color: var(--slate-gray) !important;
+        line-height: 1.2 !important;
     }
 
-    [data-theme="dark"] .mhist .row-expense .wallet-icon {
-        background: rgba(255, 255, 255, 0.07);
-        border-color: rgba(255, 255, 255, 0.10);
+    .mhist .row-deposit .dep-amt,
+    #dailyView .row-deposit .dep-amt {
+        grid-column: 3 !important;
+        grid-row: 1 / span 2 !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+        font-variant-numeric: tabular-nums !important;
+        color: #15803d !important;
+        text-align: right !important;
+        white-space: nowrap !important;
+    }
+
+    .mhist .row-deposit .row-menu-btn,
+    #dailyView .row-deposit .row-menu-btn {
+        grid-column: 4 !important;
+        grid-row: 1 / span 2 !important;
+    }
+
+    /* ---- Pie del día compacto ---- */
+    .mhist .day-foot,
+    #dailyView .day-foot {
+        margin: 1px 0 0 !important;
+        padding: 4px 4px 2px !important;
+        background: none !important;
+        border-top: 1px solid var(--line-faint) !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+
+    .mhist .day-foot-break .dfb,
+    #dailyView .day-foot-break .dfb {
+        font-size: 9.5px !important;
+        padding: 1.5px 5px !important;
+        border-radius: 4px !important;
+    }
+
+    .mhist .day-foot-net,
+    #dailyView .day-foot-net {
+        font-size: 9.5px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+
+    .mhist .day-foot-lbl,
+    #dailyView .day-foot-lbl {
+        font-size: 9px !important;
+        color: var(--slate-gray) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.04em !important;
+    }
+
+    .mhist .day-foot-val,
+    #dailyView .day-foot-val {
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+    }
+
+    [data-theme="dark"] .mhist .day-body,
+    [data-theme="dark"] #dailyView .day-body {
+        background: var(--white) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    [data-theme="dark"] .mhist .row-expense .wallet-icon,
+    [data-theme="dark"] #dailyView .row-expense .wallet-icon {
+        background: rgba(255, 255, 255, 0.07) !important;
+        border-color: rgba(255, 255, 255, 0.10) !important;
     }
 }
 

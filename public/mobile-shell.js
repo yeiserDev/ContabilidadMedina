@@ -241,6 +241,9 @@
 
         var btn = document.getElementById('mhistOpen');
         if (btn) btn.addEventListener('click', function () { abrir(true); });
+        if (new URLSearchParams(window.location.search).has('mhist') || window.location.hash === '#mhist') {
+            setTimeout(function () { abrir(true); }, 400);
+        }
         var x = document.getElementById('mhistClose');
         if (x) x.addEventListener('click', function () { abrir(false); });
         velo.addEventListener('click', function () { abrir(false); });

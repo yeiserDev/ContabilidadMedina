@@ -1,5 +1,5 @@
-// v73 — executive obsidian titanium card redesign
-const CACHE_NAME = 'contamedina-v73';
+// v74 — compact days list and transactions
+const CACHE_NAME = 'contamedina-v74';
 
 // All app shell files to pre-cache on install
 const SHELL = [
