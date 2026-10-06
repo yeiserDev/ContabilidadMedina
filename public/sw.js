@@ -1,5 +1,5 @@
-// v72 — fast comprobante caching + upgraded 2.5D visual scenes
-const CACHE_NAME = 'contamedina-v72';
+// v73 — executive obsidian titanium card redesign
+const CACHE_NAME = 'contamedina-v73';
 
 // All app shell files to pre-cache on install
 const SHELL = [
