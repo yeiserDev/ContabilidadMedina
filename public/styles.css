@@ -6835,12 +6835,12 @@ body.modal-open { overflow: hidden; }
         display: block;
         min-height: 0;
         padding: 0;
-        margin-bottom: 20px;
+        margin-bottom: 14px;
         border-radius: 0;
         overflow: visible;
         background: none;
         box-shadow: none;
-        filter: drop-shadow(0 18px 36px rgba(10, 14, 20, 0.24));
+        filter: drop-shadow(0 10px 20px rgba(10, 14, 20, 0.2));
     }
 
     .mcard-slips { position: relative; }
@@ -6854,7 +6854,7 @@ body.modal-open { overflow: hidden; }
     /* Tarjeta trasera: metal grafito con sutil canto platino */
     .mcard-slip--back {
         width: 86%;
-        height: 12px;
+        height: 8px;
         margin: 0 auto;
         border-radius: 14px 14px 0 0;
         background: linear-gradient(150deg, #334155, #1E293B);
@@ -6866,7 +6866,7 @@ body.modal-open { overflow: hidden; }
     .mcard-slip--front {
         width: 94%;
         margin: -4px auto 0;
-        padding: 13px 18px 28px;
+        padding: 10px 14px 14px;
         border-radius: 18px 18px 10px 10px;
         background:
             radial-gradient(ellipse at 85% -10%, rgba(56, 189, 248, 0.16), transparent 50%),
@@ -6882,12 +6882,12 @@ body.modal-open { overflow: hidden; }
         justify-content: space-between;
         gap: 10px;
     }
-    .mcard-slip-row--b { margin-top: 10px; }
+    .mcard-slip-row--b { margin-top: 6px; }
 
     .mcard-brand {
         display: flex;
         align-items: center;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 500;
         letter-spacing: -0.01em;
         color: rgba(255, 255, 255, 0.82);
@@ -6901,8 +6901,8 @@ body.modal-open { overflow: hidden; }
     /* Chip EMV dorado micrograbado */
     .mcard-emv-chip {
         display: inline-block;
-        width: 22px;
-        height: 16px;
+        width: 18px;
+        height: 13px;
         border-radius: 3px;
         background: linear-gradient(135deg, #FDE68A 0%, #D97706 60%, #B45309 100%);
         border: 1px solid rgba(255, 255, 255, 0.45);
@@ -6927,13 +6927,13 @@ body.modal-open { overflow: hidden; }
     }
 
     .mcard-contactless {
-        font-size: 18px !important;
+        font-size: 15px !important;
         color: rgba(255, 255, 255, 0.75);
     }
 
     .mcard-wordmark {
         flex-shrink: 0;
-        font-size: 10.5px;
+        font-size: 9px;
         font-weight: 800;
         letter-spacing: 0.12em;
         color: #CBD5E1;
@@ -6941,21 +6941,26 @@ body.modal-open { overflow: hidden; }
     }
 
     .mcard-slip-l {
-        font-size: 12px;
-        letter-spacing: 0.16em;
+        min-width: 0;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         font-weight: 600;
         color: rgba(255, 255, 255, 0.45);
         font-family: monospace;
     }
 
     .mcard-cycle {
-        max-width: 62%;
-        font-size: 11px;
+        max-width: 72%;
+        flex-shrink: 0;
+        font-size: 10px;
         font-weight: 600;
         color: rgba(255, 255, 255, 0.88);
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.14);
-        padding: 2.5px 9px;
+        padding: 2px 7px;
         border-radius: 12px;
         backdrop-filter: blur(6px);
         white-space: nowrap;
@@ -6966,8 +6971,8 @@ body.modal-open { overflow: hidden; }
     /* ---- Cuerpo del sleeve / Cartera de Titanio ---- */
     .mcard-body {
         position: relative;
-        margin-top: -32px;
-        min-height: 194px;
+        margin-top: -20px;
+        min-height: 0;
         filter: drop-shadow(0 -4px 12px rgba(0, 0, 0, 0.22));
     }
 
@@ -6987,14 +6992,14 @@ body.modal-open { overflow: hidden; }
 
     .mcard-pocket {
         position: relative;
-        padding: 56px 20px 20px;
+        padding: 28px 16px 14px;
     }
 
     .mcard-bal .bal-pill {
         display: flex !important;
         flex-direction: column;
         align-items: flex-start;
-        gap: 4px;
+        gap: 3px;
         min-width: 0 !important;
         width: auto !important;
         padding: 0 !important;
@@ -7006,7 +7011,7 @@ body.modal-open { overflow: hidden; }
         display: flex !important;
         align-items: center;
         gap: 6px;
-        font-size: 10.5px;
+        font-size: 9px;
         text-transform: uppercase;
         letter-spacing: 0.09em;
         font-weight: 700;
@@ -7022,7 +7027,7 @@ body.modal-open { overflow: hidden; }
         box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
     }
     .mcard-bal .bal-val {
-        font-size: 30px;
+        font-size: 26px;
         font-weight: 800;
         letter-spacing: -0.035em;
         line-height: 1.05;
@@ -7041,8 +7046,8 @@ body.modal-open { overflow: hidden; }
     .mcard-actions {
         display: flex;
         align-items: center;
-        gap: 9px;
-        margin-top: 18px;
+        gap: 8px;
+        margin-top: 10px;
     }
 
     .mcard-cta {
@@ -7058,7 +7063,7 @@ body.modal-open { overflow: hidden; }
         border: 1px solid rgba(74, 222, 128, 0.38);
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
         font-family: inherit;
-        font-size: var(--text-base);
+        font-size: 13px;
         font-weight: 700;
         color: #ffffff;
         cursor: pointer;

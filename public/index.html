@@ -23,7 +23,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
         rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=74">
+    <link rel="stylesheet" href="styles.css?v=77">
+    <link rel="stylesheet" href="mobile-calendar.css?v=76">
     <style>
         /* ===== SPLASH SCREEN (rápido y profesional, ~0.6s total) ===== */
         #splash {
@@ -413,6 +414,23 @@
                         <option value="all">Todos los ciclos</option>
                     </select>
                 </div>
+            </section>
+
+            <section id="activityCalendar" class="activity-calendar" aria-labelledby="activityCalendarTitle">
+                <div class="ac-heading">
+                    <div><h2 id="activityCalendarTitle">Tu calendario</h2><p>Tu dinero, día a día</p></div>
+                    <button type="button" id="acToday" class="ac-today">Hoy</button>
+                </div>
+                <div class="ac-month-nav">
+                    <button type="button" id="acPrev" aria-label="Mes anterior"><span class="material-symbols-outlined" aria-hidden="true">chevron_left</span></button>
+                    <h3 id="acMonth" aria-live="polite"></h3>
+                    <button type="button" id="acNext" aria-label="Mes siguiente"><span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></button>
+                </div>
+                <div class="ac-week" aria-hidden="true"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+                <div id="acDays" class="ac-days" role="group" aria-label="Días del mes"></div>
+                <div class="ac-legend"><span><i class="ac-dot ac-dot--income"></i>Depósito</span><span class="ac-heat-key"><i></i><i></i><i></i>Más gasto</span><span>Importes en S/</span></div>
+                <div id="acMonthInsight" class="ac-month-insight"></div>
+                <div class="ac-month-totals" aria-label="Totales del mes"><div><span>Depósitos del mes</span><strong id="acIncome"></strong></div><div><span>Gastos del mes</span><strong id="acExpense"></strong></div></div>
             </section>
 
             <!-- Puerta al historial. En móvil el feed vive en el panel
@@ -928,12 +946,26 @@
     <script src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="escenas.js?v=72"></script>
-    <script src="app.js?v=72"></script>
+    <script src="app.js?v=75"></script>
     <script src="ui-controls.js"></script>
     <script src="mobile-shell.js"></script>
+    <script src="mobile-calendar.js?v=76"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
+                // En desarrollo, una copia offline puede ocultar que el servidor
+                // está apagado y mezclar HTML antiguo con archivos nuevos.
+                const isLocal = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+                if (isLocal) {
+                    const workerURL = new URL('./sw.js', location.href).href;
+                    navigator.serviceWorker.getRegistrations()
+                        .then(registrations => Promise.all(registrations
+                            .filter(reg => [reg.active, reg.waiting, reg.installing]
+                                .some(worker => worker && worker.scriptURL === workerURL))
+                            .map(reg => reg.unregister())))
+                        .catch(err => console.warn('No se pudo desactivar el SW local:', err));
+                    return;
+                }
                 navigator.serviceWorker.register('./sw.js')
                     .then(() => console.log('✅ Service Worker registrado'))
                     .catch((err) => console.warn('SW no disponible:', err));

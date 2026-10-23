@@ -1335,6 +1335,7 @@ function renderCalendar(){
     for(let i=1;i<=remaining;i++){html+=`<span class="cal-day" style="opacity:0; pointer-events:none;"></span>`;}
     
     daysEls.forEach(el=>el.innerHTML=html);
+    document.dispatchEvent(new Event('conta:calendar-update'));
 }
 document.querySelectorAll('.cal-nav-prev').forEach(b=>b.addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}));
 document.querySelectorAll('.cal-nav-next').forEach(b=>b.addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}));
