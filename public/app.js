@@ -726,6 +726,7 @@ function getCycles() {
     return cycles.reverse();
 }
 
+let cycleFilterInitialized = false;
 function renderMonthFilter(){
     const sel=document.getElementById('monthFilter'),cur=sel.value;
     const mobSel=document.getElementById('mobileMonthFilter');
@@ -737,7 +738,11 @@ function renderMonthFilter(){
     sel.innerHTML=html;
     if(mobSel) mobSel.innerHTML=html;
     
-    const newVal = (!cur || cur==='all') ? (cycles.length?cycles[0].id:'all') : cur;
+    const validCycle = cycles.some(c => c.id === cur);
+    const newVal = cur === 'all' && cycleFilterInitialized
+        ? 'all'
+        : validCycle ? cur : (cycles.length ? cycles[0].id : 'all');
+    if (cycles.length) cycleFilterInitialized = true;
     sel.value = newVal;
     if(mobSel) mobSel.value = newVal;
 }
@@ -1246,14 +1251,16 @@ const addCat=requireAuth(()=>{const inp=document.getElementById('newCategoryInpu
 document.getElementById('addCategoryBtn').addEventListener('click',addCat);
 document.getElementById('newCategoryInput').addEventListener('keydown',e=>{if(e.key==='Enter')addCat();});
 document.getElementById('monthFilter').addEventListener('change',(e)=>{ 
+    cycleFilterInitialized = true;
     const mobSel = document.getElementById('mobileMonthFilter');
     if(mobSel) mobSel.value = e.target.value;
-    renderDaily(); renderKPIs(); renderCharts(); renderCatBreakdown(); 
+    renderDaily(); renderKPIs(); renderCharts(); renderCatBreakdown(); renderCalendar();
 });
 const mobSel = document.getElementById('mobileMonthFilter');
 if(mobSel) mobSel.addEventListener('change',(e)=>{ 
+    cycleFilterInitialized = true;
     document.getElementById('monthFilter').value = e.target.value;
-    renderDaily(); renderKPIs(); renderCharts(); renderCatBreakdown(); 
+    renderDaily(); renderKPIs(); renderCharts(); renderCatBreakdown(); renderCalendar();
     setTimeout(()=>closeM('filterModal'), 150);
 });
 document.getElementById('sidebarToggle').addEventListener('click',()=>{

@@ -1,16 +1,16 @@
-// v77 — cartera móvil compacta
-const CACHE_NAME = 'contamedina-v77';
+// v82 — calendario por ciclo y saldos acumulados diarios
+const CACHE_NAME = 'contamedina-v82';
 
 // All app shell files to pre-cache on install
 const SHELL = [
     './',
     './index.html',
-    './styles.css?v=77',
-    './app.js',
+    './styles.css?v=81',
+    './app.js?v=82',
     './ui-controls.js',
-    './mobile-shell.js',
-    './mobile-calendar.js?v=76',
-    './mobile-calendar.css?v=76',
+    './mobile-shell.js?v=81',
+    './mobile-calendar.js?v=82',
+    './mobile-calendar.css?v=82',
     './escenas.js',
     './firebase-config.js',
     './icon.svg',

@@ -529,14 +529,17 @@
             clearTimeout(apagar);
             barra.classList.add('bnav--arrastre');
             encender(local(e.clientX));
-            /* Con la captura, el dedo puede salirse de la barra y la lente
-               sigue respondiendo hasta que se suelta. */
-            if (barra.setPointerCapture) { try { barra.setPointerCapture(e.pointerId); } catch (err) {} }
+            /* Un toque conserva su destino original; capturar aquí desviaría
+               el clic del icono hacia la barra y el botón no se activaría. */
         });
 
         barra.addEventListener('pointermove', function (e) {
             if (!arrastrando) return;
-            if (Math.abs(e.clientX - x0) > 8) movio = true;
+            if (!movio && Math.abs(e.clientX - x0) > 8) {
+                movio = true;
+                // Capturar sólo cuando ya hay un arrastre real.
+                if (barra.setPointerCapture) { try { barra.setPointerCapture(e.pointerId); } catch (err) {} }
+            }
             encender(local(e.clientX));
         });
 
@@ -607,11 +610,8 @@
                 if (b) b.click();
             };
         };
-        /* Acciones de la cartera. Ninguna es un botón de adorno: la píldora
-           abre el mismo modal de depósito y el redondo de la izquierda, el
-           filtro de ciclos que ya vive en la barra inferior. */
-        var cd = document.getElementById('mcardDeposit');
-        if (cd) cd.addEventListener('click', abre('openDepositModal'));
+        /* La tarjeta conserva el filtro de ciclos y la privacidad del saldo.
+           El depósito se abre desde la barra inferior. */
         var cs = document.getElementById('mcardSwap');
         if (cs) cs.addEventListener('click', abre('bnavFilter'));
 

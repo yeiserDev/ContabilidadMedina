@@ -6,6 +6,7 @@
     const now = new Date();
     let month = now.getMonth(), year = now.getFullYear();
     let selectedDate = today(), filter = 'all', returnFocus = null;
+    let lastScopeKey = null;
     const dateLabel = new Intl.DateTimeFormat('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
     const monthLabel = new Intl.DateTimeFormat('es-PE', { month: 'long', year: 'numeric' });
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -53,6 +54,18 @@
     const amount = r => Number(r.amount) || 0;
     const total = rows => rows.reduce((sum, r) => sum + amount(r), 0);
     const iso = day => `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const localDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const shortDate = new Intl.DateTimeFormat('es-PE', { day: 'numeric', month: 'short' });
+    function scope() {
+        const key = document.getElementById('monthFilter').value || 'all';
+        const cycle = getCycles().find(c => c.id === key);
+        const end = new Date(Math.min(d2(today()).getTime(), cycle ? cycle.end.getTime() : Infinity));
+        // Los ciclos terminan justo antes del mediodía del siguiente inicio.
+        // Traducir ese límite a fechas conserva el día inicial del nuevo ciclo fuera del anterior.
+        if (d2(localDate(end)) > end) end.setDate(end.getDate() - 1);
+        return { key, cycle, start: cycle ? localDate(cycle.start) : null, end: localDate(end) };
+    }
+    const inScope = (date, period) => (!period.start || date >= period.start) && date <= period.end;
 
     // Se crea antes de abrir; el detalle existente sigue siendo la única ficha del movimiento.
     const overlay = el('div', 'modal-bg activity-day-overlay');
@@ -63,7 +76,7 @@
             <header class="ad-header"><div><h2 id="activityDayTitle"></h2><p id="adDate"></p></div><button type="button" id="adClose" class="ad-close" aria-label="Cerrar movimientos del día"><span class="material-symbols-outlined" aria-hidden="true">close</span></button></header>
             <div class="ad-day-nav"><button type="button" id="adPrev" aria-label="Día anterior"><span class="material-symbols-outlined" aria-hidden="true">chevron_left</span></button><span id="adDayPosition"></span><button type="button" id="adNext" aria-label="Día siguiente"><span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></button></div>
             <div class="ad-scroll">
-                <section class="ad-summary" aria-label="Resumen del día"><div class="ad-spending"><div class="ad-spending-copy"><span>Gastos del día</span><strong id="adExpense"></strong><span id="adExpenseCount"></span></div><div id="adRing" class="ad-ring"></div></div><div class="ad-totals"><div><span><i class="ac-dot ac-dot--income"></i>Depósitos</span><strong id="adIncome"></strong></div><div><span>Balance del día</span><strong id="adBalance"></strong></div></div></section>
+                <section class="ad-summary" aria-label="Resumen del día"><div class="ad-spending"><div class="ad-spending-copy"><span>Gastos del día</span><strong id="adExpense"></strong><span id="adExpenseCount"></span></div><div id="adRing" class="ad-ring"></div></div><div class="ad-totals"><div><span id="adIncomeLabel"></span><strong id="adIncome"></strong></div><div><span>Saldo disponible</span><strong id="adBalance"></strong></div></div><p class="ad-balance-note">Saldo acumulado al cierre de este día</p></section>
                 <section id="adCategories" class="ad-categories" aria-labelledby="adCategoriesTitle"><div class="ad-section-heading"><h3 id="adCategoriesTitle">Distribución del gasto</h3><span>Por rubro</span></div><div id="adCategoryBars"></div></section>
                 <div class="ad-list-heading"><h3>Movimientos</h3><span id="adCount" aria-live="polite"></span></div>
                 <div class="ad-filters" role="group" aria-label="Filtrar movimientos del día"><span class="ad-filter-thumb" aria-hidden="true"></span><button type="button" data-kind="all" aria-pressed="true">Todos</button><button type="button" data-kind="expense" aria-pressed="false">Gastos</button><button type="button" data-kind="deposit" aria-pressed="false">Depósitos</button></div>
@@ -75,10 +88,22 @@
     const get = id => document.getElementById(id);
 
     function render() {
+        const period = scope();
+        if (period.key !== lastScopeKey) {
+            if (!inScope(selectedDate, period)) selectedDate = period.end;
+            const anchor = d2(selectedDate);
+            month = anchor.getMonth(); year = anchor.getFullYear();
+            lastScopeKey = period.key;
+        }
         get('acMonth').textContent = monthLabel.format(new Date(year, month, 1));
         const byDate = new Map();
         const prefix = iso(1).slice(0, 7);
-        const monthly = records().filter(r => r.date.startsWith(prefix + '-'));
+        const monthly = records().filter(r => r.date.startsWith(prefix + '-') && inScope(r.date, period));
+        const visibleStart = period.start && period.start > iso(1) ? period.start : iso(1);
+        const visibleEnd = period.end < iso(new Date(year, month + 1, 0).getDate()) ? period.end : iso(new Date(year, month + 1, 0).getDate());
+        get('acScope').textContent = visibleStart <= visibleEnd
+            ? `${period.cycle ? 'Ciclo seleccionado' : 'Todos los ciclos'} · ${shortDate.format(d2(visibleStart))} – ${shortDate.format(d2(visibleEnd))}`
+            : 'Este mes no tiene días dentro del periodo seleccionado';
         monthly.forEach(r => {
             if (!byDate.has(r.date)) byDate.set(r.date, []);
             byDate.get(r.date).push(r);
@@ -98,6 +123,7 @@
             const button = el('button', 'ac-day', '');
             button.type = 'button';
             button.dataset.date = date;
+            button.disabled = !inScope(date, period);
             button.appendChild(el('span', 'ac-day-number', day));
             if (date === today()) { button.classList.add('is-today'); button.setAttribute('aria-current', 'date'); }
             if (date === selectedDate) button.classList.add('is-selected');
@@ -114,7 +140,7 @@
             button.appendChild(dots);
             button.setAttribute('aria-label', `${dateLabel.format(d2(date))}: ${expense} gastos, ${money(spent)}; ${income} depósitos, ${money(received)}`);
             button.title = `Gastos: ${money(spent)} · Depósitos: ${money(received)}`;
-            button.addEventListener('click', e => openDay(date, button, e.detail > 0));
+            if (!button.disabled) button.addEventListener('click', e => openDay(date, button, e.detail > 0));
             grid.appendChild(button);
         }
         const insight = get('acMonthInsight');
@@ -127,7 +153,7 @@
             peakButton.addEventListener('click', e => openDay(peak[0], peakButton, e.detail > 0));
             insight.appendChild(peakButton);
         } else {
-            insight.appendChild(el('p', 'ac-no-spending', byDate.size ? 'Este mes solo hay depósitos registrados.' : 'Todavía no hay movimientos este mes.'));
+            insight.appendChild(el('p', 'ac-no-spending', byDate.size ? 'Este periodo solo tiene depósitos registrados.' : 'No hay movimientos en el periodo visible.'));
         }
         get('acIncome').textContent = money(total(monthly.filter(r => r.kind === 'deposit')));
         get('acExpense').textContent = money(total(monthly.filter(r => r.kind === 'expense')));
@@ -138,12 +164,21 @@
         const rows = records(selectedDate);
         const incoming = total(rows.filter(r => r.kind === 'deposit'));
         const outgoing = total(rows.filter(r => r.kind === 'expense'));
-        const balance = incoming - outgoing;
+        const openingBalance = balBefore(selectedDate);
+        const balance = openingBalance + incoming - outgoing;
         get('activityDayTitle').textContent = `${weekday(selectedDate)}, ${dayNum(selectedDate)}`;
         get('adDate').textContent = dateLabel.format(d2(selectedDate));
         get('adBalance').textContent = `${balance < 0 ? '−' : ''}${money(Math.abs(balance))}`;
         get('adBalance').classList.toggle('is-negative', balance < 0);
-        get('adIncome').textContent = money(incoming);
+        get('adIncomeLabel').textContent = incoming ? 'Depósitos del día' : 'Saldo al iniciar';
+        const initialValue = incoming || openingBalance;
+        get('adIncome').textContent = `${initialValue < 0 ? '−' : ''}${money(Math.abs(initialValue))}`;
+        get('adIncome').classList.toggle('is-negative', initialValue < 0);
+        const period = scope();
+        const previous = d2(selectedDate); previous.setDate(previous.getDate() - 1);
+        const next = d2(selectedDate); next.setDate(next.getDate() + 1);
+        get('adPrev').disabled = !inScope(localDate(previous), period);
+        get('adNext').disabled = !inScope(localDate(next), period);
         get('adExpense').textContent = money(outgoing);
         const expenseCount = rows.filter(r => r.kind === 'expense').length;
         get('adExpenseCount').textContent = `${expenseCount} ${expenseCount === 1 ? 'gasto registrado' : 'gastos registrados'}`;
@@ -237,6 +272,7 @@
     }
 
     function openDay(date, source, animated = true) {
+        if (!inScope(date, scope())) return;
         selectedDate = date;
         filter = 'all';
         returnFocus = source || calendar.querySelector(`[data-date="${date}"]`) || get('acToday');
@@ -256,6 +292,7 @@
     }));
     function moveDay(delta, animated) {
         const date = d2(selectedDate); date.setDate(date.getDate() + delta);
+        if (!inScope(localDate(date), scope())) return;
         selectedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         month = date.getMonth(); year = date.getFullYear();
         filter = 'all'; render();
@@ -330,7 +367,8 @@
     get('acPrev').addEventListener('click', e => moveMonth(-1, e.detail > 0));
     get('acNext').addEventListener('click', e => moveMonth(1, e.detail > 0));
     get('acToday').addEventListener('click', () => {
-        const current = new Date(); month = current.getMonth(); year = current.getFullYear(); selectedDate = today(); render();
+        selectedDate = inScope(today(), scope()) ? today() : scope().end;
+        const current = d2(selectedDate); month = current.getMonth(); year = current.getFullYear(); render();
         calendar.querySelector(`[data-date="${selectedDate}"]`)?.focus();
     });
     document.addEventListener('conta:calendar-update', render);
