@@ -23,7 +23,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
         rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=81">
+    <link rel="stylesheet" href="styles.css?v=83">
     <link rel="stylesheet" href="mobile-calendar.css?v=82">
     <style>
         /* ===== SPLASH SCREEN (rápido y profesional, ~0.6s total) ===== */
@@ -63,10 +63,12 @@
             gap: 12px;
         }
         #splash .sp-mark {
-            width: 52px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             flex: none;
-            overflow: visible;
+            border-radius: 11px;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.2);
+            object-fit: contain;
         }
         #splash .sp-word {
             font-size: 27px;
@@ -80,10 +82,10 @@
         }
         #splash .sp-word b {
             font-weight: 700;
-            color: #CF4500;
+            color: #0284C7;
         }
         #splash.dark .sp-word b {
-            color: #F0873F;
+            color: #38BDF8;
         }
         #splash .sp-bar {
             width: 48px;
@@ -103,7 +105,7 @@
             left: 0;
             height: 100%;
             width: 50%;
-            background: linear-gradient(90deg, #CF4500, #F0873F);
+            background: linear-gradient(90deg, #0284C7, #38BDF8);
             border-radius: 999px;
             animation: spProgress 0.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
@@ -127,27 +129,7 @@
     <div id="splash">
         <div class="sp-wrap">
             <div class="sp-brand">
-                <svg class="sp-mark" viewBox="0 0 130 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <defs>
-                        <linearGradient id="spBar" x1=".1" y1="0" x2=".9" y2="1">
-                            <stop offset="0" stop-color="#7A3413"/>
-                            <stop offset=".55" stop-color="#C4470E"/>
-                            <stop offset="1" stop-color="#F0873F"/>
-                        </linearGradient>
-                        <linearGradient id="spOr" x1="0" y1="1" x2="1" y2="0">
-                            <stop offset="0" stop-color="#B93C05"/>
-                            <stop offset=".55" stop-color="#E2691F"/>
-                            <stop offset="1" stop-color="#F9A45C"/>
-                        </linearGradient>
-                    </defs>
-                    <g fill="url(#spBar)">
-                        <rect x="28" y="44" width="16" height="38" rx="5"/>
-                        <rect x="50" y="30" width="16" height="52" rx="5"/>
-                        <rect x="72" y="14" width="16" height="68" rx="5"/>
-                    </g>
-                    <path d="M4 56 C12 98 66 108 100 62" fill="none" stroke="url(#spOr)" stroke-width="13" stroke-linecap="round"/>
-                    <path d="M107 68 L93 55 L126 22 L118 46 Z" fill="url(#spOr)"/>
-                </svg>
+                <img src="icon.svg" alt="Conta Medina" class="sp-mark" width="44" height="44">
                 <div class="sp-word">Conta <b>Medina</b></div>
             </div>
             <div class="sp-bar"></div>

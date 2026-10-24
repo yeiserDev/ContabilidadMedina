@@ -1,11 +1,11 @@
-// v82 — calendario por ciclo y saldos acumulados diarios
-const CACHE_NAME = 'contamedina-v82';
+// v83 — Nuevo logo corporativo integrado: transporte & contabilidad
+const CACHE_NAME = 'contamedina-v83';
 
 // All app shell files to pre-cache on install
 const SHELL = [
     './',
     './index.html',
-    './styles.css?v=81',
+    './styles.css?v=83',
     './app.js?v=82',
     './ui-controls.js',
     './mobile-shell.js?v=81',

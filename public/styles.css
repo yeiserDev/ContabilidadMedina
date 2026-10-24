@@ -216,7 +216,7 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .brand-accent {
-    color: var(--signal-orange);
+    color: #0284C7;
 }
 
 .brand-sub {
@@ -5726,14 +5726,16 @@ body, .header, .day-card, .kpi, .chart-card, .modal, .sidebar-left, .bottom-nav 
 /* En claro el degradado va de bronce a oro oscuro, no a oro brillante: sobre
    el cream, #D9A93C daba 1.91:1 y la mitad derecha de la palabra se perdía. */
 .brand-accent {
-    background: linear-gradient(135deg, #8A6018, #A8781F);
+    color: #0284C7;
+    background: linear-gradient(135deg, #0284C7, #0369A1);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 [data-theme="dark"] .brand-accent {
-    background: linear-gradient(135deg, #D9A93C, #F7E3A1);
+    color: #38BDF8;
+    background: linear-gradient(135deg, #38BDF8, #60A5FA);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
