@@ -198,38 +198,29 @@
     <div class="layout">
         <!-- LEFT SIDEBAR -->
         <aside class="sidebar-left" id="sidebar">
-            <!-- Resumen del ciclo. Vive en el panel porque la cabecera pasó a
-                 mostrar los métodos de pago. -->
-            <div class="sl-block">
-                <div class="sl-heading"><span class="material-symbols-outlined">monitoring</span> Resumen del Ciclo</div>
-                <section class="kpis kpi-band" aria-label="Resumen del ciclo">
-
-                    <div class="kpi kpi--income">
-                        <div class="kpi-top">
-                            <span class="kpi-l">Ingresos del ciclo</span>
-                            <span class="material-symbols-outlined ki">trending_up</span>
-                        </div>
-                        <div class="kpi-v" id="totalIncome">S/ 0.00</div>
-                        <div class="kpi-delta" id="incomeDelta"></div>
+            <section class="sl-block cycle-summary" aria-labelledby="cycleSummaryTitle">
+                <h2 id="cycleSummaryTitle" class="summary-title">Resumen del ciclo</h2>
+                <div class="summary-ledger">
+                    <div class="summary-row">
+                        <span>Ingresos</span>
+                        <strong id="totalIncome">S/ 0.00</strong>
                     </div>
-                    <div class="kpi kpi--count">
-                        <div class="kpi-top">
-                            <span class="kpi-l">Neto del ciclo</span>
-                            <span class="material-symbols-outlined ki">account_balance</span>
-                        </div>
-                        <div class="kpi-v" id="cycleNet">S/ 0.00</div>
-                        <div class="kpi-delta" id="cycleNetSub"></div>
+                    <div class="kpi-delta" id="incomeDelta"></div>
+                    <div class="summary-row summary-row--expense">
+                        <span>Gastos</span>
+                        <strong id="totalExpenses">S/ 0.00</strong>
                     </div>
-                    <div class="kpi kpi--days">
-                        <div class="kpi-top">
-                            <span class="kpi-l">Días con registro</span>
-                            <span class="material-symbols-outlined ki">calendar_month</span>
-                        </div>
-                        <div class="kpi-v" id="totalDays">0</div>
-                        <div class="kpi-delta" id="depositsSub"></div>
-                    </div>
-                </section>
-            </div>
+                </div>
+                <div class="summary-result">
+                    <span class="summary-label">Neto del ciclo</span>
+                    <strong class="summary-value" id="cycleNet">S/ 0.00</strong>
+                    <div class="kpi-delta" id="cycleNetSub"></div>
+                </div>
+                <div class="summary-activity">
+                    <span><strong id="totalDays">0</strong> días activos</span>
+                    <span id="depositsSub">0 movimientos</span>
+                </div>
+            </section>
 
             <div class="sl-block">
                 <div class="sl-heading"><span class="material-symbols-outlined">label</span> Administrar Rubros</div>
@@ -282,18 +273,17 @@
                     <div class="mshell-actions" id="mshellActions"></div>
                 </div>
 
-                <!-- Saldo arriba; ciclo y acciones dentro de una tarjeta compacta. -->
+                <!-- Saldo y ciclo a la izquierda; controles al alcance del pulgar. -->
                 <article class="mcard" id="mcard">
+                    <div class="mcard-bank-brand">
+                        <span>Conta <strong>Medina</strong></span>
+                        <svg class="mcard-chip" viewBox="0 0 32 24" fill="none" aria-hidden="true"><rect x=".75" y=".75" width="30.5" height="22.5" rx="5" fill="currentColor" stroke="#d8bc89" stroke-width=".75"/><path d="M11 1v6H1m30 0H21V1M11 23v-6H1m30 0H21v6M1 12h8m14 0h8M12 7h8v10h-8z" stroke="#806a43" stroke-width=".8"/></svg>
+                    </div>
                     <div class="mcard-header">
                         <div class="mcard-bal" id="mcardBal" role="group" aria-label="Saldo disponible"></div>
-                        <div class="mcard-meta">
-                            <div class="mcard-badge-right">
-                                <span class="material-symbols-outlined mcard-contactless" aria-hidden="true">contactless</span>
-                            </div>
-                        </div>
+                        <span class="mcard-cycle" id="mcardCycle">Ciclo actual</span>
                     </div>
                     <div class="mcard-content">
-                            <span class="mcard-cycle" id="mcardCycle">Ciclo actual</span>
                             <div class="mcard-actions">
                                 <button type="button" class="mcard-ic" id="mcardSwap" aria-label="Cambiar de ciclo">
                                     <span class="material-symbols-outlined">sync_alt</span>
@@ -311,23 +301,32 @@
 
             <!-- CHARTS -->
             <section class="charts-section" id="chartsSection">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <span class="material-symbols-outlined">bar_chart</span>
-                        <span>Ingresos vs Gastos — Últimos 6 meses</span>
+                <div class="chart-card cashflow-card">
+                    <div class="cashflow-heading">
+                        <div><h2>Ingresos vs gastos</h2><p>Últimos 6 meses</p></div>
+                        <span class="cashflow-period" aria-hidden="true">6M</span>
+                    </div>
+                    <div class="cashflow-legend">
+                        <span class="cashflow-label"><i class="cashflow-dot cashflow-dot--income" aria-hidden="true"></i>Ingresos</span>
+                        <span class="cashflow-label"><i class="cashflow-dot cashflow-dot--expense" aria-hidden="true"></i>Gastos</span>
                     </div>
                     <div class="chart-wrap">
-                        <canvas id="chartBar"></canvas>
+                        <canvas id="chartBar" role="img" aria-label="Comparación mensual de ingresos y gastos" aria-describedby="cashflowData"></canvas>
                     </div>
+                    <p id="cashflowData" class="cashflow-sr-only"></p>
+                    <div class="cashflow-footer"><span>Balance del período</span><strong id="chartPeriodNet">S/ 0.00</strong></div>
                 </div>
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <span class="material-symbols-outlined">donut_large</span>
-                        <span>Distribución por Rubro</span>
+                <div class="chart-card distribution-card">
+                    <div class="cashflow-heading">
+                        <div><h2>Distribución por rubro</h2><p>Según el ciclo seleccionado</p></div>
                     </div>
-                    <div class="chart-wrap chart-wrap--donut">
-                        <canvas id="chartDonut"></canvas>
+                    <div class="distribution-body">
+                        <div class="chart-wrap chart-wrap--donut">
+                            <canvas id="chartDonut" role="img" aria-label="Distribución de gastos por rubro" aria-describedby="distributionLegend"></canvas>
+                        </div>
+                        <div id="distributionLegend" class="distribution-legend" tabindex="0" aria-label="Rubros y porcentajes"></div>
                     </div>
+                    <p class="distribution-note" id="distributionNote">Sin gastos en este ciclo</p>
                 </div>
                 <div class="chart-card" style="grid-column: 1 / -1; display:none;">
                     <div class="chart-header">
@@ -438,14 +437,15 @@
                 </div>
             </div>
             <!-- ÚLTIMO DEPÓSITO + GASTOS MÁS FUERTES -->
-            <div class="sr-block sr-block--glass">
-                <div class="sr-heading"><span class="material-symbols-outlined">savings</span>
-                    Último Depósito</div>
+            <section class="sr-block deposit-panel" aria-labelledby="lastDepositTitle">
+                <h2 class="insight-title" id="lastDepositTitle">Último depósito <span class="material-symbols-outlined" aria-hidden="true">south_west</span></h2>
                 <div id="lastDepositCard"></div>
-                <div class="sr-subheading"><span class="material-symbols-outlined">local_fire_department</span>
-                    Gastos más fuertes</div>
+            </section>
+            <section class="sr-block activity-summary" aria-labelledby="topExpensesTitle">
+                <h2 class="insight-title" id="topExpensesTitle">Mayores gastos</h2>
+                <p class="insight-subtitle">En este ciclo</p>
                 <div id="topExpenses" class="topx-list"></div>
-            </div>
+            </section>
 
             <!-- REMINDERS -->
             <div class="sr-block">
@@ -500,39 +500,24 @@
     <!-- BOTTOM NAV (mobile / PWA) — Liquid Glass -->
     <!-- Iconos vectoriales con el mismo trazo y tamaño óptico. -->
     <nav class="bottom-nav" id="bottomNav" aria-label="Acciones principales">
-        <!-- Capa de metaballs: la barra y la gota viven aquí dentro, bajo el
-             mismo filtro. El filtro desenfoca las dos y luego sube el
-             contraste del canal alfa, así que donde sus bordes difuminados se
-             tocan aparece un puente sólido: es lo que hace que la gota salga
-             de la barra estirándose en vez de aparecer y ya. -->
-        <span class="bnav-goo" aria-hidden="true">
-            <span class="bnav-goo-barra"></span>
-            <span class="bnav-goo-gota" id="bnavGota"></span>
-        </span>
-        <!-- La lente va aparte y sin filtro: es la que desenfoca y satura lo
-             que pasa por debajo. Un filtro SVG encima de un backdrop-filter
-             anula el desenfoque de fondo, así que la silueta que se funde
-             (arriba) y el cristal que refracta (aquí) tienen que ser dos
-             capas distintas, movidas a la vez. -->
-        <span class="bnav-lente" id="bnavLente" aria-hidden="true"></span>
         <button class="bnav-btn" id="bnavMenu">
-            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span>
+            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.8"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.8"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.8"/><rect x="14" y="14" width="6.5" height="6.5" rx="1.8"/></svg></span>
             <span class="bnav-label">Rubros</span>
         </button>
         <button class="bnav-btn bnav-btn--deposit" id="bnavDeposit">
-            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><path d="M12 3v11m-4-4 4 4 4-4"/><path d="M5 12H3v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2"/><path d="M7 17h10" opacity=".5"/></svg></span>
+            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9m-3.5-3.5L12 16.5l3.5-3.5"/></svg></span>
             <span class="bnav-label">Depósito</span>
         </button>
         <button class="bnav-btn" id="bnavLoans" onclick="openM('loansModal')">
-            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><circle cx="16" cy="5.5" r="3"/><path d="M3 13h3v8H3zM6 14l4-3h4a2 2 0 0 1 0 4h-3"/><path d="m6 19 7 2 7-5a2 2 0 0 0-2-3l-3 2"/></svg></span>
+            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><path d="M4 7.5h15.5M15.5 3.5l4 4-4 4M20 16.5H4.5m4-4-4 4 4 4"/></svg></span>
             <span class="bnav-label" id="bnavLoansBadge">Préstamos</span>
         </button>
         <button class="bnav-btn bnav-btn--expense" id="bnavExpense">
-            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 7h6M9 11h6M9 15h3"/></svg></span>
+            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M3 9.5h18M6.5 15h4"/></svg></span>
             <span class="bnav-label">Gasto</span>
         </button>
         <button class="bnav-btn" id="bnavFilter">
-            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><path d="M3 7h3m4 0h11M3 17h11m4 0h3"/><circle cx="8" cy="7" r="2"/><circle cx="16" cy="17" r="2"/></svg></span>
+            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M7.5 8.5h9M9 12h6m-4.5 3.5h3"/></svg></span>
             <span class="bnav-label">Filtrar</span>
         </button>
     </nav>

@@ -75,10 +75,8 @@
 
         var puntos = document.createElement('div');
         puntos.className = 'mdots';
-        /* Decorativo: el contenido real ya está en las tarjetas y se
-           alcanza deslizando, así que el lector de pantalla no gana nada
-           anunciando cuatro botones "1 de 3". */
-        puntos.setAttribute('aria-hidden', 'true');
+        /* Los botones permiten cambiar de tarjeta también con teclado. */
+        puntos.setAttribute('aria-label', 'Elegir tarjeta');
         deck.parentNode.insertBefore(puntos, deck.nextSibling);
 
         var pausaHasta = 0;   /* marca de tiempo hasta la que no se gira */
@@ -112,13 +110,17 @@
             if (puntos.children.length !== n) {
                 puntos.innerHTML = '';
                 for (var i = 0; i < n; i++) {
-                    puntos.appendChild(document.createElement('i')).className = 'mdot';
+                    var dot=document.createElement('button');
+                    dot.type='button';dot.className='mdot';
+                    dot.setAttribute('aria-label',deck.id==='chartsSection'?(i===0?'Ingresos vs gastos':'Distribución por rubro'):'Tarjeta '+(i+1));
+                    puntos.appendChild(dot);
                 }
             }
             puntos.style.display = n > 1 ? '' : 'none';
             var act = indice();
             Array.prototype.forEach.call(puntos.children, function (p, i) {
                 p.classList.toggle('is-on', i === act);
+                p.setAttribute('aria-pressed', String(i === act));
             });
 
             /* El desvanecido sólo se enciende en el lado que de verdad
@@ -133,7 +135,7 @@
             var t = tarjetas();
             if (!t[i]) return;
             propio = Date.now() + 700;
-            deck.scrollTo({ left: inicio(t[i]), behavior: 'smooth' });
+            deck.scrollTo({ left: inicio(t[i]), behavior: REDUCIDO.matches?'instant':'smooth' });
         }
 
         function pausar() { pausaHasta = Date.now() + 9000; }
@@ -156,6 +158,19 @@
         /* app.js reconstruye el mazo de métodos con innerHTML en cada
            render: sin esto los puntos se quedarían con la cuenta vieja. */
         new MutationObserver(pintar).observe(deck, { childList: true });
+
+        // Preserve the selected card when rotation or layout changes its width.
+        if (window.ResizeObserver) {
+            var lastWidth=deck.clientWidth, selected=0;
+            deck.addEventListener('scroll',function(){selected=indice();},{passive:true});
+            new ResizeObserver(function(){
+                if(deck.clientWidth===lastWidth)return;
+                lastWidth=deck.clientWidth;
+                var cards=tarjetas();
+                if(MQ.matches&&cards[selected])deck.scrollTo({left:inicio(cards[selected]),behavior:'instant'});
+                pintar();
+            }).observe(deck);
+        }
 
         if (window.IntersectionObserver) {
             new IntersectionObserver(function (e) {
@@ -449,144 +464,24 @@
         hoja.addEventListener('touchcancel', soltar, { passive: true });
     }
 
-    /* ========================================================
-       LA LENTE DE LA BARRA
-       --------------------------------------------------------
-       Al apoyar el dedo aparece una lente de cristal debajo y lo
-       sigue mientras se desliza de un icono a otro; al soltar,
-       encaja en el más cercano.
-
-       Dos capas se mueven con la misma medida: la gota, que va
-       bajo el filtro y hace que la forma se funda y se estire con
-       la barra, y la lente, que es la que desenfoca y satura lo
-       que pasa por debajo.
-       ======================================================== */
-    function gotaBarra() {
-        var barra = document.getElementById('bottomNav');
-        var capa = barra && barra.querySelector('.bnav-goo');
-        var gota = document.getElementById('bnavGota');
-        var lente = document.getElementById('bnavLente');
-        if (!barra || !capa || !gota || !lente) return;
-
-        var botones = Array.prototype.slice.call(barra.querySelectorAll('.bnav-btn'));
-        var arrastrando = false, movio = false, x0 = 0, apagar = null;
-        var tragar = false, soltarTragar = null;
-
-        /* Si el arrastre empieza y acaba dentro del mismo botón, el navegador
-           manda además su clic nativo: sin este portero se abriría dos veces
-           lo que se haya tocado. Se traga uno y sólo uno. */
-        barra.addEventListener('click', function (e) {
-            if (!tragar) return;
-            tragar = false;
-            clearTimeout(soltarTragar);
-            e.stopPropagation();
-            e.preventDefault();
-        }, true);
-
-        function local(clientX) {
-            var r = barra.getBoundingClientRect();
-            /* Pegada a los extremos la lente se sale de la barra; se queda
-               dentro con el margen de su propio radio. */
-            return Math.max(30, Math.min(r.width - 30, clientX - r.left));
-        }
-
-        function centro(btn) {
-            var r = barra.getBoundingClientRect();
-            var b = btn.getBoundingClientRect();
-            return b.left - r.left + b.width / 2;
-        }
-
-        function colocar(x) {
-            gota.style.setProperty('--gota-x', x + 'px');
-            lente.style.setProperty('--gota-x', x + 'px');
-        }
-
-        function cercano(x) {
-            var mejor = null, dist = Infinity;
-            botones.forEach(function (b) {
-                var d = Math.abs(centro(b) - x);
-                if (d < dist) { dist = d; mejor = b; }
-            });
-            return mejor;
-        }
-
-        function resaltar(btn) {
-            botones.forEach(function (b) { b.classList.toggle('is-bajo', b === btn); });
-        }
-
-        function encender(x) {
-            colocar(x);
-            resaltar(cercano(x));
-            capa.classList.add('is-activa');
-            barra.classList.add('is-tocando');
-        }
-
-        barra.addEventListener('pointerdown', function (e) {
-            if (!MQ.matches) return;
-            arrastrando = true;
-            movio = false;
-            x0 = e.clientX;
-            clearTimeout(apagar);
-            barra.classList.add('bnav--arrastre');
-            encender(local(e.clientX));
-            /* Un toque conserva su destino original; capturar aquí desviaría
-               el clic del icono hacia la barra y el botón no se activaría. */
+    // These are actions, not pages: selection follows the open sheet.
+    function navigationState() {
+        var targets = { bnavMenu: 'sidebar', bnavDeposit: 'depositModal',
+            bnavLoans: 'loansModal', bnavExpense: 'expenseModal', bnavFilter: 'filterModal' };
+        Object.keys(targets).forEach(function (id) {
+            var button = document.getElementById(id);
+            var panel = document.getElementById(targets[id]);
+            if (!button || !panel) return;
+            button.type = 'button';
+            button.setAttribute('aria-controls', panel.id);
+            var update = function () {
+                var open = panel.classList.contains(id === 'bnavMenu' ? 'open' : 'active');
+                button.classList.toggle('is-selected', open);
+                button.setAttribute('aria-expanded', String(open));
+            };
+            new MutationObserver(update).observe(panel, { attributes: true, attributeFilter: ['class'] });
+            update();
         });
-
-        barra.addEventListener('pointermove', function (e) {
-            if (!arrastrando) return;
-            if (!movio && Math.abs(e.clientX - x0) > 8) {
-                movio = true;
-                // Capturar sólo cuando ya hay un arrastre real.
-                if (barra.setPointerCapture) { try { barra.setPointerCapture(e.pointerId); } catch (err) {} }
-            }
-            encender(local(e.clientX));
-        });
-
-        function soltar(e) {
-            if (!arrastrando) return;
-            arrastrando = false;
-            /* Se devuelve la transición antes de colocarla en su sitio: así
-               la lente viaja hasta el icono en vez de saltar. */
-            barra.classList.remove('bnav--arrastre');
-
-            var btn = cercano(local(e.clientX));
-            if (btn) {
-                colocar(centro(btn));
-                resaltar(btn);
-                /* Sólo se dispara a mano si hubo arrastre. En un toque limpio
-                   el clic nativo del botón ya llega solo, y hacerlo aquí
-                   además abriría dos veces. */
-                if (movio) {
-                    btn.click();
-                    tragar = true;
-                    clearTimeout(soltarTragar);
-                    /* Si el clic nativo no llega —porque el dedo acabó en otro
-                       botón—, el portero se retira solo. */
-                    soltarTragar = setTimeout(function () { tragar = false; }, 400);
-                }
-            }
-
-            /* En un toque limpio se retiran en cuanto se levanta el dedo: la
-               marca no tiene nada que decir una vez abierto lo que se tocó, y
-               dejarla casi un segundo colgando bajo la barra mientras la hoja
-               sube se leía como suciedad. Tras un arrastre se queda lo justo
-               para que se vea encajar en el icono. */
-            if (movio) {
-                apagar = setTimeout(retirar, 220);
-            } else {
-                retirar();
-            }
-        }
-
-        function retirar() {
-            barra.classList.remove('is-tocando');
-            capa.classList.remove('is-activa');
-            resaltar(null);
-        }
-
-        barra.addEventListener('pointerup', soltar);
-        barra.addEventListener('pointercancel', soltar);
     }
 
     function init() {
@@ -663,7 +558,7 @@
            ahí el usuario está comparando, no ojeando. */
         historial();
         hojaDetalle();
-        gotaBarra();
+        navigationState();
 
         carrusel(document.getElementById('payMethods'), 6500);
         carrusel(document.querySelector('.charts-section'), 0);

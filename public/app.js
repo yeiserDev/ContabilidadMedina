@@ -343,7 +343,7 @@ function renderKPIs(){
     const depSub = document.getElementById('depositsSub');
     if (depSub) {
         const n = curDeps.length + curExps.length;
-        depSub.textContent = n === 1 ? '1 movimiento en el ciclo' : `${n} movimientos en el ciclo`;
+        depSub.textContent = n === 1 ? '1 movimiento' : `${n} movimientos`;
         depSub.className = 'kpi-delta neutral';
     }
 
@@ -486,13 +486,22 @@ function leyendaDatos() {
 function renderCharts(){
     if(typeof Chart==='undefined')return;
     const now=new Date();
-    const cycles = typeof getCycles !== 'undefined' ? getCycles().slice(0,6).reverse() : [];
     const labels=[],incData=[],expData=[];
-    cycles.forEach(c => {
-        labels.push(`${c.start.getDate()} ${monShort(c.start.toISOString().split('T')[0])}`);
-        incData.push(deposits.filter(d=>{const dd=d2(d.date);return dd>=c.start&&dd<=c.end;}).reduce((s,d)=>s+ +d.amount,0));
-        expData.push(expenses.filter(e=>{const dd=d2(e.date);return dd>=c.start&&dd<=c.end;}).reduce((s,e)=>s+ +e.amount,0));
-    });
+    const monthNames=[];
+    for(let offset=5;offset>=0;offset--){
+        const month=new Date(now.getFullYear(),now.getMonth()-offset,1);
+        const inMonth=record=>{const date=d2(record.date);return date.getFullYear()===month.getFullYear()&&date.getMonth()===month.getMonth();};
+        labels.push(month.toLocaleDateString('es-PE',{month:'short'}).replace('.',''));
+        monthNames.push(month.toLocaleDateString('es-PE',{month:'long',year:'numeric'}));
+        incData.push(deposits.filter(inMonth).reduce((sum,record)=>sum+ +record.amount,0));
+        expData.push(expenses.filter(inMonth).reduce((sum,record)=>sum+ +record.amount,0));
+    }
+    const periodIncome=incData.reduce((sum,value)=>sum+value,0);
+    const periodExpenses=expData.reduce((sum,value)=>sum+value,0);
+    const periodNet=document.getElementById('chartPeriodNet');
+    periodNet.textContent=(periodIncome<periodExpenses?'-':'+')+money(Math.abs(periodIncome-periodExpenses));
+    periodNet.classList.toggle('is-negative',periodIncome<periodExpenses);
+    document.getElementById('cashflowData').textContent=monthNames.map((month,i)=>`${month}: ingresos ${money(incData[i])}, gastos ${money(expData[i])}`).join('. ');
     const _dark=document.documentElement.getAttribute('data-theme')==='dark';
     const _tick=_dark?'#9C988E':'#94a3b8', _grid=_dark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)', _legend=_dark?'#B6B2A8':'#64748b';
 
@@ -501,16 +510,32 @@ function renderCharts(){
     if(barCtx){
         if(barChart)barChart.destroy();
         barChart=new Chart(barCtx,{type:'bar',data:{labels,datasets:[
-            {label:'Ingresos',data:incData,backgroundColor:'rgba(22,163,74,0.72)',borderColor:'rgba(22,163,74,1)',borderWidth:1.5,borderRadius:4,borderSkipped:false},
-            {label:'Gastos',data:expData,backgroundColor:'rgba(220,38,38,0.62)',borderColor:'rgba(220,38,38,0.9)',borderWidth:1.5,borderRadius:4,borderSkipped:false}
-        ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:1200,easing:'easeOutQuart',delay:c=>c.type==='data'?c.dataIndex*100+c.datasetIndex*100:0},plugins:{legend:{labels:Object.assign({},_legLbl,{boxWidth:8,padding:12})},tooltip:Object.assign({},_tt,{callbacks:{label:c=>` ${c.dataset.label}: ${money(c.raw)}`}})},scales:{x:{grid:{display:false},ticks:{color:_tick,font:{size:10}}},y:{grid:{color:_grid},ticks:{color:_tick,font:{size:10},callback:v=>v>=1000?`S/${(v/1000).toFixed(0)}k`:`S/${v}`}}}}});
+            {label:'Ingresos',data:incData,backgroundColor:_dark?'#69c99b':'#319b70',borderWidth:0,borderRadius:5,borderSkipped:false,maxBarThickness:18,categoryPercentage:0.65,barPercentage:0.85},
+            {label:'Gastos',data:expData,backgroundColor:_dark?'#efac7d':'#d88859',borderWidth:0,borderRadius:5,borderSkipped:false,maxBarThickness:18,categoryPercentage:0.65,barPercentage:0.85}
+        ]},options:{responsive:true,maintainAspectRatio:false,
+            animation:{duration:window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:500,easing:'easeOutQuart'},
+            interaction:{mode:'index',intersect:false},
+            plugins:{legend:{display:false},tooltip:Object.assign({},_tt,{callbacks:{title:items=>monthNames[items[0].dataIndex],label:c=>` ${c.dataset.label}: ${money(c.raw)}`}})},
+            scales:{x:{border:{display:false},grid:{display:false},ticks:{color:_dark?'#b6b2a8':'#72716f',font:{size:11,family:'-apple-system, BlinkMacSystemFont, Arial, sans-serif'},padding:8}},
+                y:{beginAtZero:true,border:{display:false,dash:[3,4]},grid:{color:_grid,drawTicks:false},ticks:{maxTicksLimit:4,color:_dark?'#b6b2a8':'#72716f',font:{size:10},padding:8,callback:v=>v>=1000?`${Number((v/1000).toFixed(1))} mil`:v}}}
+        }});
     }
     const donutCtx=document.getElementById('chartDonut');
     if(donutCtx){
         const ct=catTotals(),cats=categories.filter(c=>(ct[c]||0)>0);
+        const total=cats.reduce((sum,category)=>sum+ct[category],0);
+        const legend=document.getElementById('distributionLegend');
+        legend.replaceChildren();
+        cats.forEach((category,i)=>{
+            const row=document.createElement('div');row.className='distribution-row';
+            const dot=document.createElement('i');dot.style.background=COLORS[i%COLORS.length];dot.setAttribute('aria-hidden','true');
+            const label=document.createElement('span');label.textContent=category;label.title=category;
+            const percent=document.createElement('strong');percent.textContent=Math.round(ct[category]/total*100)+'%';
+            row.append(dot,label,percent);legend.append(row);
+        });
+        document.getElementById('distributionNote').textContent=cats.length?`${cats.length} ${cats.length===1?'rubro con gastos':'rubros con gastos'}`:'Sin gastos en este ciclo';
         if(donutChart)donutChart.destroy();
-        if(!cats.length){donutChart=null;return;}
-        donutChart=new Chart(donutCtx,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>ct[c]),backgroundColor:cats.map((_,i)=>COLORS[i%COLORS.length]+'CC'),borderColor:cats.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:1.5,hoverOffset:8,spacing:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',animation:{animateScale:true,animateRotate:true,duration:1200,easing:'easeOutQuart'},plugins:{legend:{position:'bottom',labels:Object.assign({},_legLbl,{boxWidth:8,padding:9})},tooltip:Object.assign({},_tt,{callbacks:{
+        donutChart=new Chart(donutCtx,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.length?cats.map(c=>ct[c]):[1],backgroundColor:cats.length?cats.map((_,i)=>COLORS[i%COLORS.length]):[_dark?'#403d38':'#eeece9'],borderWidth:0,borderRadius:3,hoverOffset:3,spacing:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'76%',animation:{animateScale:false,animateRotate:true,duration:window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:450,easing:'easeOutQuart'},plugins:{donutPct:false,legend:{display:false},tooltip:Object.assign({},_tt,{enabled:cats.length>0,callbacks:{
             title:i=>i[0].label,
             label:c=>{const t=c.dataset.data.reduce((a,v)=>a+ +v,0);return ` ${money(c.raw)} · ${t?Math.round(c.raw/t*100):0}% del ciclo`;}
         }})}}});
@@ -1380,18 +1405,12 @@ function renderSidebarInsights(){
         const hoy = new Date(); hoy.setHours(12,0,0,0);
         const dias = Math.round((hoy - d2(ult.date)) / 86400000);
         const cuando = dias<=0 ? 'Hoy' : dias===1 ? 'Ayer' : `Hace ${dias} días`;
-        cardEl.innerHTML = `<div class="ldep">
-            <span class="ldep-layer ldep-layer--2"></span>
-            <span class="ldep-layer ldep-layer--1"></span>
-            <div class="ldep-card" onclick="viewRecord('deposit','${ult.id}')" title="Ver detalle">
-                <div class="ldep-top">
-                    <span class="ldep-lbl">Depósito ${ult.type||''}</span>
-                    <span class="ldep-when">${cuando}</span>
-                </div>
-                <div class="ldep-amt">+${money(ult.amount)}</div>
-                <div class="ldep-sub">${fmtDate(ult.date)}${ult.description?' · '+ult.description:''}</div>
-            </div>
-        </div>`;
+        cardEl.innerHTML = `<button type="button" class="deposit-summary" onclick="viewRecord('deposit','${ult.id}')" title="Ver detalle del depósito">
+            <span class="deposit-amount">+${money(ult.amount)}</span>
+            <span class="deposit-label">Depósito ${ult.type||''}</span>
+            <span class="deposit-meta">${dayNum(ult.date)} ${monShort(ult.date)} · ${cuando}</span>
+            <span class="deposit-link">Ver movimiento <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></span>
+        </button>`;
     }
 
     // --- Gastos más fuertes del ciclo actual ---
@@ -1404,24 +1423,12 @@ function renderSidebarInsights(){
         listEl.innerHTML = `<div class="sr-empty">Sin gastos en este ciclo</div>`;
         return;
     }
-    // La barra mide cada gasto contra el mayor, no contra el total: así se ve
-    // de un vistazo cuánto se despega el más fuerte del resto.
-    const mayor = +top[0].amount;
-    listEl.innerHTML = top.map((e,i)=>{
-        const ci = categories.indexOf(e.category);
-        const col = COLORS[(ci>=0?ci:0)%COLORS.length];
-        const pct = mayor>0 ? (+e.amount/mayor*100) : 0;
-        return `<div class="topx" onclick="viewRecord('expense','${e.id}')" title="Ver detalle">
-            <span class="topx-rank">${i+1}</span>
-            <div class="topx-info">
-                <div class="topx-head">
-                    <span class="topx-desc">${e.description||e.category}</span>
-                    <span class="topx-amt">${money(e.amount)}</span>
-                </div>
-                <div class="topx-bar"><i style="width:${pct.toFixed(0)}%;background:${col}"></i></div>
-                <div class="topx-meta"><span class="topx-dot" style="background:${col}"></span>${e.category} · ${dayNum(e.date)} ${monShort(e.date)}</div>
-            </div>
-        </div>`;
+    listEl.innerHTML = top.map(e=>{
+        return `<button type="button" class="expense-summary" onclick="viewRecord('expense','${e.id}')" title="Ver detalle del gasto">
+            <span class="expense-summary-desc">${e.description||e.category}</span>
+            <span class="expense-summary-meta">${e.category} · ${dayNum(e.date)} ${monShort(e.date)}</span>
+            <span class="expense-summary-amount">${money(e.amount)} <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></span>
+        </button>`;
     }).join('');
 }
 
@@ -1980,7 +1987,12 @@ function renderLoans() {
     }
     // Bottom nav badge
     const bnavBadge = document.getElementById('bnavLoansBadge');
-    if (bnavBadge) bnavBadge.textContent = totalDebt > 0 ? money(totalDebt) : 'Préstamos';
+    if (bnavBadge) {
+        bnavBadge.textContent = 'Préstamos';
+        const button=bnavBadge.closest('button');
+        button.classList.toggle('has-debt',totalDebt>0);
+        button.setAttribute('aria-label',totalDebt>0?`Préstamos: ${money(totalDebt)} pendiente`:'Préstamos');
+    }
 
     const body = document.getElementById('loansModalBody');
     if (!body) return;

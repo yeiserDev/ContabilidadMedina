@@ -9213,3 +9213,285 @@ body.modal-open { overflow: hidden; }
         .bottom-nav .bnav-btn.is-bajo .bnav-icon { transform: none; }
     }
 }
+
+/* Sidebar summaries: a compact ledger and a readable activity list. */
+.cycle-summary,
+.sr-block.activity-summary,
+.sr-block.deposit-panel {
+    border: 0;
+    border-radius: 16px;
+    padding: 22px;
+    background: var(--white);
+    box-shadow: 0 2px 8px -4px rgba(20,20,19,.12);
+}
+.summary-title,
+.insight-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0;
+    color: var(--ink-black);
+    font-size: 17px;
+    line-height: 1.3;
+    letter-spacing: -.02em;
+    font-weight: 600;
+}
+.summary-ledger { margin: 26px 0 22px; }
+.summary-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 14px; color: var(--slate-gray); }
+.summary-row strong { color: var(--ink-black); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; letter-spacing: -.02em; }
+.summary-row--expense { margin-top: 20px; }
+.cycle-summary .kpi-delta { margin-top: 6px; font-size: 12px; line-height: 1.4; font-weight: 500; }
+.summary-ledger .kpi-delta { text-align: right; }
+.summary-result { padding-top: 20px; border-top: 1px solid var(--line); }
+.summary-label { color: var(--slate-gray); font-size: 13px; }
+.summary-value { display: block; margin-top: 7px; font-size: 32px; font-weight: 600; line-height: 1.15; letter-spacing: -.035em; font-variant-numeric: tabular-nums; color: var(--ink-black); overflow-wrap: anywhere; }
+.summary-value.is-neg { color: var(--signal-orange); }
+.summary-activity { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 22px -22px -22px; padding: 15px 22px; background: var(--line-faint); border-radius: 0 0 16px 16px; color: var(--slate-gray); font-size: 12px; line-height: 1.4; }
+.summary-activity strong { color: var(--ink-black); font-weight: 600; }
+.summary-activity #depositsSub { margin: 0; font: inherit; color: inherit; }
+.sr-block.deposit-panel { background: #eaf0e9; }
+.deposit-panel .insight-title { color: #324a3d; font-size: 15px; }
+.deposit-panel .insight-title .material-symbols-outlined { font-size: 21px; color: #42644e; }
+.deposit-summary,
+.expense-summary { width: 100%; margin: 0; border: 0; background: transparent; box-shadow: none; text-align: left; font: inherit; color: var(--ink-black); cursor: pointer; }
+.deposit-summary { display: flex; flex-direction: column; align-items: flex-start; padding: 24px 0 0; }
+.deposit-amount { max-width: 100%; color: #243f2e; font-size: 30px; font-weight: 600; line-height: 1.15; letter-spacing: -.035em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.deposit-label { margin-top: 12px; color: #324a3d; font-size: 14px; font-weight: 500; }
+.deposit-meta { margin-top: 4px; color: #526456; font-size: 12px; line-height: 1.5; }
+.deposit-link { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 22px; padding-top: 12px; border-top: 1px solid #cedace; color: #324a3d; font-size: 12px; font-weight: 600; }
+.deposit-link .material-symbols-outlined { font-size: 17px; transition: transform .18s ease; }
+.deposit-summary:hover .deposit-link .material-symbols-outlined { transform: translateX(3px); }
+.insight-subtitle { margin: 5px 0 8px; font-size: 12px; color: var(--slate-gray); }
+.activity-summary .topx-list { gap: 0; }
+.expense-summary { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 10px; row-gap: 8px; padding: 16px 0; border-radius: 0; }
+.expense-summary + .expense-summary { border-top: 1px solid var(--line); }
+.expense-summary:last-child { padding-bottom: 0; }
+.expense-summary-desc { grid-column: 1 / -1; font-size: 14px; line-height: 1.4; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.expense-summary-meta { font-size: 11px; line-height: 1.5; color: var(--slate-gray); overflow-wrap: anywhere; }
+.expense-summary-amount { display: flex; align-items: center; justify-content: space-between; gap: 3px; white-space: nowrap; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.015em; }
+.expense-summary-amount .material-symbols-outlined { font-size: 17px; color: var(--slate-gray); }
+.expense-summary:hover .expense-summary-desc { color: var(--clay-brown); }
+.deposit-summary:focus-visible,
+.expense-summary:focus-visible { outline: 2px solid var(--link-blue); outline-offset: 5px; border-radius: 4px; }
+[data-theme="dark"] .sr-block.deposit-panel { background: #293a2d; }
+[data-theme="dark"] .deposit-panel .insight-title,
+[data-theme="dark"] .deposit-panel .material-symbols-outlined,
+[data-theme="dark"] .deposit-label,
+[data-theme="dark"] .deposit-link { color: #d6e4d8; }
+[data-theme="dark"] .deposit-amount { color: #e2efe4; }
+[data-theme="dark"] .deposit-meta { color: #b2c5b6; }
+[data-theme="dark"] .deposit-link { border-top-color: #455b49; }
+[data-theme="dark"] .cycle-summary .kpi-delta.up { color: #75c68b; }
+[data-theme="dark"] .cycle-summary .kpi-delta.down { color: var(--light-signal-orange); }
+[data-theme="dark"] .expense-summary:hover .expense-summary-desc { color: var(--light-signal-orange); }
+@media (min-width: 901px) { .sidebar-left { padding-top: 24px; } }
+@media (prefers-reduced-motion: reduce) { .deposit-link .material-symbols-outlined { transition: none; } }
+
+/* Cash flow: readable figures above a quiet monthly plot. */
+.charts-section > .cashflow-card {
+    padding: 22px;
+    background: var(--white);
+    border: 0;
+    border-radius: 24px;
+    box-shadow: 0 3px 16px -9px rgba(20,20,19,.16);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Sofia Sans', sans-serif;
+}
+.cashflow-card:hover { transform: none; }
+.cashflow-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.cashflow-heading h2 { margin: 0; color: var(--ink-black); font-size: 19px; font-weight: 650; letter-spacing: -.025em; line-height: 1.25; }
+.cashflow-heading p { margin: 5px 0 0; color: var(--slate-gray); font-size: 12px; }
+.cashflow-period { padding: 7px 10px; border-radius: 10px; background: var(--line-faint); color: var(--slate-gray); font-size: 12px; font-weight: 600; }
+.cashflow-legend { display: flex; align-items: center; gap: 22px; margin: 22px 0 16px; }
+.cashflow-label { display: flex; align-items: center; gap: 6px; color: var(--slate-gray); font-size: 12px; }
+.cashflow-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.cashflow-dot--income { background: #319b70; }
+.cashflow-dot--expense { background: #d88859; }
+.cashflow-card .chart-wrap { height: 188px; }
+.cashflow-footer { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--slate-gray); }
+.cashflow-footer strong { color: #237a53; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.cashflow-footer .is-negative { color: var(--clay-brown); }
+.cashflow-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-theme="dark"] .charts-section > .cashflow-card { background: var(--white); border: 0; box-shadow: 0 3px 16px -9px rgba(0,0,0,.4); }
+[data-theme="dark"] .cashflow-dot--income { background: #69c99b; }
+[data-theme="dark"] .cashflow-dot--expense { background: #efac7d; }
+[data-theme="dark"] .cashflow-footer strong { color: #69c99b; }
+[data-theme="dark"] .cashflow-footer .is-negative { color: var(--light-signal-orange); }
+@media (max-width: 768px) {
+    #bottomNav {
+        display: grid;
+        grid-template-columns: repeat(5,minmax(0,1fr));
+        gap: 3px;
+        width: calc(100% - 28px);
+        max-width: 440px;
+        min-height: 68px;
+        padding: 6px;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        border: 1px solid rgba(255,255,255,.8);
+        border-radius: 36px;
+        background: rgba(250,250,249,.86);
+        backdrop-filter: blur(24px) saturate(150%);
+        -webkit-backdrop-filter: blur(24px) saturate(150%);
+        box-shadow: 0 8px 30px -8px rgba(25,24,22,.22), 0 2px 5px rgba(25,24,22,.04);
+        touch-action: manipulation;
+        isolation: isolate;
+    }
+    #bottomNav::before, #bottomNav::after { content: none; }
+    #bottomNav .bnav-btn {
+        min-width: 0;
+        min-height: 54px;
+        padding: 6px 2px;
+        gap: 4px;
+        border: 0;
+        border-radius: 28px;
+        color: #626773;
+        background: transparent;
+        transition: background-color .18s ease, color .18s ease, transform .18s ease;
+    }
+    #bottomNav .bnav-btn::before { content: none; }
+    #bottomNav .bnav-icon { width: 25px; height: 25px; background: none; border-radius: 0; }
+    #bottomNav .bnav-icon svg { width: 25px; height: 25px; stroke-width: 1.85; }
+    #bottomNav .bnav-label { font-family: -apple-system, BlinkMacSystemFont, 'Sofia Sans', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: -.015em; line-height: 1.2; }
+    #bottomNav .bnav-btn.is-selected,
+    #bottomNav .bnav-btn:active { color: #bb460e; background: #fbeadd; }
+    #bottomNav .bnav-btn:active { transform: scale(.96); }
+    #bottomNav .bnav-btn:active .bnav-icon { background: none; transform: none; }
+    #bottomNav .bnav-btn:focus-visible { outline: 2px solid var(--link-blue); outline-offset: -2px; }
+    #bottomNav .has-debt .bnav-icon::after { content: ''; position: absolute; top: 0; right: -3px; width: 5px; height: 5px; border-radius: 50%; background: var(--signal-orange); }
+    [data-theme="dark"] #bottomNav { background: rgba(38,37,35,.9); border-color: rgba(255,255,255,.13); box-shadow: 0 8px 30px -8px rgba(0,0,0,.5); }
+    [data-theme="dark"] #bottomNav .bnav-btn { color: #c3c2c7; }
+    [data-theme="dark"] #bottomNav .bnav-btn.is-selected,
+    [data-theme="dark"] #bottomNav .bnav-btn:active { background: #503625; color: #ffb17f; }
+    .charts-section > .cashflow-card { padding: 20px; }
+    #chartsSection.mcut { mask-image: none; -webkit-mask-image: none; }
+    .cashflow-heading h2 { font-size: 20px; }
+    .cashflow-card .chart-wrap { height: 170px; }
+    .cashflow-footer { font-size: 11px; }
+    .cashflow-footer strong { font-size: 13px; }
+    .center { padding-bottom: calc(104px + env(safe-area-inset-bottom)); }
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        #bottomNav { background: #fafaf9; }
+        [data-theme="dark"] #bottomNav { background: #262523; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        #bottomNav .bnav-btn { transition: none; }
+        #bottomNav .bnav-btn:active { transform: none; }
+    }
+}
+
+/* Mobile wallet and chart: compact enough to reveal the calendar. */
+@media (max-width: 768px) {
+    #mcard {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        min-height: 98px;
+        margin-bottom: 10px;
+        padding: 14px 16px;
+        border-radius: 24px;
+        background: #f1dfd2;
+        box-shadow: 0 3px 12px -8px rgba(77,45,26,.2);
+        font-family: -apple-system, BlinkMacSystemFont, 'Sofia Sans', sans-serif;
+    }
+    #mcard::before, #mcard::after { content: none; }
+    #mcard .mcard-header { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-width: 0; }
+    #mcard .bal-label { display: block !important; font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none; color: #795b49; }
+    #mcard .bal-val { font-size: clamp(22px, 6.5vw, 28px); font-weight: 650; line-height: 1.1; color: #432d20; letter-spacing: -.035em; text-shadow: none; }
+    #mcard .mcard-cycle { padding: 0; background: none; border: 0; border-radius: 0; backdrop-filter: none; color: #795b49; font-size: 10px; font-weight: 500; line-height: 1.4; }
+    #mcard .mcard-content { padding: 0; }
+    #mcard .mcard-actions { gap: 4px; }
+    #mcard .mcard-ic { width: 44px; height: 44px; background: rgba(255,255,255,.45); color: #674431; border: 0; box-shadow: none; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    #mcard .mcard-ic .material-symbols-outlined { font-size: 20px; font-variation-settings: 'wght' 350; }
+    #mcard .mcard-ic:active { background: rgba(255,255,255,.75); }
+    #mcard .mcard-ic:focus-visible { outline: 2px solid #674431; outline-offset: 2px; }
+    [data-theme="dark"] #mcard { background: #443329; box-shadow: none; }
+    [data-theme="dark"] #mcard .bal-val { color: #f7ece3; }
+    [data-theme="dark"] #mcard .bal-label,
+    [data-theme="dark"] #mcard .mcard-cycle { color: #d5bca9; }
+    [data-theme="dark"] #mcard .mcard-ic { color: #f1d5c0; background: rgba(255,255,255,.08); }
+    [data-theme="dark"] #mcard .mcard-ic:focus-visible { outline-color: #f1d5c0; }
+    .charts-section > .cashflow-card { padding: 16px 18px 14px; border-radius: 24px; }
+    .cashflow-heading h2 { font-size: 18px; }
+    .cashflow-heading p { margin-top: 3px; font-size: 11px; }
+    .cashflow-period { padding: 6px 8px; }
+    .cashflow-legend { margin: 12px 0 5px; gap: 18px; }
+    .cashflow-label { font-size: 11px; }
+    .cashflow-card .chart-wrap { height: 128px; }
+    .cashflow-footer { margin-top: 7px; padding-top: 10px; }
+    #chartsSection { padding-bottom: 5px; align-items: flex-start; }
+    #chartsSection + .mdots { margin-top: 2px; margin-bottom: 10px; }
+    @media (prefers-reduced-motion: reduce) {
+        #mcard .mcard-ic { transition: none; }
+        #mcard .mcard-ic:active { transform: none; }
+    }
+}
+
+/* Matching chart surfaces and a bank-card treatment for the wallet. */
+.mcard-bank-brand { display: none; }
+.charts-section > .distribution-card {
+    background: var(--white); border: 0; border-radius: 24px; padding: 22px;
+    box-shadow: 0 3px 16px -9px rgba(20,20,19,.16);
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Sofia Sans', sans-serif;
+    display: flex; flex-direction: column;
+}
+.distribution-card:hover { transform: none; }
+.distribution-body { display: grid; grid-template-columns: minmax(100px, .9fr) minmax(0, 1.1fr); gap: 18px; align-items: center; flex: 1; min-height: 0; margin: 16px 0; }
+.distribution-card .chart-wrap--donut { height: 160px; width: 100%; display: block; }
+.distribution-legend { max-height: 160px; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.distribution-row { display: grid; grid-template-columns: 6px minmax(0,1fr) auto; align-items: center; column-gap: 7px; padding: 7px 0; font-size: 11px; line-height: 1.25; }
+.distribution-row + .distribution-row { border-top: 1px solid var(--line-faint); }
+.distribution-row i { width: 6px; height: 6px; border-radius: 50%; }
+.distribution-row span { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; color: var(--slate-gray); overflow-wrap: anywhere; }
+.distribution-row strong { font-size: 12px; font-weight: 600; color: var(--ink-black); font-variant-numeric: tabular-nums; }
+.distribution-legend:focus-visible { outline: 2px solid var(--link-blue); outline-offset: 3px; border-radius: 4px; }
+.distribution-note { margin: 0; padding-top: 10px; border-top: 1px solid var(--line); color: var(--slate-gray); font-size: 11px; }
+[data-theme="dark"] .charts-section > .distribution-card { background: var(--white); box-shadow: 0 3px 16px -9px rgba(0,0,0,.4); }
+@media (max-width: 768px) {
+    #mcard {
+        min-height: 118px; gap: 8px 10px; padding: 12px 16px;
+        background: linear-gradient(115deg, #282624 0%, #292624 60%, #68452f 100%);
+        box-shadow: 0 8px 16px -11px rgba(41,28,18,.5), inset 0 1px 0 rgba(255,255,255,.16);
+    }
+    #mcard .mcard-bank-brand { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; color: #e8d8c4; font-size: 12px; letter-spacing: .015em; }
+    #mcard .mcard-bank-brand strong { font-weight: 600; }
+    #mcard .mcard-chip { display: block; width: 27px; height: 20px; color: #c5ad7f; }
+    #mcard .bal-label { display: none !important; }
+    #mcard .bal-val { color: #fff9f2; font-weight: 600; text-shadow: none; }
+    #mcard .mcard-cycle { color: #cebdab; }
+    #mcard .mcard-ic { color: #ead9c4; background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.10); }
+    #mcard .mcard-ic:active { background: rgba(255,255,255,.18); }
+    #mcard .mcard-ic:focus-visible { outline-color: #ebcba1; }
+    [data-theme="dark"] #mcard { background: linear-gradient(115deg, #292726, #302a26 60%, #63442f); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+    [data-theme="dark"] #mcard .bal-val { color: #fff9f2; }
+    [data-theme="dark"] #mcard .mcard-cycle { color: #cebdab; }
+    #chartsSection {
+        display: grid; grid-auto-flow: column; grid-auto-columns: 100%; grid-template-columns: none;
+        gap: 12px; align-items: stretch; width: 100%; min-width: 0;
+        overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 0;
+        padding: 2px 0 5px; margin-inline: 0;
+    }
+    #chartsSection > .chart-card {
+        width: 100%; min-width: 0; box-sizing: border-box; height: 270px;
+        margin: 0; padding: 16px 18px 14px; border-radius: 24px;
+        scroll-snap-align: start; scroll-snap-stop: always;
+    }
+    #chartsSection .cashflow-heading h2 { font-size: 18px; }
+    #chartsSection .cashflow-heading p { font-size: 11px; margin-top: 3px; }
+    #chartsSection .distribution-body { grid-template-columns: minmax(90px,.85fr) minmax(0,1.15fr); gap: 14px; margin: 12px 0; }
+    #chartsSection .distribution-card .chart-wrap--donut { height: 132px; }
+    #chartsSection .distribution-legend { max-height: 142px; }
+    #chartsSection + .mdots .mdot { border: 0; padding: 0; }
+    #chartsSection + .mdots .mdot:focus-visible { outline: 2px solid var(--link-blue); outline-offset: 4px; }
+    @media (prefers-contrast: more) { #mcard .mcard-cycle { color: #fff9f2; } }
+}
+@media (max-width: 768px) {
+    .mdots .mdot { border: 0; padding: 0; }
+    #chartsSection + .mdots { margin-top: -5px; margin-bottom: 3px; }
+    #chartsSection + .mdots .mdot { display: grid; place-items: center; width: 24px; height: 24px; background: none; }
+    #chartsSection + .mdots .mdot::before { content: ''; width: 6px; height: 6px; border-radius: 6px; background: var(--line-strong); }
+    #chartsSection + .mdots .mdot.is-on::before { width: 18px; background: var(--signal-orange); }
+}
