@@ -25,6 +25,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="styles.css?v=83">
     <link rel="stylesheet" href="mobile-calendar.css?v=82">
+    <link rel="stylesheet" href="distribution.css?v=1">
     <style>
         /* ===== SPLASH SCREEN (rápido y profesional, ~0.6s total) ===== */
         #splash {
@@ -318,15 +319,20 @@
                 </div>
                 <div class="chart-card distribution-card">
                     <div class="cashflow-heading">
-                        <div><h2>Distribución por rubro</h2><p>Según el ciclo seleccionado</p></div>
+                        <div><h2>Distribución por rubro</h2><button type="button" id="distributionCycle" class="dist-cycle">Elegir ciclo <span aria-hidden="true">⌄</span></button></div>
+                    </div>
+                    <div class="dist-controls">
+                        <div class="dist-segment" role="group" aria-label="Mostrar distribución como"><button type="button" data-dist-unit="percent" aria-pressed="true">%</button><button type="button" data-dist-unit="money" aria-pressed="false">S/</button></div>
+                        <button type="button" id="distributionSort" class="dist-sort" aria-label="Ordenar rubros por nombre">Mayor gasto <span class="material-symbols-outlined" aria-hidden="true">swap_vert</span></button>
                     </div>
                     <div class="distribution-body">
                         <div class="chart-wrap chart-wrap--donut">
                             <canvas id="chartDonut" role="img" aria-label="Distribución de gastos por rubro" aria-describedby="distributionLegend"></canvas>
+                            <button type="button" class="dist-center" id="distributionReset" aria-label="Mostrar todos los rubros"><span id="distributionCenterLabel">Total</span><strong id="distributionCenterValue">—</strong></button>
                         </div>
-                        <div id="distributionLegend" class="distribution-legend" tabindex="0" aria-label="Rubros y porcentajes"></div>
+                        <div id="distributionLegend" class="distribution-legend" role="group" aria-label="Seleccionar un rubro"></div>
                     </div>
-                    <p class="distribution-note" id="distributionNote">Sin gastos en este ciclo</p>
+                    <div class="dist-footer"><p class="distribution-note" id="distributionNote" aria-live="polite">Elige un ciclo</p><button type="button" id="distributionDetails">Ver gastos <span aria-hidden="true">›</span></button></div>
                 </div>
                 <div class="chart-card" style="grid-column: 1 / -1; display:none;">
                     <div class="chart-header">
@@ -877,6 +883,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="escenas.js?v=72"></script>
     <script src="app.js?v=82"></script>
+    <script src="distribution.js?v=1"></script>
     <script src="ui-controls.js"></script>
     <script src="mobile-shell.js?v=81"></script>
     <script src="mobile-calendar.js?v=82"></script>

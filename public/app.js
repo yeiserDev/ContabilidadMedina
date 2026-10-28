@@ -520,26 +520,7 @@ function renderCharts(){
                 y:{beginAtZero:true,border:{display:false,dash:[3,4]},grid:{color:_grid,drawTicks:false},ticks:{maxTicksLimit:4,color:_dark?'#b6b2a8':'#72716f',font:{size:10},padding:8,callback:v=>v>=1000?`${Number((v/1000).toFixed(1))} mil`:v}}}
         }});
     }
-    const donutCtx=document.getElementById('chartDonut');
-    if(donutCtx){
-        const ct=catTotals(),cats=categories.filter(c=>(ct[c]||0)>0);
-        const total=cats.reduce((sum,category)=>sum+ct[category],0);
-        const legend=document.getElementById('distributionLegend');
-        legend.replaceChildren();
-        cats.forEach((category,i)=>{
-            const row=document.createElement('div');row.className='distribution-row';
-            const dot=document.createElement('i');dot.style.background=COLORS[i%COLORS.length];dot.setAttribute('aria-hidden','true');
-            const label=document.createElement('span');label.textContent=category;label.title=category;
-            const percent=document.createElement('strong');percent.textContent=Math.round(ct[category]/total*100)+'%';
-            row.append(dot,label,percent);legend.append(row);
-        });
-        document.getElementById('distributionNote').textContent=cats.length?`${cats.length} ${cats.length===1?'rubro con gastos':'rubros con gastos'}`:'Sin gastos en este ciclo';
-        if(donutChart)donutChart.destroy();
-        donutChart=new Chart(donutCtx,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.length?cats.map(c=>ct[c]):[1],backgroundColor:cats.length?cats.map((_,i)=>COLORS[i%COLORS.length]):[_dark?'#403d38':'#eeece9'],borderWidth:0,borderRadius:3,hoverOffset:3,spacing:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'76%',animation:{animateScale:false,animateRotate:true,duration:window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:450,easing:'easeOutQuart'},plugins:{donutPct:false,legend:{display:false},tooltip:Object.assign({},_tt,{enabled:cats.length>0,callbacks:{
-            title:i=>i[0].label,
-            label:c=>{const t=c.dataset.data.reduce((a,v)=>a+ +v,0);return ` ${money(c.raw)} · ${t?Math.round(c.raw/t*100):0}% del ciclo`;}
-        }})}}});
-    }
+    if (window.renderDistribution) window.renderDistribution();
 }
 
 let lineChart = null;
@@ -753,7 +734,9 @@ function getCycles() {
 
 let cycleFilterInitialized = false;
 function renderMonthFilter(){
-    const sel=document.getElementById('monthFilter'),cur=sel.value;
+    const sel=document.getElementById('monthFilter');
+    let saved=null;try{saved=localStorage.getItem('ct_selected_cycle');}catch{}
+    const cur=cycleFilterInitialized?sel.value:(saved||sel.value);
     const mobSel=document.getElementById('mobileMonthFilter');
     const cycles=getCycles();
     
@@ -764,9 +747,9 @@ function renderMonthFilter(){
     if(mobSel) mobSel.innerHTML=html;
     
     const validCycle = cycles.some(c => c.id === cur);
-    const newVal = cur === 'all' && cycleFilterInitialized
-        ? 'all'
-        : validCycle ? cur : (cycles.length ? cycles[0].id : 'all');
+    const newVal = validCycle ? cur
+        : (cycleFilterInitialized || saved) ? 'all'
+        : (cycles.length ? cycles[0].id : 'all');
     if (cycles.length) cycleFilterInitialized = true;
     sel.value = newVal;
     if(mobSel) mobSel.value = newVal;
@@ -1134,7 +1117,7 @@ window.openLightboxFromView = function() {
     }
 };
 
-function renderAll(){renderKPIs();renderCharts();renderLineChart();renderCatBreakdown();renderCatList();populateCatSelect();renderMonthFilter();renderDaily();renderCalendar();renderSidebarInsights();renderReminders();renderLoans();}
+function renderAll(){renderMonthFilter();renderKPIs();renderCharts();renderLineChart();renderCatBreakdown();renderCatList();populateCatSelect();renderDaily();renderCalendar();renderSidebarInsights();renderReminders();renderLoans();}
 
 // ====== EVENTS: DEPOSIT ======
 document.getElementById('openDepositModal').addEventListener('click',requireAuth(()=>{editDepositId=null;document.getElementById('depositModalTitle').textContent='Nuevo Depósito';document.getElementById('depositDate').value=today();document.getElementById('depositAmount').value='';document.getElementById('depositDescription').value='';document.getElementById('depositType').value='quincenal';document.getElementById('depositCycleStart').checked=false;openM('depositModal');setTimeout(()=>document.getElementById('depositAmount').focus(),120);}));
@@ -1277,6 +1260,7 @@ document.getElementById('addCategoryBtn').addEventListener('click',addCat);
 document.getElementById('newCategoryInput').addEventListener('keydown',e=>{if(e.key==='Enter')addCat();});
 document.getElementById('monthFilter').addEventListener('change',(e)=>{ 
     cycleFilterInitialized = true;
+    try{localStorage.setItem('ct_selected_cycle',e.target.value);}catch{}
     const mobSel = document.getElementById('mobileMonthFilter');
     if(mobSel) mobSel.value = e.target.value;
     renderDaily(); renderKPIs(); renderCharts(); renderCatBreakdown(); renderCalendar();
@@ -1284,6 +1268,7 @@ document.getElementById('monthFilter').addEventListener('change',(e)=>{
 const mobSel = document.getElementById('mobileMonthFilter');
 if(mobSel) mobSel.addEventListener('change',(e)=>{ 
     cycleFilterInitialized = true;
+    try{localStorage.setItem('ct_selected_cycle',e.target.value);}catch{}
     document.getElementById('monthFilter').value = e.target.value;
     renderDaily(); renderKPIs(); renderCharts(); renderCatBreakdown(); renderCalendar();
     setTimeout(()=>closeM('filterModal'), 150);

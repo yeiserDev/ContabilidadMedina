@@ -1,0 +1,93 @@
+/* Distribution controls and drill-down sheet share the app's color tokens. */
+.dist-cycle { display: block; max-width: 100%; padding: 3px 0; border: 0; background: none; color: var(--signal-orange); font: inherit; font-size: 11px; text-align: left; cursor: pointer; }
+.dist-controls { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 10px 0 4px; }
+.dist-segment { display: flex; gap: 2px; padding: 3px; background: var(--line-faint); border-radius: 10px; }
+.dist-segment button { min-width: 36px; min-height: 26px; border: 0; border-radius: 7px; background: none; color: var(--slate-gray); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.dist-segment button[aria-pressed="true"] { color: var(--ink-black); background: var(--white); box-shadow: 0 2px 5px rgba(0,0,0,.09); }
+.dist-sort { display: flex; align-items: center; gap: 3px; min-height: 32px; padding: 0 2px; border: 0; background: none; color: var(--slate-gray); font: inherit; font-size: 11px; cursor: pointer; }
+.dist-sort .material-symbols-outlined { font-size: 17px; }
+.distribution-card .chart-wrap--donut { position: relative; }
+.dist-center { position: absolute; inset: 28%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 3px; border: 0; background: transparent; border-radius: 50%; color: var(--ink-black); cursor: pointer; font-family: inherit; }
+.dist-center span { color: var(--slate-gray); font-size: 9px; }
+.dist-center strong { font-size: 19px; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.dist-center:disabled { opacity: 1; cursor: default; }
+.distribution-row { width: 100%; min-height: 34px; padding: 7px 4px; border: 0; background: transparent; border-radius: 8px; text-align: left; font-family: inherit; cursor: pointer; }
+.distribution-row[aria-pressed="true"] { background: var(--line-faint); }
+.distribution-row[aria-pressed="true"] span { color: var(--ink-black); font-weight: 600; }
+.distribution-row strong { white-space: nowrap; font-size: 11px; }
+.distribution-row:hover { background: var(--line-faint); }
+.dist-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; padding-top: 5px; border-top: 1px solid var(--line); }
+.dist-footer .distribution-note { padding: 0; border: 0; font-size: 10px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dist-footer button { flex: none; min-height: 28px; padding: 0; border: 0; background: none; color: var(--signal-orange); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+.dist-footer button:disabled { color: var(--slate-gray); opacity: .6; cursor: default; }
+.distribution-card button:focus-visible { outline: 2px solid var(--link-blue); outline-offset: 1px; }
+.dist-empty { color: var(--slate-gray); font-size: 12px; line-height: 1.5; padding: 12px 4px; }
+.dist-overlay { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: opacity 200ms ease; }
+.dist-overlay .dist-sheet { width: min(520px, calc(100% - 24px)); max-height: 85dvh; padding: 0; display: flex; flex-direction: column; border: 0; border-radius: 28px; background: var(--white); font-family: -apple-system, BlinkMacSystemFont, 'Sofia Sans', sans-serif; overflow: hidden; }
+.dist-handle { display: none; }
+.dist-sheet-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 22px 20px 12px; }
+.dist-sheet-header > div { min-width: 0; }
+.dist-sheet-header h2 { font-size: 22px; line-height: 1.2; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.dist-sheet-header p { color: var(--slate-gray); font-size: 12px; line-height: 1.4; margin-top: 6px; }
+.dist-sheet-header button { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: var(--line-faint); color: var(--slate-gray); cursor: pointer; }
+.dist-sheet-summary { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 4px 20px 18px; }
+.dist-sheet-summary strong { font-size: 27px; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.dist-sheet-summary span { color: var(--slate-gray); font-size: 12px; }
+.dist-search { display: flex; align-items: center; gap: 8px; margin: 0 20px 12px; padding: 0 12px; min-height: 44px; border-radius: 13px; background: var(--line-faint); color: var(--slate-gray); }
+.dist-search input { width: 100%; min-width: 0; padding: 10px 0; border: 0; background: transparent; color: var(--ink-black); font: inherit; font-size: 16px; outline-offset: 3px; }
+.dist-search input::placeholder { color: var(--slate-gray); font-size: 13px; }
+.dist-records { overflow-y: auto; overscroll-behavior: contain; padding: 0 20px calc(20px + env(safe-area-inset-bottom)); min-height: 0; }
+.dist-record { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 68px; padding: 14px 0; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--ink-black); font-family: inherit; text-align: left; cursor: pointer; }
+.dist-record-copy { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.dist-record-copy strong { font-size: 14px; font-weight: 550; line-height: 1.4; overflow-wrap: anywhere; }
+.dist-record-copy span { font-size: 11px; color: var(--slate-gray); }
+.dist-record-value { flex: none; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dist-record:focus-visible, .dist-sheet button:focus-visible { outline: 2px solid var(--link-blue); outline-offset: -2px; border-radius: 6px; }
+.dist-sheet > :not(.dist-records) { flex-shrink: 0; }
+.dist-sheet-header h2 { font-weight: 650; }
+.dist-sheet-summary { align-items: flex-end; padding-top: 2px; padding-bottom: 16px; }
+.dist-sheet-summary > div { display: flex; flex-direction: column; gap: 4px; }
+.dist-sheet-summary > div > span { font-size: 11px; }
+.dist-sheet-summary strong { font-size: 30px; font-weight: 650; }
+.dist-sheet-summary > span { padding-bottom: 3px; }
+.dist-sheet-tools { padding: 0 20px 14px; border-bottom: 1px solid var(--line-faint); }
+.dist-sheet-tools .dist-search { margin: 0 0 10px; }
+.dist-record-order { display: flex; gap: 3px; padding: 3px; background: var(--line-faint); border-radius: 11px; }
+.dist-record-order button { flex: 1; min-height: 30px; border: 0; border-radius: 8px; background: transparent; color: var(--slate-gray); font: inherit; font-size: 12px; font-weight: 550; cursor: pointer; }
+.dist-record-order button[aria-pressed="true"] { background: var(--white); color: var(--ink-black); box-shadow: 0 2px 5px rgba(0,0,0,.08); }
+.dist-day-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 18px 0 5px; }
+.dist-day-heading h3 { font-size: 12px; font-weight: 600; color: var(--slate-gray); }
+.dist-day-heading > span { font-size: 11px; color: var(--slate-gray); font-variant-numeric: tabular-nums; }
+.dist-day-heading + .dist-record { border-top: 0; }
+.dist-record { gap: 10px; padding: 14px 0; min-height: 72px; }
+.dist-record-icon { display: grid; place-items: center; flex: 0 0 32px; width: 32px; height: 36px; font-size: 20px; color: var(--slate-gray); font-variation-settings: 'wght' 350; }
+.dist-record-copy { flex: 1; }
+.dist-record-copy strong { font-size: 13px; font-weight: 550; }
+.dist-record-trailing { display: flex; align-items: center; gap: 3px; flex: none; }
+.dist-record-trailing > .material-symbols-outlined { font-size: 15px; color: var(--slate-gray); }
+.dist-record-value { font-size: 13px; }
+.dist-record:hover { background: var(--line-faint); border-radius: 8px; }
+.dist-detail-back { display: inline-flex; align-items: center; gap: 3px; min-height: 44px; margin: 10px 16px 0; padding: 0 8px 0 0; border: 0; background: transparent; color: var(--signal-orange); font: inherit; font-size: 13px; font-weight: 550; cursor: pointer; }
+.dist-detail-back[hidden] { display: none; }
+.dist-detail-back .material-symbols-outlined { font-size: 22px; }
+.dist-detail-back:focus-visible { outline: 2px solid var(--link-blue); border-radius: 6px; }
+@media (max-width: 360px) {
+    .dist-record-icon { display: none; }
+    .dist-sheet-header, .dist-sheet-summary { padding-left: 16px; padding-right: 16px; }
+    .dist-sheet-tools, .dist-records { padding-left: 16px; padding-right: 16px; }
+}
+@media (max-width: 768px) {
+    #chartsSection > .chart-card { height: 290px; }
+    #chartsSection > .cashflow-card { display: flex; flex-direction: column; }
+    #chartsSection > .cashflow-card .chart-wrap { flex: 1; min-height: 128px; }
+    #chartsSection .distribution-card { padding: 14px 16px 10px; }
+    #chartsSection .distribution-card .cashflow-heading h2 { font-size: 17px; }
+    .dist-controls { margin: 5px 0 0; }
+    #chartsSection .distribution-body { grid-template-columns: minmax(92px,.8fr) minmax(0,1.2fr); gap: 9px; margin: 5px 0; }
+    #chartsSection .distribution-card .chart-wrap--donut { height: 112px; }
+    #chartsSection .distribution-legend { max-height: 126px; }
+    .dist-overlay { align-items: flex-end; padding: 0; }
+    .dist-overlay .dist-sheet { width: 100%; max-width: 540px; max-height: 88dvh; margin: 0; border-radius: 28px 28px 0 0; }
+    .dist-handle { display: block; width: 34px; height: 5px; flex: none; border-radius: 4px; background: var(--line-strong); margin: 9px auto 0; }
+    .dist-sheet-header { padding-top: 15px; }
+}
