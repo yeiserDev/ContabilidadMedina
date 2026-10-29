@@ -9322,10 +9322,10 @@ body.modal-open { overflow: hidden; }
 @media (max-width: 768px) {
     #bottomNav {
         display: grid;
-        grid-template-columns: repeat(5,minmax(0,1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 3px;
         width: calc(100% - 28px);
-        max-width: 440px;
+        max-width: 380px;
         min-height: 68px;
         padding: 6px;
         bottom: max(12px, env(safe-area-inset-bottom));
@@ -9495,3 +9495,18 @@ body.modal-open { overflow: hidden; }
     #chartsSection + .mdots .mdot::before { content: ''; width: 6px; height: 6px; border-radius: 6px; background: var(--line-strong); }
     #chartsSection + .mdots .mdot.is-on::before { width: 18px; background: var(--signal-orange); }
 }
+
+/* Receipt capture follows the existing mobile sheets. */
+.scan-sheet { max-width: 440px; }
+.scan-intro { font-size: 14px; line-height: 1.6; color: var(--granite); margin: 0 0 20px; }
+.scan-actions { display: flex; gap: 10px; }
+.scan-actions button { flex: 1; min-height: 44px; }
+#scanPreview { display: block; max-width: 100%; max-height: 240px; object-fit: contain; margin: 20px auto; border-radius: 12px; }
+#scanPreview[hidden], #scanRead[hidden], #scanEdit[hidden] { display: none; }
+.scan-auto { display: flex !important; align-items: flex-start; gap: 12px; margin: 22px 0 16px; font-size: 14px !important; text-transform: none !important; letter-spacing: 0 !important; cursor: pointer; }
+.scan-auto input { width: 19px; height: 19px; flex: none; margin-top: 2px; accent-color: var(--signal-orange); }
+.scan-auto small { display: block; margin-top: 5px; font-weight: 400; font-size: 12px; line-height: 1.5; color: var(--granite); }
+#scanStatus { font-size: 13px; line-height: 1.5; margin: 16px 0; overflow-wrap: anywhere; }
+#scanRead, #scanEdit { width: 100%; min-height: 44px; }
+.scan-sheet button:disabled { opacity: .5; cursor: wait; }
+.scan-sheet button:focus-visible { outline: 2px solid var(--signal-orange); outline-offset: 3px; }

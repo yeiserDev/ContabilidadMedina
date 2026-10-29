@@ -21,6 +21,8 @@
     function recordIcon(record) {
         if (record.kind === 'deposit') return 'south_west';
         const text = `${record.category || ''} ${record.description || ''}`.toLowerCase();
+        if (/universidad|colegio|curso|estudio/.test(text)) return 'school';
+        if (/mantenimiento|reparaci|accesorio|pintura/.test(text)) return 'build';
         if (/petróleo|petroleo|combustible|gasolina/.test(text)) return 'local_gas_station';
         if (/almuerzo|comida|cena|desayuno|restauran/.test(text)) return 'restaurant';
         if (/compra|víveres|viveres|supermercado|mass/.test(text)) return 'shopping_bag';
@@ -41,6 +43,28 @@
         return node;
     }
     function icon(name) {
+        const paths = {
+            south_west: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-7 7m0-6v6h6"/>',
+            receipt_long: '<path d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20V4a.5.5 0 0 1 .5-.5Z"/><path d="M14 3.5V8h4M9 12h6m-6 4h4"/>',
+            school: '<path d="m2 9 10-5 10 5-10 5L2 9Zm4 2v6c4 3 8 3 12 0v-6m4-2v7"/>',
+            build: '<path d="M14 4a5 5 0 0 0-5.6 6.7l-5.2 5.2a2.7 2.7 0 0 0 3.9 3.9l5.2-5.2A5 5 0 0 0 19 9l-3 3-4-4 3-3Z"/>',
+            local_gas_station: '<rect x="4" y="3" width="10" height="18" rx="2"/><path d="M6.5 6h5v5h-5zM14 12h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-3-3M3 21h12"/>',
+            restaurant: '<path d="M6 3v6m-3-6v5a3 3 0 0 0 6 0V3M6 11v10M18 3c-4 3-4 8 0 9h1m0-9v18"/>',
+            shopping_bag: '<rect x="4" y="7" width="16" height="14" rx="3"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/>',
+            directions_bus: '<rect x="4" y="3" width="16" height="16" rx="4"/><path d="M4 11h16M8 19v2m8-2v2M8 15h.01M16 15h.01"/>',
+            currency_exchange: '<path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4"/>',
+            attach_file: '<path d="m8 13 6-6a2.1 2.1 0 0 1 3 3l-8 8a3.5 3.5 0 0 1-5-5l9-9a5 5 0 0 1 7 7l-8 8"/>',
+            chevron_right: '<path d="m9 5 7 7-7 7"/>',
+            chevron_left: '<path d="m15 5-7 7 7 7"/>',
+            close: '<path d="m6 6 12 12M18 6 6 18"/>',
+            arrow_back: '<path d="M20 12H4m7-7-7 7 7 7"/>',
+            check: '<path d="m5 12 4 4L19 6"/>'
+        };
+        if (paths[name]) {
+            const node = el('span', 'ac-symbol');node.setAttribute('aria-hidden', 'true');
+            node.innerHTML = `<svg viewBox="0 0 24 24" fill="none" focusable="false">${paths[name]}</svg>`;
+            return node;
+        }
         const node = el('span', 'material-symbols-outlined', name);
         node.setAttribute('aria-hidden', 'true');
         return node;
@@ -84,6 +108,9 @@
             </div>
         </section>`;
     document.body.appendChild(overlay);
+    overlay.querySelectorAll('.material-symbols-outlined').forEach(node => {
+        if (['close', 'chevron_left', 'chevron_right'].includes(node.textContent)) node.replaceWith(icon(node.textContent));
+    });
     const sheet = overlay.querySelector('.activity-day');
     const get = id => document.getElementById(id);
 
@@ -136,7 +163,15 @@
             }
             const dots = el('span', 'ac-day-dots');
             dots.setAttribute('aria-hidden', 'true');
-            if (income) dots.appendChild(el('i', 'ac-dot ac-dot--income'));
+            if (income) {
+                button.classList.add('has-deposit');
+                const bill = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                bill.setAttribute('viewBox', '0 0 20 14');
+                bill.setAttribute('class', 'ac-banknote');
+                bill.setAttribute('aria-hidden', 'true');
+                bill.innerHTML = '<rect x="1" y="1" width="18" height="12" rx="2"/><path d="M4 4h1M15 10h1"/><circle cx="10" cy="7" r="2.5"/>';
+                dots.appendChild(bill);
+            }
             button.appendChild(dots);
             button.setAttribute('aria-label', `${dateLabel.format(d2(date))}: ${expense} gastos, ${money(spent)}; ${income} depósitos, ${money(received)}`);
             button.title = `Gastos: ${money(spent)} · Depósitos: ${money(received)}`;
@@ -219,11 +254,13 @@
             row.style.setProperty('--category-color', categoryColor(name));
             const label = el('div', 'ad-category-label');
             const categoryName = el('span', 'ad-category-name', name);
-            categoryName.prepend(el('i', 'ad-category-dot'));
-            label.append(categoryName, el('span', 'ad-category-percent', `${Math.round(value / outgoing * 100)}%`), el('strong', '', money(value)));
+            const symbol = el('span', 'ad-category-symbol');symbol.appendChild(icon(recordIcon({ category: name })));
+            label.append(symbol, categoryName, el('span', 'ad-category-percent', `${Math.round(value / outgoing * 100)}%`), el('strong', '', money(value)));
             const track = el('div', 'ad-category-track');
-            const fill = el('span'); fill.style.width = `${value / outgoing * 100}%`;
-            track.appendChild(fill); row.append(label, track); bars.appendChild(row);
+            track.setAttribute('aria-hidden', 'true');
+            const fill = el('span');fill.style.width = `${value / outgoing * 100}%`;
+            track.appendChild(fill);
+            row.append(label, track);bars.appendChild(row);
         });
         const visible = rows.filter(r => filter === 'all' || r.kind === filter);
         get('adCount').textContent = `${visible.length} ${visible.length === 1 ? 'movimiento' : 'movimientos'}`;
@@ -251,11 +288,6 @@
             value.appendChild(el('strong', 'ad-record-amount', `${isIncome ? '+' : '−'}${money(amount(r))}`));
             if (!isIncome && outgoing) value.appendChild(el('span', 'ad-record-share', `${Math.round(amount(r) / outgoing * 100)}% del día`));
             card.append(figure, copy, value, icon('chevron_right'));
-            if (!isIncome && outgoing) {
-                const track = el('span', 'ad-record-track');
-                const fill = el('span'); fill.style.transform = `scaleX(${amount(r) / outgoing})`;
-                track.appendChild(fill); card.appendChild(track);
-            }
             card.addEventListener('click', () => {
                 closeM(overlay.id);
                 window.viewRecord(r.kind, r.id);

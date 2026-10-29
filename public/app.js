@@ -1131,9 +1131,11 @@ document.getElementById('saveDeposit').addEventListener('click',()=>{
 
 // ====== EVENTS: EXPENSE ======
 document.getElementById('openExpenseModal').addEventListener('click',requireAuth(()=>{editExpenseId=null;document.getElementById('expenseModalTitle').textContent='Nuevo Gasto';document.getElementById('expenseDate').value=today();document.getElementById('expenseAmount').value='';document.getElementById('expenseDescription').value='';document.getElementById('expenseWallet').value='bcp';populateCatSelect();resetImageUI();openM('expenseModal');setTimeout(()=>document.getElementById('expenseDescription').focus(),120);}));
-document.getElementById('saveExpense').addEventListener('click', async ()=>{
+async function saveExpense() {
+    if (!currentUser) { toast('Inicia sesión para guardar.', 'err'); return false; }
+    if (document.getElementById('saveExpense').disabled || imagenesProcesando) return false;
     const date=document.getElementById('expenseDate').value,category=document.getElementById('expenseCategory').value,description=document.getElementById('expenseDescription').value.trim(),amount=parseFloat(document.getElementById('expenseAmount').value),wallet=document.getElementById('expenseWallet').value;
-    if(!date||!category||isNaN(amount)||amount<=0){toast('Completa correctamente','err');return;}
+    if(!date||!category||!Number.isFinite(amount)||amount<=0||!['bcp','yape','efectivo'].includes(wallet)){toast('Completa correctamente','err');return false;}
     
     const btn = document.getElementById('saveExpense');
     const originalText = btn.textContent;
@@ -1159,6 +1161,7 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
 
                 if (!idToken) {
                     toast('Inicia sesión para subir comprobantes.', 'err');
+                    return false;
                 } else {
                     // Las fotos viajan a la vez, no una detrás de otra: con tres
                     // comprobantes, en serie se sumaban tres esperas completas.
@@ -1196,8 +1199,11 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
                     // orden en que se pidieron, no en el que respondieron.
                     const ok = subidas.filter(Boolean);
                     finalImageUrls.push(...ok);
+                    pendingImagesData = [...oldUrls, ...subidas.map((url, i) => url || newImgs[i])];
+                    renderPendingImages();
                     if (ok.length < newImgs.length) {
                         toast('Alguna foto no se pudo subir. Verifica tu conexión.', 'err');
+                        return false;
                     }
                 }
                 btn.textContent = 'Guardando...';
@@ -1224,16 +1230,23 @@ document.getElementById('saveExpense').addEventListener('click', async ()=>{
         }
         else{
             const nx={id:uid(),date,category,description,amount,wallet};
+            if (pendingScanHash) nx.receiptHash = pendingScanHash;
             if(finalImageUrls.length > 0) nx.imageUrls = finalImageUrls;
             expenses.push(nx);
             persist();closeM('expenseModal');renderAll();
             toast(`Gasto de ${money(amount)} registrado`);
+            return nx.id;
         }
+        return true;
+    } catch (error) {
+        toast('No se pudo guardar el gasto. Intenta nuevamente.', 'err');
+        return false;
     } finally {
         btn.textContent = originalText;
         btn.disabled = false;
     }
-});
+}
+document.getElementById('saveExpense').addEventListener('click', saveExpense);
 
 document.getElementById('expenseDescription').addEventListener('input', (e) => {
     const text = e.target.value.trim().toLowerCase();
@@ -1715,6 +1728,7 @@ document.getElementById('openReportModal').addEventListener('click', () => {
 
 // ====== IMAGE HANDLING ======
 let pendingImagesData = [];
+let pendingScanHash = null;
 
 // Compresión máxima: 1000px lado mayor + calidad JPEG adaptativa hasta ~130 KB.
 // Mantiene legible el texto del comprobante mientras minimiza el almacenamiento.
@@ -1778,8 +1792,10 @@ async function comprimir(file) {
 function resizeToThumb(file) {
     return new Promise(resolve => {
         const reader = new FileReader();
+        reader.onerror = () => resolve(null);
         reader.onload = e => {
             const img = new Image();
+            img.onerror = () => resolve(null);
             img.onload = () => {
                 const MAX = IMG_MAX_DIM;
                 let w = img.width, h = img.height;
@@ -1807,6 +1823,7 @@ function resizeToThumb(file) {
 }
 
 function resetImageUI() {
+    pendingScanHash = null;
     pendingImagesData = [];
     // Los contadores de estado también se vacían: si no, un modal cerrado a
     // medias dejaba huecos de cristal fantasma en el siguiente gasto.

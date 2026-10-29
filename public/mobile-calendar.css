@@ -213,3 +213,96 @@
     .activity-day-overlay .activity-day { transform: none; }
     .activity-calendar button:active, .activity-day button:active { transform: none; }
 }
+
+/* Quiet geometric illustration and recognizable deposit markers. */
+@media (max-width: 768px) {
+    .activity-calendar { position: relative; isolation: isolate; }
+    .ac-header-art { position: absolute; inset: 0; height: 146px; overflow: hidden; border-radius: 28px 28px 0 0; pointer-events: none; z-index: -1; }
+    .ac-header-art::before, .ac-header-art::after { content: ''; position: absolute; border-radius: 50%; background: #fbecdf; opacity: .65; }
+    .ac-header-art::before { width: 58px; height: 58px; left: -20px; top: -22px; }
+    .ac-header-art::after { width: 52px; height: 52px; right: -31px; bottom: 2px; }
+    .ac-art-orbit { position: absolute; width: 47px; height: 47px; border: 1px solid #ee9a74; border-radius: 50%; right: 77px; top: 12px; }
+    .ac-art-disc { position: absolute; width: 50px; height: 25px; border-radius: 0 0 50px 50px; right: 83px; top: 43px; transform: rotate(29deg); background: #ffddc7; opacity: .8; }
+    .ac-art-dot { position: absolute; width: 11px; height: 11px; border-radius: 50%; right: 76px; top: 17px; background: #ed8759; box-shadow: 0 3px 5px -2px rgba(161,70,29,.25); }
+    .ac-art-square { position: absolute; width: 12px; height: 12px; border-radius: 3px; right: 67px; top: 61px; transform: rotate(-8deg); background: #efb394; }
+    .ac-art-specks { position: absolute; top: 24px; right: 144px; width: 2px; height: 2px; border-radius: 50%; background: #efb394; box-shadow: 7px 0 #efb394, 14px 0 #efb394, 0 7px #efb394, 7px 7px #efb394, 14px 7px #efb394; opacity: .6; }
+    .ac-heading > div { position: relative; z-index: 1; }
+    .ac-today { position: relative; z-index: 1; }
+    .ac-day.has-deposit .ac-day-number { align-self: flex-start; margin-left: 6px; }
+    .ac-day.has-deposit .ac-day-dots { top: 7px; right: 3px; }
+    .ac-banknote { display: block; width: 15px; height: 11px; flex: none; color: #367950; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; }
+    .ac-banknote rect { fill: #e3f2e6; }
+    .ac-banknote circle, .ac-banknote path { fill: none; }
+    .ac-day.is-selected .ac-banknote { color: #76451a; }
+    .ac-day.is-selected .ac-banknote rect { fill: #fff3d9; }
+    [data-theme="dark"] .ac-header-art::before, [data-theme="dark"] .ac-header-art::after { background: #5e3a26; opacity: .35; }
+    [data-theme="dark"] .ac-art-orbit { border-color: #af7956; }
+    [data-theme="dark"] .ac-art-disc { background: #704b35; opacity: .7; }
+    [data-theme="dark"] .ac-art-dot { background: #d89067; }
+    [data-theme="dark"] .ac-art-square { background: #a77555; }
+    [data-theme="dark"] .ac-banknote { color: #91cda7; }
+    [data-theme="dark"] .ac-banknote rect { fill: #264735; }
+    [data-theme="dark"] .ac-day.is-selected .ac-banknote { color: #513211; }
+    [data-theme="dark"] .ac-day.is-selected .ac-banknote rect { fill: #ffe6b6; }
+    @media (max-width: 360px) {
+        .ac-art-orbit { right: 70px; width: 36px; height: 36px; top: 13px; }
+        .ac-art-disc { right: 76px; width: 36px; height: 18px; top: 35px; }
+        .ac-art-dot { right: 69px; top: 15px; width: 9px; height: 9px; }
+        .ac-art-square { right: 61px; top: 54px; width: 9px; height: 9px; }
+        .ac-art-specks { display: none; }
+        .ac-day.has-deposit .ac-day-number { margin-left: 3px; }
+        .ac-day.has-deposit .ac-day-dots { right: 2px; }
+        .ac-day .ac-banknote { width: 13px; height: 10px; }
+    }
+}
+
+/* Day detail: a single category overview and grouped transaction rows. */
+.ac-symbol { display: inline-grid; place-items: center; width: 22px; height: 22px; flex: none; vertical-align: middle; }
+.ac-symbol svg { display: block; width: 100%; height: 100%; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.ad-close .ac-symbol { width: 19px; height: 19px; }
+.ad-day-nav .ac-symbol { width: 17px; height: 17px; }
+.ad-categories { margin: 18px 0 20px; padding: 16px; border-radius: 20px; background: var(--ac-glass); }
+.ad-section-heading h3, .ad-list-heading h3 { font-size: 15px; font-weight: 650; letter-spacing: -.02em; }
+.ad-section-heading > span, .ad-list-heading > span { font-size: 10px; }
+.ad-category-track { height: 6px; margin: 8px 0 2px 33px; border-radius: 6px; background: color-mix(in srgb, var(--category-color) 9%, var(--ac-track)); }
+.ad-category-track > span { min-width: 3px; border-radius: inherit; }
+.ad-category { margin: 0; padding: 10px 0; }
+.ad-category + .ad-category { border-top: 1px solid var(--ac-track); }
+.ad-category:last-child { padding-bottom: 0; }
+.ad-category-label { align-items: center; gap: 8px; font-size: 11px; }
+.ad-category-symbol { display: grid; place-items: center; width: 25px; height: 27px; flex: none; color: var(--category-color); }
+.ad-category-symbol .ac-symbol { width: 20px; height: 20px; }
+.ad-category-name { font-weight: 500; line-height: 1.4; }
+.ad-category-percent { font-size: 10px; font-variant-numeric: tabular-nums; }
+.ad-category-label strong { font-size: 12px; font-weight: 600; }
+.ad-list-heading { margin: 18px 3px 11px; }
+.ad-filters { padding: 3px; border-radius: 12px; margin-bottom: 12px; }
+.ad-filter-thumb { left: 3px; top: 3px; bottom: 3px; width: calc((100% - 6px) / 3); border-radius: 9px; }
+.ad-filters button { min-height: 34px; padding: 7px 3px; font-size: 11px; border-radius: 9px; }
+.ad-records { gap: 0; background: var(--ac-glass); border-radius: 20px; overflow: hidden; }
+.ad-record { grid-template-columns: 34px minmax(0,1fr) auto 10px; gap: 8px; padding: 15px 12px; min-height: 76px; border-radius: 0; background: transparent; }
+.ad-record + .ad-record::before { content: ''; position: absolute; left: 54px; right: 12px; top: 0; height: 1px; background: var(--ac-track); }
+.ad-record-icon { width: 34px; height: 36px; border-radius: 11px; background: color-mix(in srgb, var(--category-color) 8%, transparent); }
+.ad-record-icon .ac-symbol { width: 22px; height: 22px; }
+.ad-record-copy { gap: 4px; }
+.ad-record-copy > strong { font-size: 13px; font-weight: 600; letter-spacing: -.015em; line-height: 1.35; }
+.ad-record-copy > span { font-size: 10px; }
+.ad-evidence .ac-symbol { width: 11px; height: 11px; }
+.ad-record-amount { font-size: 13px; font-weight: 650; }
+.ad-record-share { font-size: 9px; }
+.ad-record > .ac-symbol { width: 11px; height: 14px; color: var(--ac-secondary); }
+.ad-record-value { max-width: 106px; gap: 5px; }
+.activity-day .ad-record:active { transform: none; background: var(--ac-press); }
+@media (max-width: 360px) {
+    .ad-categories { padding: 13px; }
+    .ad-category-label { gap: 5px; }
+    .ad-category-symbol { width: 21px; }
+    .ad-category-label strong { font-size: 11px; }
+    .ad-record { grid-template-columns: 29px minmax(0,1fr) auto 8px; column-gap: 6px; padding: 13px 10px; }
+    .ad-record-icon { width: 29px; height: 34px; }
+    .ad-record-icon .ac-symbol { width: 20px; height: 20px; }
+    .ad-record-copy > strong { font-size: 12px; }
+    .ad-record-value { max-width: 88px; }
+    .ad-record-amount { font-size: 12px; }
+    .ad-record + .ad-record::before { left: 45px; right: 10px; }
+}

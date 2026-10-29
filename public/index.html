@@ -23,8 +23,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
         rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=83">
-    <link rel="stylesheet" href="mobile-calendar.css?v=82">
+    <link rel="stylesheet" href="styles.css?v=84">
+    <link rel="stylesheet" href="mobile-calendar.css?v=84">
     <link rel="stylesheet" href="distribution.css?v=1">
     <style>
         /* ===== SPLASH SCREEN (rápido y profesional, ~0.6s total) ===== */
@@ -369,6 +369,7 @@
             </section>
 
             <section id="activityCalendar" class="activity-calendar" aria-labelledby="activityCalendarTitle">
+                <div class="ac-header-art" aria-hidden="true"><span class="ac-art-orbit"></span><span class="ac-art-disc"></span><span class="ac-art-dot"></span><span class="ac-art-square"></span><span class="ac-art-specks"></span></div>
                 <div class="ac-heading">
                     <div><h2 id="activityCalendarTitle">Tu calendario</h2><p>Tu dinero, día a día</p></div>
                     <button type="button" id="acToday" class="ac-today">Hoy</button>
@@ -381,7 +382,7 @@
                 <p id="acScope" class="ac-scope" aria-live="polite"></p>
                 <div class="ac-week" aria-hidden="true"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
                 <div id="acDays" class="ac-days" role="group" aria-label="Días del mes"></div>
-                <div class="ac-legend"><span><i class="ac-dot ac-dot--income"></i>Depósito</span><span class="ac-heat-key"><i></i><i></i><i></i>Más gasto</span><span>Importes en S/</span></div>
+                <div class="ac-legend"><span><svg class="ac-banknote" viewBox="0 0 20 14" fill="none" aria-hidden="true"><rect x="1" y="1" width="18" height="12" rx="2"/><path d="M4 4h1M15 10h1"/><circle cx="10" cy="7" r="2.5"/></svg>Depósito</span><span class="ac-heat-key"><i></i><i></i><i></i>Más gasto</span><span>Importes en S/</span></div>
                 <div id="acMonthInsight" class="ac-month-insight"></div>
                 <div class="ac-month-totals" aria-label="Totales del periodo visible"><div><span>Depósitos del periodo</span><strong id="acIncome"></strong></div><div><span>Gastos del periodo</span><strong id="acExpense"></strong></div></div>
             </section>
@@ -514,9 +515,9 @@
             <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9m-3.5-3.5L12 16.5l3.5-3.5"/></svg></span>
             <span class="bnav-label">Depósito</span>
         </button>
-        <button class="bnav-btn" id="bnavLoans" onclick="openM('loansModal')">
-            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><path d="M4 7.5h15.5M15.5 3.5l4 4-4 4M20 16.5H4.5m4-4-4 4 4 4"/></svg></span>
-            <span class="bnav-label" id="bnavLoansBadge">Préstamos</span>
+        <button class="bnav-btn" id="bnavScan" aria-label="Escanear un comprobante">
+            <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3M7 9h10M7 12h10M7 15h6"/></svg></span>
+            <span class="bnav-label">Escanear</span>
         </button>
         <button class="bnav-btn bnav-btn--expense" id="bnavExpense">
             <span class="bnav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" focusable="false"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M3 9.5h18M6.5 15h4"/></svg></span>
@@ -882,11 +883,12 @@
     <script src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="escenas.js?v=72"></script>
-    <script src="app.js?v=82"></script>
+    <script src="app.js?v=84"></script>
     <script src="distribution.js?v=1"></script>
+    <script src="receipt-scan.js?v=1"></script>
     <script src="ui-controls.js"></script>
-    <script src="mobile-shell.js?v=81"></script>
-    <script src="mobile-calendar.js?v=82"></script>
+    <script src="mobile-shell.js?v=84"></script>
+    <script src="mobile-calendar.js?v=84"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

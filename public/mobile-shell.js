@@ -467,7 +467,7 @@
     // These are actions, not pages: selection follows the open sheet.
     function navigationState() {
         var targets = { bnavMenu: 'sidebar', bnavDeposit: 'depositModal',
-            bnavLoans: 'loansModal', bnavExpense: 'expenseModal', bnavFilter: 'filterModal' };
+            bnavExpense: 'expenseModal', bnavFilter: 'filterModal', bnavScan: 'scanModal' };
         Object.keys(targets).forEach(function (id) {
             var button = document.getElementById(id);
             var panel = document.getElementById(targets[id]);
