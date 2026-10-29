@@ -1131,7 +1131,7 @@ document.getElementById('saveDeposit').addEventListener('click',()=>{
 
 // ====== EVENTS: EXPENSE ======
 document.getElementById('openExpenseModal').addEventListener('click',requireAuth(()=>{editExpenseId=null;document.getElementById('expenseModalTitle').textContent='Nuevo Gasto';document.getElementById('expenseDate').value=today();document.getElementById('expenseAmount').value='';document.getElementById('expenseDescription').value='';document.getElementById('expenseWallet').value='bcp';populateCatSelect();resetImageUI();openM('expenseModal');setTimeout(()=>document.getElementById('expenseDescription').focus(),120);}));
-async function saveExpense() {
+async function saveExpense({ quiet = false } = {}) {
     if (!currentUser) { toast('Inicia sesión para guardar.', 'err'); return false; }
     if (document.getElementById('saveExpense').disabled || imagenesProcesando) return false;
     const date=document.getElementById('expenseDate').value,category=document.getElementById('expenseCategory').value,description=document.getElementById('expenseDescription').value.trim(),amount=parseFloat(document.getElementById('expenseAmount').value),wallet=document.getElementById('expenseWallet').value;
@@ -1226,7 +1226,7 @@ async function saveExpense() {
             }
             editExpenseId=null;
             persist();closeM('expenseModal');renderAll();
-            toast('Gasto actualizado');
+            if (!quiet) toast('Gasto actualizado');
         }
         else{
             const nx={id:uid(),date,category,description,amount,wallet};
@@ -1234,7 +1234,7 @@ async function saveExpense() {
             if(finalImageUrls.length > 0) nx.imageUrls = finalImageUrls;
             expenses.push(nx);
             persist();closeM('expenseModal');renderAll();
-            toast(`Gasto de ${money(amount)} registrado`);
+            if (!quiet) toast(`Gasto de ${money(amount)} registrado`);
             return nx.id;
         }
         return true;
