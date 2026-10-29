@@ -74,7 +74,7 @@
             savedId = existing.id;get('scanRead').hidden = true;get('scanEdit').hidden = false;
             status('Esta imagen ya está registrada. Puedes abrir el gasto.');return;
         }
-        setBusy(true);status('Leyendo fecha, monto y detalle…');
+        setBusy(true);status('Leyendo fecha, monto y detalle… Si Gemini está ocupado, probaremos una segunda lectura.');
         try {
             const token = await auth.currentUser.getIdToken();
             const response = await fetch(`${BACKEND_URL}/api/scan-receipt`, {

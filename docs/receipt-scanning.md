@@ -11,6 +11,8 @@ GEMINI_MODEL=gemini-3.8-flash
 
 El modelo es configurable. Debe admitir imágenes y salida estructurada mediante `generateContent`. Referencia: https://ai.google.dev/gemini-api/docs/generate-content/structured-output
 
+La lectura usa razonamiento bajo y un límite de 20 segundos. Si el modelo configurado no responde o está temporalmente indisponible, vuelve a intentar una vez con `gemini-3.5-flash-lite`. Un error de clave o de cuota se muestra sin repetir la petición.
+
 Se requieren las credenciales de Drive y la sesión Firebase ya utilizadas por `/api/comprobantes`. Después de cambiar variables del servidor, reiniciar o desplegar nuevamente.
 
 El guardado automático está activado y puede desmarcarse. Solo guarda si hay fecha válida, monto positivo en PEN, descripción, rubro existente y método de pago; Gemini también debe identificar un gasto sin ambigüedad. Campos incompletos y gastos similares pasan al formulario. Transferencias recibidas y monedas no confirmadas no se registran automáticamente. El ciclo continúa determinado por la fecha real del documento, no por el ciclo visible.

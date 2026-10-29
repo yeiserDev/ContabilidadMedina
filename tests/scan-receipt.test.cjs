@@ -9,15 +9,18 @@ const code = ts.transpileModule(fs.readFileSync('app/api/scan-receipt/route.ts',
 const valid = { amount: 35.5, date: '2026-10-17', description: 'Almuerzo', category: 'Comida', wallet: 'yape', currency: 'PEN', isExpense: true, needsReview: false, note: '' };
 const jpeg = 'data:image/jpeg;base64,' + Buffer.from([255,216,255,217]).toString('base64');
 
-async function run({ authorized = true, key = 'test-key', body = { image: jpeg, categories: ['Comida'] }, output = valid, upstream = 200 } = {}) {
+async function run({ authorized = true, key = 'test-key', body = { image: jpeg, categories: ['Comida'] }, output = valid, upstream = 200, firstTimeout = false } = {}) {
     const env = process.env.GEMINI_API_KEY, originalFetch = global.fetch;
-    let calls = 0;
+    let calls = 0, models = [];
     process.env.GEMINI_API_KEY = key;
-    global.fetch = async (_url, options) => {
+    global.fetch = async (url, options) => {
         calls++;
+        models.push(url);
         const request = JSON.parse(options.body);
         assert.equal(request.contents[0].parts[1].inlineData.mimeType, 'image/jpeg');
         assert.ok(request.generationConfig.responseFormat.text.schema.required.includes('amount'));
+        assert.equal(request.generationConfig.thinkingConfig.thinkingLevel, calls === 1 ? 'low' : 'minimal');
+        if (firstTimeout && calls === 1) throw new DOMException('Timed out', 'TimeoutError');
         return new Response(JSON.stringify({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify(output) }] } }] }), { status: upstream });
     };
     try {
@@ -30,7 +33,7 @@ async function run({ authorized = true, key = 'test-key', body = { image: jpeg, 
         const response = await module.exports.POST(new Request('http://localhost/api/scan-receipt', {
             method: 'POST', body: JSON.stringify(body), headers: { authorization: 'Bearer test' },
         }));
-        return { status: response.status, data: await response.json(), calls };
+        return { status: response.status, data: await response.json(), calls, models };
     } finally {
         global.fetch = originalFetch;
         if (env === undefined) delete process.env.GEMINI_API_KEY;else process.env.GEMINI_API_KEY = env;
@@ -55,6 +58,11 @@ test('invalid dates, categories, currencies and incoming transfers require revie
     }
 });
 test('handles provider errors and malformed output without exposing provider data', async () => {
-    assert.equal((await run({ upstream: 429 })).status, 502);
+    assert.equal((await run({ upstream: 429 })).status, 429);
     assert.equal((await run({ output: null })).status, 422);
+});
+test('falls back to a lighter model when the first call times out', async () => {
+    const result = await run({ firstTimeout: true });
+    assert.equal(result.status, 200);assert.equal(result.calls, 2);
+    assert.match(result.models[1], /gemini-3\.5-flash-lite/);
 });
