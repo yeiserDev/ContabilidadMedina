@@ -35,15 +35,23 @@
             <label class="scan-auto"><span>Guardar automáticamente<small>Solo si todos los datos están completos</small></span><input id="scanAuto" type="checkbox" role="switch" checked></label>
         </div>
         <footer class="scan-footer"><button id="scanRead" class="scan-primary"><span>Elegir comprobante</span>${icon('arrow')}</button><button id="scanEdit" class="scan-primary" hidden><span>Ver gasto guardado</span>${icon('arrow')}</button><button id="scanManual" class="scan-manual" hidden>Completar manualmente con esta foto</button><p id="scanFootnote">La imagen se enviará a Gemini para leer sus datos.</p></footer>
+        <div class="scan-processing" aria-hidden="true" inert>
+            <div class="scan-processing-art" aria-hidden="true"><span class="scan-processing-halo"></span><div class="scan-processing-paper"><img id="scanProcessingPhoto" alt=""><span class="scan-processing-beam"></span></div><span class="scan-processing-mark">${icon('scan')}</span></div>
+            <div class="scan-processing-copy" role="status" aria-live="polite" aria-atomic="true"><h3 id="scanProcessingTitle">Preparando tu foto</h3><p id="scanProcessingStatus"></p></div>
+            <div class="scan-processing-activity" aria-hidden="true"><i></i><i></i><i></i></div>
+            <button id="scanProcessingCancel" class="scan-processing-cancel">Cancelar lectura</button>
+            <small>Conta Medina</small>
+        </div>
     </section>`;
     document.body.appendChild(modal);
     const sheet = modal.querySelector('.scan-sheet');
     let image = null, hash = null, savedId = null, busy = false, previewUrl = null;
     let epoch = 0, controller = null, deadline = 0, readingNotice = 0, lastStep = 0;
     const stageTitles = { empty: 'Listo para comenzar', preparing: 'Preparando tu foto', ready: 'Foto conservada', reading: 'Leyendo el comprobante', saving: 'Guardando tu gasto', success: 'Gasto registrado', error: 'La lectura no se completó' };
-    function status(message) { get('scanStatus').textContent = message; }
+    function status(message) { get('scanStatus').textContent = message;get('scanProcessingStatus').textContent = message; }
     function setStage(stage, message) {
         sheet.dataset.stage = stage;get('scanStageTitle').textContent = stageTitles[stage];
+        get('scanProcessingTitle').textContent = stageTitles[stage];
         if (message) status(message);
         if (stage !== 'error') lastStep = ({ empty: 0, preparing: 0, ready: 0, reading: 1, saving: 2, success: 3 })[stage];
         modal.querySelectorAll('.scan-steps li').forEach((item, i) => {
@@ -62,7 +70,19 @@
         busy = value;
         ['scanCamera', 'scanGallery', 'scanRead', 'scanAuto', 'scanManual'].forEach(id => get(id).disabled = value);
         get('scanClose').disabled = value && sheet.dataset.stage === 'saving';
+        get('scanProcessingCancel').disabled = value && sheet.dataset.stage === 'saving';
+        get('scanProcessingCancel').textContent = sheet.dataset.stage === 'saving' ? 'Guardando de forma segura…' : 'Cancelar lectura';
+        const splash = modal.querySelector('.scan-processing');
+        const hadSplashFocus = splash.contains(document.activeElement);
+        splash.inert = !value;splash.setAttribute('aria-hidden', String(!value));
+        for (const panel of modal.querySelectorAll('.scan-content, .scan-footer')) { panel.inert = value;panel.setAttribute('aria-hidden', String(value)); }
         sheet.classList.toggle('is-busy', value);
+        if (value) {
+            get('scanProcessingPhoto').src = get('scanPreview').src;
+            if (!get('scanProcessingCancel').disabled) get('scanProcessingCancel').focus({ preventScroll: true });
+        } else if ((hadSplashFocus || sheet.dataset.stage === 'success') && modal.classList.contains('active')) {
+            (get('scanEdit').hidden ? get('scanRead') : get('scanEdit')).focus({ preventScroll: true });
+        }
     }
     function releasePreview() { if (previewUrl) URL.revokeObjectURL(previewUrl);previewUrl = null; }
     function close() {
@@ -81,12 +101,13 @@
         openM('scanModal');get('scanCamera').focus();
     }));
     get('scanClose').addEventListener('click', close);
+    get('scanProcessingCancel').addEventListener('click', close);
     modal.addEventListener('click', e => { if (e.target === modal) { e.stopImmediatePropagation();close(); } }, true);
     document.addEventListener('keydown', e => {
         if (!modal.classList.contains('active')) return;
         if (e.key === 'Escape') { e.preventDefault();e.stopImmediatePropagation();close(); }
         if (e.key === 'Tab') {
-            const controls = [...modal.querySelectorAll('button:not(:disabled),input:not(:disabled)')].filter(el => !el.hidden && el.offsetParent);
+            const controls = [...modal.querySelectorAll('button:not(:disabled),input:not(:disabled)')].filter(el => !el.hidden && el.offsetParent && !el.closest('[inert]'));
             const first = controls[0], last = controls.at(-1);
             if (!first) { e.preventDefault();return; }
             if (e.shiftKey && document.activeElement === first) { e.preventDefault();last.focus(); }
