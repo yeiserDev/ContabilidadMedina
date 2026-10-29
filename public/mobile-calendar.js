@@ -247,20 +247,27 @@
         });
         ring.appendChild(svg);
         const ringCenter = el('span', 'ad-ring-center');
-        ringCenter.append(icon(outgoing ? 'donut_small' : 'check'), el('span', '', `${groups.length} ${groups.length === 1 ? 'rubro' : 'rubros'}`));
+        ringCenter.append(icon(outgoing ? 'donut_small' : 'check'), el('span', '', `${sorted.length} ${sorted.length === 1 ? 'rubro' : 'rubros'}`));
         ring.appendChild(ringCenter);
-        groups.forEach(([name, value]) => {
+        sorted.forEach(([name, value]) => {
             const row = el('div', 'ad-category');
             row.style.setProperty('--category-color', categoryColor(name));
+            const share = outgoing > 0 ? Math.max(0, Math.min(100, value / outgoing * 100)) : 0;
+            const percent = share > 0 && share < 1 ? '<1%' : `${Math.round(share)}%`;
+            const gauge = el('div', 'ad-category-gauge');
+            gauge.setAttribute('aria-hidden', 'true');
+            const chart = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            chart.setAttribute('viewBox', '0 0 56 56');
+            chart.innerHTML = '<circle class="ad-gauge-track" cx="28" cy="28" r="24"/><circle class="ad-gauge-fill" cx="28" cy="28" r="24" pathLength="100"/>';
+            chart.querySelector('.ad-gauge-fill').style.setProperty('--share-offset', String(100 - share));
+            gauge.append(chart, el('span', 'ad-category-percent', percent));
+            const copy = el('div', 'ad-category-copy');
             const label = el('div', 'ad-category-label');
-            const categoryName = el('span', 'ad-category-name', name);
             const symbol = el('span', 'ad-category-symbol');symbol.appendChild(icon(recordIcon({ category: name })));
-            label.append(symbol, categoryName, el('span', 'ad-category-percent', `${Math.round(value / outgoing * 100)}%`), el('strong', '', money(value)));
-            const track = el('div', 'ad-category-track');
-            track.setAttribute('aria-hidden', 'true');
-            const fill = el('span');fill.style.width = `${value / outgoing * 100}%`;
-            track.appendChild(fill);
-            row.append(label, track);bars.appendChild(row);
+            label.append(symbol, el('span', 'ad-category-name', name));
+            copy.append(label, el('strong', 'ad-category-amount', money(value)));
+            const shareLabel = el('span', 'ad-category-share-label', `${percent} del gasto del día`);
+            row.append(gauge, copy, shareLabel);bars.appendChild(row);
         });
         const visible = rows.filter(r => filter === 'all' || r.kind === filter);
         get('adCount').textContent = `${visible.length} ${visible.length === 1 ? 'movimiento' : 'movimientos'}`;
