@@ -21,17 +21,18 @@
         <div class="scan-content">
             <ol class="scan-steps" aria-label="Progreso del comprobante"><li><span>1</span>Foto</li><li><span>2</span>Lectura</li><li><span>3</span>Guardado</li></ol>
             <div class="scan-visual">
-                <div class="scan-empty-art" aria-hidden="true"><span>${icon('receipt')}</span><strong>Tu próximo gasto empieza aquí</strong><small>Toma una foto o elige un comprobante</small></div>
+                <div class="scan-empty-art" aria-hidden="true"><div class="scan-idle-scene"><span class="scan-idle-photo">${icon('image')}</span><span class="scan-idle-paper"><i></i><b></b><b></b><b></b><em></em></span><span class="scan-idle-frame"></span><span class="scan-idle-light"></span><span class="scan-idle-camera">${icon('camera')}</span></div><strong>Una foto. Tu gasto listo para revisar.</strong><small>Toca aquí para elegir tu comprobante</small></div>
+                <button id="scanPickArea" class="scan-pick-area" aria-label="Elegir una imagen del comprobante"></button>
                 <img id="scanPreview" alt="Comprobante seleccionado" hidden>
                 <div class="scan-photo-badge" aria-hidden="true"><span></span><b id="scanPhotoState">Vista previa</b></div>
                 <div class="scan-sweep" aria-hidden="true"></div>
                 <span class="scan-success-icon" aria-hidden="true">${icon('check')}</span>
                 <span id="scanFileInfo" class="scan-file-info" hidden></span>
             </div>
-            <div class="scan-actions"><button id="scanCamera">${icon('camera')}Tomar foto</button><button id="scanGallery">${icon('image')}Elegir imagen</button></div>
+            <div class="scan-actions"><button id="scanCamera">${icon('camera')}<span>Tomar foto<small>Usa tu cámara</small></span></button><button id="scanGallery">${icon('image')}<span>Elegir imagen<small>Desde tus fotos</small></span></button></div>
             <input id="scanCameraInput" type="file" accept="image/*" capture="environment" hidden>
             <input id="scanGalleryInput" type="file" accept="image/*" hidden>
-            <div class="scan-feedback" role="status" aria-live="polite" aria-atomic="true"><span class="scan-feedback-icon" aria-hidden="true">${icon('scan')}</span><div><strong id="scanStageTitle">Listo para comenzar</strong><p id="scanStatus">La lectura empieza al elegir la foto.</p><small id="scanReference" hidden></small></div></div>
+            <div class="scan-feedback" role="status" aria-live="polite" aria-atomic="true"><span class="scan-feedback-icon" aria-hidden="true">${icon('scan')}</span><div><strong id="scanStageTitle">Lectura automática</strong><p id="scanStatus">Fecha, importe y concepto desde tu comprobante.</p><small id="scanReference" hidden></small></div></div>
             <label class="scan-auto"><span>Guardar automáticamente<small>Solo si todos los datos están completos</small></span><input id="scanAuto" type="checkbox" role="switch" checked></label>
         </div>
         <footer class="scan-footer"><button id="scanRead" class="scan-primary"><span>Elegir comprobante</span>${icon('arrow')}</button><button id="scanEdit" class="scan-primary" hidden><span>Ver gasto guardado</span>${icon('arrow')}</button><button id="scanManual" class="scan-manual" hidden>Completar manualmente con esta foto</button><p id="scanFootnote">La imagen se enviará a Gemini para leer sus datos.</p></footer>
@@ -47,10 +48,11 @@
     const sheet = modal.querySelector('.scan-sheet');
     let image = null, hash = null, savedId = null, busy = false, previewUrl = null;
     let epoch = 0, controller = null, deadline = 0, readingNotice = 0, lastStep = 0;
-    const stageTitles = { empty: 'Listo para comenzar', preparing: 'Preparando tu foto', ready: 'Foto conservada', reading: 'Leyendo el comprobante', saving: 'Guardando tu gasto', success: 'Gasto registrado', error: 'La lectura no se completó' };
+    const stageTitles = { empty: 'Lectura automática', preparing: 'Preparando tu foto', ready: 'Foto conservada', reading: 'Leyendo el comprobante', saving: 'Guardando tu gasto', success: 'Gasto registrado', error: 'La lectura no se completó' };
     function status(message) { get('scanStatus').textContent = message;get('scanProcessingStatus').textContent = message; }
     function setStage(stage, message) {
         sheet.dataset.stage = stage;get('scanStageTitle').textContent = stageTitles[stage];
+        get('scanPickArea').hidden = sheet.classList.contains('has-photo');
         get('scanProcessingTitle').textContent = stageTitles[stage];
         if (message) status(message);
         if (stage !== 'error') lastStep = ({ empty: 0, preparing: 0, ready: 0, reading: 1, saving: 2, success: 3 })[stage];
@@ -89,14 +91,14 @@
         if (busy && sheet.dataset.stage === 'saving') return;
         epoch++;controller?.abort();controller = null;clearTimeout(deadline);clearTimeout(readingNotice);
         if (busy) setStage(image ? 'ready' : 'empty', image ? 'La lectura se canceló. Puedes reintentarlo con esta foto.' : 'Elige un comprobante para comenzar.');
-        if (!image) { releasePreview();get('scanPreview').hidden = true;get('scanFileInfo').hidden = true;sheet.classList.remove('has-photo'); }
+        if (!image) { releasePreview();get('scanPreview').hidden = true;get('scanFileInfo').hidden = true;sheet.classList.remove('has-photo');get('scanPickArea').hidden = false; }
         setBusy(false);closeM('scanModal');get('bnavScan').focus();
     }
     get('bnavScan').addEventListener('click', requireAuth(() => {
         if (busy) return;
         if (sheet.dataset.stage === 'success') {
             image = null;hash = null;savedId = null;releasePreview();get('scanPreview').hidden = true;get('scanFileInfo').hidden = true;sheet.classList.remove('has-photo');
-            setStage('empty', 'La lectura empieza al elegir la foto.');
+            setStage('empty', 'Fecha, importe y concepto desde tu comprobante.');
         }
         openM('scanModal');get('scanCamera').focus();
     }));
@@ -121,6 +123,7 @@
         pendingImagesData = image ? [image] : [];pendingScanHash = hash;renderPendingImages();closeM('scanModal');openM('expenseModal');get('expenseDate').focus();
     }
     get('scanManual').addEventListener('click', () => { if (!busy && image) openDraft(); });
+    get('scanPickArea').addEventListener('click', () => { if (!busy) get('scanGalleryInput').click(); });
     ['Camera', 'Gallery'].forEach(kind => {
         get('scan' + kind).addEventListener('click', () => get('scan' + kind + 'Input').click());
         get('scan' + kind + 'Input').addEventListener('change', async e => {
