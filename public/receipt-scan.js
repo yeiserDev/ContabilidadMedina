@@ -4,30 +4,40 @@
     const get = id => document.getElementById(id);
     const modal = document.createElement('div');
     modal.id = 'scanModal';modal.className = 'modal-bg';
-    modal.innerHTML = `<section class="modal scan-sheet" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
-        <div class="modal-hd"><h2 id="scanTitle">Escanear gasto</h2><button class="modal-x" id="scanClose" aria-label="Cerrar escáner">×</button></div>
+    modal.innerHTML = `<section class="modal scan-sheet" role="dialog" aria-modal="true" aria-labelledby="scanTitle" data-stage="empty">
+        <div class="modal-hd"><div class="scan-heading"><span class="scan-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 3H5a2 2 0 0 0-2 2v3m11-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3M7 9h10M7 12h10M7 15h6"/></svg></span><h2 id="scanTitle">Escanear gasto</h2></div><button class="modal-x" id="scanClose" aria-label="Cerrar escáner"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
         <div class="modal-bd">
-            <p class="scan-intro">Una foto de tu boleta, factura o transferencia. Completamos el gasto y guardamos el comprobante comprimido en Drive.</p>
-            <div class="scan-actions"><button class="mb mb--blue" id="scanCamera">Tomar foto</button><button class="mb mb--ghost" id="scanGallery">Elegir imagen</button></div>
+            <p class="scan-intro">Fotografía una boleta o el comprobante de una transferencia. Leeremos sus datos para registrar el gasto.</p>
+            <div class="scan-steps" aria-label="Proceso de escaneo"><span class="scan-step">Foto</span><span class="scan-step">Lectura</span><span class="scan-step">Guardado</span></div>
+            <div class="scan-visual" aria-hidden="true"><div class="scan-visual-inner"><span class="scan-placeholder"><svg viewBox="0 0 48 48" fill="none"><rect x="9" y="5" width="30" height="38" rx="5"/><path d="M16 16h16M16 23h16M16 30h9"/></svg></span><img id="scanPreview" alt="" hidden><span class="scan-corner scan-corner--tl"></span><span class="scan-corner scan-corner--tr"></span><span class="scan-corner scan-corner--bl"></span><span class="scan-corner scan-corner--br"></span><span class="scan-line"></span><span class="scan-success-icon"><svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4.5 4.5L19 7"/></svg></span></div></div>
+            <div class="scan-actions"><button class="mb mb--blue" id="scanCamera"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h4l1.5-2h5L16 7h4v12H4z"/><circle cx="12" cy="13" r="3"/></svg>Tomar foto</button><button class="mb mb--ghost" id="scanGallery"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 4 4 3-3 4 4"/></svg>Elegir imagen</button></div>
             <input id="scanCameraInput" type="file" accept="image/*" capture="environment" hidden>
             <input id="scanGalleryInput" type="file" accept="image/*" hidden>
-            <img id="scanPreview" alt="Comprobante seleccionado" hidden>
             <label class="scan-auto"><input id="scanAuto" type="checkbox" checked><span>Guardar automáticamente<small>Si los datos están completos. Podrás editarlos después.</small></span></label>
-            <p id="scanStatus" role="status" aria-live="polite">La imagen se enviará a Gemini para leer sus datos.</p>
+            <div class="scan-feedback" role="status" aria-live="polite"><span class="scan-spinner" aria-hidden="true"></span><div><strong id="scanStageTitle">Listo para comenzar</strong><p id="scanStatus">La foto se comprimirá antes de guardarse en Drive.</p></div></div>
             <button class="mb mb--blue" id="scanRead" hidden>Leer y registrar</button>
             <button class="mb mb--ghost" id="scanEdit" hidden>Ver gasto guardado</button>
         </div>
     </section>`;
     document.body.appendChild(modal);
-    let image = null, hash = null, savedId = null, busy = false;
+    let image = null, hash = null, savedId = null, busy = false, previewUrl = null;
+    const sheet = modal.querySelector('.scan-sheet');
+    const stageTitles = { empty: 'Listo para comenzar', preparing: 'Preparando la foto', ready: 'Foto preparada', reading: 'Leyendo el comprobante', saving: 'Guardando el gasto', success: 'Gasto registrado', error: 'No se completó' };
+    function setStage(stage) { sheet.dataset.stage = stage;get('scanStageTitle').textContent = stageTitles[stage]; }
     const status = message => { get('scanStatus').textContent = message; };
     function setBusy(value) {
         busy = value;
         ['scanCamera', 'scanGallery', 'scanRead', 'scanAuto', 'scanClose'].forEach(id => get(id).disabled = value);
         modal.setAttribute('aria-busy', String(value));
+        sheet.setAttribute('aria-busy', String(value));
     }
     get('bnavScan').addEventListener('click', requireAuth(() => {
         if (busy) return;
+        if (sheet.dataset.stage === 'success') {
+            image = null;hash = null;savedId = null;get('scanPreview').hidden = true;
+            get('scanRead').hidden = true;get('scanEdit').hidden = true;
+            setStage('empty');status('La foto se comprimirá antes de guardarse en Drive.');
+        }
         openM('scanModal');get('scanCamera').focus();
     }));
     get('scanClose').addEventListener('click', () => { if (!busy) { closeM('scanModal');get('bnavScan').focus(); } });
@@ -51,18 +61,23 @@
             if (!file || busy) return;
             image = null;hash = null;savedId = null;
             get('scanRead').hidden = true;get('scanEdit').hidden = true;get('scanPreview').hidden = true;
-            if (!file.type.startsWith('image/') || file.size > 25 * 1024 * 1024) { status('Elige una imagen de hasta 25 MB.');return; }
-            setBusy(true);status('Preparando la imagen…');
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+            previewUrl = null;
+            if (!file.type.startsWith('image/') || file.size > 25 * 1024 * 1024) { setStage('error');status('Elige una imagen de hasta 25 MB.');return; }
+            previewUrl = URL.createObjectURL(file);
+            get('scanPreview').src = previewUrl;get('scanPreview').hidden = false;
+            setStage('preparing');setBusy(true);status('Comprimiendo la imagen para conservarla con buena calidad y menos peso.');
             try {
                 const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
                 hash = [...new Uint8Array(digest)].map(n => n.toString(16).padStart(2, '0')).join('');
                 const duplicate = expenses.find(exp => exp.receiptHash === hash);
-                if (duplicate) { savedId = duplicate.id;get('scanEdit').hidden = false;status('Esta imagen ya está registrada. Puedes abrir el gasto.');return; }
+                if (duplicate) { savedId = duplicate.id;get('scanEdit').hidden = false;setStage('success');status('Esta imagen ya está registrada. Puedes abrir el gasto.');return; }
                 image = await comprimir(file);
                 if (!image) throw new Error('No se pudo abrir la imagen. Usa una foto JPEG o PNG.');
                 get('scanPreview').src = image;get('scanPreview').hidden = false;
-                get('scanRead').hidden = false;status('Imagen lista. Se enviará a Gemini al pulsar «Leer y registrar».');
-            } catch (error) { status(error.message || 'No se pudo preparar la foto.'); }
+                if (previewUrl) { URL.revokeObjectURL(previewUrl);previewUrl = null; }
+                setStage('ready');get('scanRead').hidden = false;status('Revisa la imagen. Luego toca «Leer y registrar».');
+            } catch (error) { setStage('error');status(error.message || 'No se pudo preparar la foto.'); }
             finally { setBusy(false); }
         });
     });
@@ -72,9 +87,9 @@
         const existing = expenses.find(exp => exp.receiptHash === hash);
         if (existing) {
             savedId = existing.id;get('scanRead').hidden = true;get('scanEdit').hidden = false;
-            status('Esta imagen ya está registrada. Puedes abrir el gasto.');return;
+            setStage('success');status('Esta imagen ya está registrada. Puedes abrir el gasto.');return;
         }
-        setBusy(true);status('Leyendo fecha, monto y detalle… Si Gemini está ocupado, probaremos una segunda lectura.');
+        setStage('reading');setBusy(true);status('Buscando fecha, importe y concepto en la imagen. Esto puede tardar unos segundos.');
         try {
             const token = await auth.currentUser.getIdToken();
             const response = await fetch(`${BACKEND_URL}/api/scan-receipt`, {
@@ -97,22 +112,22 @@
             pendingImagesData = [image];pendingScanHash = hash;renderPendingImages();
             const duplicate = expenses.some(exp => exp.date === data.date && Number(exp.amount) === data.amount && exp.description === data.description);
             if (data.needsReview || duplicate || !get('scanAuto').checked) {
-                status('Datos preparados para revisión. El gasto todavía no se ha guardado.');
+                setStage('ready');status('Datos preparados para revisión. El gasto todavía no se ha guardado.');
                 closeM('scanModal');openM('expenseModal');
                 toast(duplicate ? 'Hay un gasto similar. Revísalo antes de guardar.' : data.note || 'Revisa los datos antes de guardar.');
                 get('expenseDate').focus();return;
             }
-            status('Guardando el comprobante en Drive…');
+            setStage('saving');status('Subiendo el comprobante comprimido a Drive y registrando el gasto.');
             const result = await saveExpense();
             if (!result) {
-                status('No se pudo guardar. El comprobante sigue adjunto en el formulario para reintentar.');
+                setStage('error');status('No se pudo guardar. El comprobante sigue adjunto en el formulario para reintentar.');
                 closeM('scanModal');openM('expenseModal');
                 toast('El gasto no se guardó. Puedes reintentar desde aquí.', 'err');return;
             }
             savedId = result;get('scanRead').hidden = true;get('scanEdit').hidden = false;
-            status(`Gasto registrado: ${money(data.amount)} · ${data.date}. Comprobante adjunto. Puedes editarlo desde su detalle.`);
+            setStage('success');status(`Gasto registrado: ${money(data.amount)} · ${data.date}. Comprobante adjunto. Puedes editarlo desde su detalle.`);
             get('scanEdit').focus();
-        } catch (error) { status(error.name === 'TimeoutError' ? 'La lectura tardó demasiado. Vuelve a intentarlo.' : error.message || 'No hay conexión. Inténtalo nuevamente.'); }
+        } catch (error) { setStage('error');status(error.name === 'TimeoutError' ? 'La lectura tardó demasiado. Vuelve a intentarlo.' : error.message || 'No hay conexión. Inténtalo nuevamente.'); }
         finally { setBusy(false); }
     });
 })();
