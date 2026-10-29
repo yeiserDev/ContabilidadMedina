@@ -6,12 +6,14 @@ Configurar en `.env.local` y en las variables del proyecto de Vercel:
 
 ```
 GEMINI_API_KEY=tu_clave_privada
-GEMINI_MODEL=gemini-3.8-flash
+GEMINI_SCAN_MODEL=gemini-3.5-flash-lite
 ```
 
-El modelo es configurable. Debe admitir imágenes y salida estructurada mediante `generateContent`. Referencia: https://ai.google.dev/gemini-api/docs/generate-content/structured-output
+`GEMINI_SCAN_MODEL` es opcional: el escáner usa `gemini-3.5-flash-lite` por defecto. Ya no hereda `GEMINI_MODEL`, que puede apuntar a un modelo general más lento. No hace falta cambiar las variables existentes para usar el nuevo valor predeterminado. El modelo debe admitir imágenes y salida estructurada mediante `generateContent`. Referencia: https://ai.google.dev/gemini-api/docs/generate-content/structured-output
 
-La lectura usa razonamiento bajo y un límite de 20 segundos. Si el modelo configurado no responde o está temporalmente indisponible, vuelve a intentar una vez con `gemini-3.5-flash-lite`. Un error de clave o de cuota se muestra sin repetir la petición.
+La lectura usa el modelo ligero desde la primera llamada, razonamiento mínimo y hasta 2048 tokens de salida. Un único plazo de 45 segundos cubre la respuesta completa; el navegador espera hasta 65 segundos para recibir errores del servidor. No se cancelan dos generaciones consecutivas a los 20 segundos. La hoja puede cerrarse para cancelar una lectura; la respuesta tardía no guarda ningún gasto. El guardado en Drive no se cancela a mitad.
+
+Si falla, la foto sigue disponible y se puede elegir **Completar manualmente con esta foto**. El mensaje incluye una referencia; en Vercel → Logs se puede buscar `receipt_scan` y esa referencia para distinguir `PROVIDER_TIMEOUT`, `PROVIDER_NETWORK`, `PROVIDER_AUTH`, `PROVIDER_QUOTA` y otros errores. Los registros incluyen modelo, fase y duración, sin claves ni imágenes. La lectura real debe verificarse en Vercel con la sesión del usuario; las pruebas locales no demuestran que el proveedor responda en producción.
 
 Se requieren las credenciales de Drive y la sesión Firebase ya utilizadas por `/api/comprobantes`. Después de cambiar variables del servidor, reiniciar o desplegar nuevamente.
 
