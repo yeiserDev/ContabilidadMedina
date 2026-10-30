@@ -44,14 +44,14 @@
     }
     function icon(name) {
         const paths = {
-            south_west: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-7 7m0-6v6h6"/>',
-            receipt_long: '<path d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20V4a.5.5 0 0 1 .5-.5Z"/><path d="M14 3.5V8h4M9 12h6m-6 4h4"/>',
-            school: '<path d="m2 9 10-5 10 5-10 5L2 9Zm4 2v6c4 3 8 3 12 0v-6m4-2v7"/>',
-            build: '<path d="M14 4a5 5 0 0 0-5.6 6.7l-5.2 5.2a2.7 2.7 0 0 0 3.9 3.9l5.2-5.2A5 5 0 0 0 19 9l-3 3-4-4 3-3Z"/>',
+            south_west: '<circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity=".12"/><path d="M12 6.5v11m-4-4 4 4 4-4"/>',
+            receipt_long: '<path d="M7 2.75h6.8L19 8v11.25a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4.75a2 2 0 0 1 2-2Z" fill="currentColor" fill-opacity=".1"/><path d="M13.5 3v4a1.25 1.25 0 0 0 1.25 1.25h4M8.5 12h7m-7 3h7m-7 3h4"/>',
+            school: '<path d="M2 8.5 12 4l10 4.5L12 13 2 8.5Z" fill="currentColor" fill-opacity=".18"/><path d="M6 10.5v6c3.5 2.5 8.5 2.5 12 0v-6M21 9v7.5m-1 2h2"/>',
+            build: '<path d="M15.8 3a5.2 5.2 0 0 0-6.2 6.8l-6.1 6.1a2.75 2.75 0 0 0 3.9 3.9l6.1-6.1A5.2 5.2 0 0 0 20.3 7l-3.7 3.7-3.3-3.3L17 3.7Z" fill="currentColor" fill-opacity=".14"/><circle cx="5.7" cy="17.6" r=".7" fill="currentColor" stroke="none"/>',
             local_gas_station: '<rect x="4" y="3" width="10" height="18" rx="2"/><path d="M6.5 6h5v5h-5zM14 12h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-3-3M3 21h12"/>',
-            restaurant: '<path d="M6 3v6m-3-6v5a3 3 0 0 0 6 0V3M6 11v10M18 3c-4 3-4 8 0 9h1m0-9v18"/>',
-            shopping_bag: '<rect x="4" y="7" width="16" height="14" rx="3"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/>',
-            directions_bus: '<rect x="4" y="3" width="16" height="16" rx="4"/><path d="M4 11h16M8 19v2m8-2v2M8 15h.01M16 15h.01"/>',
+            restaurant: '<path d="M4 3v5.5a2.5 2.5 0 0 0 5 0V3M6.5 3v18M18.5 3c-3 2-4 5.5-4 9h4"/><path d="M18.5 3v18" stroke-width="2.3"/>',
+            shopping_bag: '<path d="M5 7h14l1 12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2L5 7Z" fill="currentColor" fill-opacity=".12"/><path d="M8.5 8V6a3.5 3.5 0 0 1 7 0v2"/>',
+            directions_bus: '<rect x="4.5" y="3" width="15" height="16" rx="4" fill="currentColor" fill-opacity=".1"/><path d="M4.5 11h15M8 19v2m8-2v2M9 5.5h6"/><circle cx="8" cy="15.5" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="15.5" r="1" fill="currentColor" stroke="none"/>',
             currency_exchange: '<path d="M4 8h15m-4-4 4 4-4 4M20 16H5m4-4-4 4 4 4"/>',
             attach_file: '<path d="m8 13 6-6a2.1 2.1 0 0 1 3 3l-8 8a3.5 3.5 0 0 1-5-5l9-9a5 5 0 0 1 7 7l-8 8"/>',
             chevron_right: '<path d="m9 5 7 7-7 7"/>',
