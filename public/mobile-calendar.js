@@ -301,7 +301,14 @@
             }
             const value = el('span', 'ad-record-value');
             value.appendChild(el('strong', 'ad-record-amount', `${isIncome ? '+' : '−'}${money(amount(r))}`));
-            if (!isIncome && outgoing) value.appendChild(el('span', 'ad-record-share', `${Math.round(amount(r) / outgoing * 100)}% del día`));
+            if (!isIncome && outgoing) {
+                const share = Math.max(0, Math.min(100, amount(r) / outgoing * 100));
+                const badge = el('span', 'ad-record-share', `${share > 0 && share < 1 ? '<1' : Math.round(share)}% del día`);
+                const chart = el('span', 'ad-record-share-chart');
+                chart.style.setProperty('--record-share', `${share}%`);
+                chart.setAttribute('aria-hidden', 'true');
+                badge.prepend(chart);value.appendChild(badge);
+            } else if (isIncome) value.appendChild(el('span', 'ad-record-share', 'Ingreso'));
             card.append(figure, copy, value, icon('chevron_right'));
             card.addEventListener('click', () => {
                 closeM(overlay.id);
@@ -335,7 +342,11 @@
     overlay.querySelectorAll('[data-kind]').forEach(b => b.addEventListener('click', e => {
         if (filter === b.dataset.kind) return;
         filter = b.dataset.kind; renderDay();
-        if (e.detail > 0) animateContent(get('adRecords'));
+        if (e.detail > 0 && !reducedMotion.matches) {
+            get('adRecords').querySelectorAll('.ad-record').forEach((card, index) => {
+                card.animate([{ opacity: .45, transform: 'translateY(6px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, delay: Math.min(index * 24, 72), easing: 'cubic-bezier(.16,1,.3,1)' });
+            });
+        }
     }));
     function moveDay(delta, animated) {
         const date = d2(selectedDate); date.setDate(date.getDate() + delta);
