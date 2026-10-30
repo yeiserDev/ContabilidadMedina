@@ -267,7 +267,15 @@
             label.append(symbol, el('span', 'ad-category-name', name));
             copy.append(label, el('strong', 'ad-category-amount', money(value)));
             const shareLabel = el('span', 'ad-category-share-label', `${percent} del gasto del día`);
-            row.append(gauge, copy, shareLabel);bars.appendChild(row);
+            row.append(gauge, copy, shareLabel);
+            if (sorted.length === 1) {
+                const count = el('div', 'ad-category-stat ad-category-stat-count');
+                count.append(el('span', '', expenseCount === 1 ? 'Gasto' : 'Gastos'), el('strong', '', String(expenseCount)));
+                const average = el('div', 'ad-category-stat ad-category-stat-average');
+                average.append(el('span', '', 'Promedio'), el('strong', '', money(expenseCount ? value / expenseCount : 0)), el('small', '', 'por gasto'));
+                row.append(count, average);
+            }
+            bars.appendChild(row);
         });
         const visible = rows.filter(r => filter === 'all' || r.kind === filter);
         get('adCount').textContent = `${visible.length} ${visible.length === 1 ? 'movimiento' : 'movimientos'}`;
