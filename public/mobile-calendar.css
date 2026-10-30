@@ -327,6 +327,25 @@
     .ad-record:hover .ad-record-icon .ac-symbol { transform: translateY(-1px); }
 }
 @media (prefers-reduced-motion: reduce) { .activity-day .ad-record, .ad-record-icon .ac-symbol { transition: none; transform: none !important; } }
+.activity-day .ad-record.is-income {
+    isolation: isolate; overflow: hidden;
+    background: linear-gradient(115deg, #e6f6ed, #d5efdf 65%, #eaf8ef);
+    box-shadow: 0 5px 16px -10px rgba(24,112,65,.35);
+}
+.ad-record.is-income > :not(.ad-income-art) { position: relative; z-index: 1; }
+.ad-record.is-income .ad-record-icon { background: rgba(255,255,255,.65); color: #147247; }
+.ad-record.is-income .ad-record-copy > span, .ad-record.is-income .ad-record-share, .ad-record.is-income > .ac-symbol { color: #446653; }
+.ad-income-art { position: absolute; z-index: -1; right: 4px; top: 50%; width: 150px; height: 100px; transform: translateY(-50%); color: #24784d; opacity: .12; pointer-events: none; }
+.ad-income-art svg { width: 100%; height: 100%; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.ad-record.is-income::after { content: ''; position: absolute; z-index: 0; inset: -35% 0; width: 45%; pointer-events: none; background: linear-gradient(100deg, transparent, rgba(255,255,255,.52), transparent); transform: translateX(-150%) skewX(-18deg); }
+.activity-day-overlay.active .ad-record.is-income::after { animation: ad-income-shine 850ms cubic-bezier(.2,.65,.3,1) both; }
+@keyframes ad-income-shine { from { transform: translateX(-150%) skewX(-18deg); } to { transform: translateX(340%) skewX(-18deg); } }
+[data-theme="dark"] .activity-day .ad-record.is-income { background: linear-gradient(115deg, #203d30, #214e37 65%, #233e32); box-shadow: 0 5px 16px -10px rgba(0,0,0,.35); }
+[data-theme="dark"] .ad-record.is-income .ad-record-icon { background: rgba(164,232,188,.12); color: #8ae4b4; }
+[data-theme="dark"] .ad-record.is-income .ad-record-copy > span, [data-theme="dark"] .ad-record.is-income .ad-record-share, [data-theme="dark"] .ad-record.is-income > .ac-symbol { color: #b4d2bf; }
+[data-theme="dark"] .ad-income-art { color: #b0edc6; opacity: .12; }
+[data-theme="dark"] .ad-record.is-income::after { opacity: .15; }
+@media (prefers-reduced-motion: reduce) { .activity-day-overlay.active .ad-record.is-income::after { animation: none; display: none; } }
 @media (max-width: 360px) {
     .ad-categories { padding: 13px; }
     .ad-category { gap: 8px; padding: 10px 6px; }

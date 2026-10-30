@@ -316,6 +316,12 @@
                 badge.prepend(chart);value.appendChild(badge);
             } else if (isIncome) value.appendChild(el('span', 'ad-record-share', 'Ingreso'));
             card.append(figure, copy, value, icon('chevron_right'));
+            if (isIncome) {
+                const artwork = el('span', 'ad-income-art');
+                artwork.setAttribute('aria-hidden', 'true');
+                artwork.innerHTML = '<svg viewBox="0 0 160 100" fill="none" focusable="false"><g transform="rotate(-18 95 50)"><rect x="52" y="15" width="90" height="50" rx="9"/><rect x="42" y="27" width="90" height="50" rx="9"/><circle cx="87" cy="52" r="12"/><path d="M53 40h8m52 24h8M87 45v14m-4-11h5a3 3 0 0 1 0 6h-5"/></g><path d="M27 21v12m-6-6h12M141 80v8m-4-4h8"/></svg>';
+                card.appendChild(artwork);
+            }
             card.addEventListener('click', () => {
                 closeM(overlay.id);
                 window.viewRecord(r.kind, r.id);
