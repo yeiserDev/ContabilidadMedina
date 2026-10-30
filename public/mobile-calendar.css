@@ -287,6 +287,18 @@
 .ad-category-name { font-weight: 500; line-height: 1.4; color: var(--ac-secondary); }
 .ad-category-amount { color: var(--ac-ink); font-size: 19px; font-weight: 650; letter-spacing: -.03em; line-height: 1.2; overflow-wrap: anywhere; }
 .ad-category-share-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ad-category:not(:only-child) { flex-direction: row; gap: 8px; padding: 12px 8px; text-align: left; }
+.ad-category:not(:only-child) .ad-category-gauge { width: 38px; height: 38px; flex-basis: 38px; }
+.ad-category:not(:only-child) .ad-category-percent { font-size: 11px; }
+.ad-category:not(:only-child) .ad-category-label { flex: none; justify-content: flex-start; min-height: 0; font-size: 11px; }
+.ad-category:not(:only-child) .ad-category-copy { gap: 4px; }
+.ad-category:not(:only-child) .ad-category-symbol { display: none; }
+.ad-category:not(:only-child) .ad-category-amount { font-size: 14px; }
+@media (max-width: 360px) {
+    .ad-category:not(:only-child) { gap: 6px; padding: 10px 5px; }
+    .ad-category:not(:only-child) .ad-category-gauge { width: 34px; height: 34px; flex-basis: 34px; }
+    .ad-category:not(:only-child) .ad-category-amount { font-size: 13px; }
+}
 @keyframes ad-gauge-reveal { from { stroke-dashoffset: 100; } to { stroke-dashoffset: var(--share-offset); } }
 @media (prefers-reduced-motion: reduce) { .activity-day-overlay.active .ad-gauge-fill { animation: none; } }
 .ad-list-heading { margin: 18px 3px 11px; }
