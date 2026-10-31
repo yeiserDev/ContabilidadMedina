@@ -301,6 +301,44 @@ document.getElementById('confirmAction').addEventListener('click',()=>{if(pendin
 let editDepositId=null, editExpenseId=null, editLoanId=null;
 
 // ====== RENDER KPIs ======
+function annualTotals(year) {
+    const inYear = records => records.filter(record => String(record.date).slice(0, 4) === String(year));
+    const incomeRows = inYear(deposits), expenseRows = inYear(expenses);
+    const sum = records => records.reduce((total, record) => total + (Number(record.amount) || 0), 0);
+    const income = sum(incomeRows), spending = sum(expenseRows);
+    return {
+        income, spending, moved: income + spending, net: income - spending,
+        days: new Set([...incomeRows, ...expenseRows].map(record => String(record.date).slice(0, 10))).size,
+        count: incomeRows.length + expenseRows.length
+    };
+}
+
+function renderAnnualSummary() {
+    const select = document.getElementById('summaryYear');
+    const currentYear = Number(new Intl.DateTimeFormat('en', { year: 'numeric', timeZone: 'America/Lima' }).format(new Date()));
+    const selected = Number(select.value) || currentYear;
+    const years = new Set([currentYear, selected]);
+    [...deposits, ...expenses].forEach(record => {
+        const year = Number(String(record.date).slice(0, 4));
+        if (Number.isInteger(year) && year >= 1900 && year <= 9999) years.add(year);
+    });
+    select.replaceChildren(...[...years].sort((a, b) => b - a).map(year => new Option(String(year), String(year))));
+    select.value = String(selected);
+    const totals = annualTotals(selected);
+    for (const [id, value] of Object.entries({ totalIncome: totals.income, totalExpenses: totals.spending, cycleNet: totals.moved, annualNet: totals.net })) {
+        const element = document.getElementById(id);
+        element.textContent = money(value);
+        element.dataset.rawVal = value;
+    }
+    document.getElementById('annualNet').classList.toggle('is-neg', totals.net < 0);
+    document.getElementById('cycleNetSub').textContent = 'Ingresos + gastos · enero a diciembre';
+    document.getElementById('cycleNetSub').className = 'kpi-delta annual-note';
+    document.getElementById('totalDays').textContent = totals.days;
+    document.getElementById('depositsSub').textContent = `${totals.count} ${totals.count === 1 ? 'movimiento' : 'movimientos'}`;
+    document.getElementById('incomeDelta').textContent = '';
+}
+document.getElementById('summaryYear').addEventListener('change', renderAnnualSummary);
+
 function renderKPIs(){
     const balEl = document.getElementById('currentBalance');
     animateCount(balEl, totalBal());
@@ -310,54 +348,11 @@ function renderKPIs(){
 
     const cycles = typeof getCycles !== 'undefined' ? getCycles() : [];
     const curC = cycles[0];
-    const prevC = cycles[1];
     const inCycle = (arr, c) => c ? arr.filter(r => { const d = d2(r.date); return d >= c.start && d <= c.end; }) : [];
 
-    const curDeps = inCycle(deposits, curC), curExps = inCycle(expenses, curC);
-    const curInc = curDeps.reduce((s,d)=>s+ +d.amount,0);
-    const prevInc = inCycle(deposits, prevC).reduce((s,d)=>s+ +d.amount,0);
-    const curExp = curExps.reduce((s,e)=>s+ +e.amount,0);
-    const prevExp = inCycle(expenses, prevC).reduce((s,e)=>s+ +e.amount,0);
+    const curExps = inCycle(expenses, curC);
 
-    // Las cifras se miden sobre el ciclo actual, no sobre el histórico.
-    // Antes el número era el total de siempre pero el delta decía "vs ciclo
-    // anterior": dos cosas distintas en la misma tarjeta, y la variación no
-    // significaba nada contra un acumulado que sólo crece.
-    animateCount(document.getElementById('totalIncome'), curInc);
-    animateCount(document.getElementById('totalExpenses'), curExp);
-
-    const net = curInc - curExp;
-    const netEl = document.getElementById('cycleNet');
-    if (netEl) { animateCount(netEl, Math.abs(net)); netEl.classList.toggle('is-neg', net < 0); }
-    const netSub = document.getElementById('cycleNetSub');
-    if (netSub) {
-        netSub.textContent = net >= 0 ? 'A favor en este ciclo' : 'En contra en este ciclo';
-        netSub.className = 'kpi-delta ' + (net >= 0 ? 'up' : 'down');
-    }
-
-    // También por ciclo: antes contaba los días de todo el histórico mientras
-    // el subtítulo hablaba de movimientos del ciclo, dos escalas en la misma
-    // tarjeta.
-    document.getElementById('totalDays').textContent =
-        new Set([...curDeps, ...curExps].map(r => r.date)).size;
-    const depSub = document.getElementById('depositsSub');
-    if (depSub) {
-        const n = curDeps.length + curExps.length;
-        depSub.textContent = n === 1 ? '1 movimiento' : `${n} movimientos`;
-        depSub.className = 'kpi-delta neutral';
-    }
-
-    const setDelta=(elId,cur,prev)=>{
-        const el=document.getElementById(elId);if(!el)return;
-        if(prev===0&&cur===0){el.textContent='';el.className='kpi-delta';return;}
-        if(prev===0){el.textContent='Nuevo ciclo';el.className='kpi-delta neutral';return;}
-        const pct=Math.abs((cur-prev)/prev*100).toFixed(0);
-        const up=cur>=prev;
-        el.textContent=`${up?'▲':'▼'} ${pct}% vs ciclo ant.`;
-        el.className=`kpi-delta ${up?'up':'down'}`;
-    };
-    setDelta('incomeDelta',curInc,prevInc);
-    setDelta('expenseDelta',curExp,prevExp);
+    renderAnnualSummary();
 
     renderPayMethods(curExps);
 }
@@ -689,28 +684,97 @@ window.toggleAiAnalysis = function() {
         saveLocal('ct_ai_open', true);
     }
 };
+function renameCategory(oldName, newName) {
+    const name = newName.trim();
+    if (!name) return 'Escribe un nombre para el rubro.';
+    if (categories.some(category => category !== oldName && category.toLocaleLowerCase('es') === name.toLocaleLowerCase('es'))) return 'Ya existe un rubro con ese nombre.';
+    const index = categories.indexOf(oldName);
+    if (index < 0) return 'Este rubro ya no existe. Vuelve a abrir la lista.';
+    if (name === oldName) return '';
+    categories[index] = name;
+    expenses.forEach(expense => { if (expense.category === oldName) expense.category = name; });
+    if (Object.hasOwn(budgets, oldName)) {
+        Object.defineProperty(budgets, name, { value: budgets[oldName], writable: true, enumerable: true, configurable: true });
+        delete budgets[oldName];
+    }
+    return '';
+}
+
 function renderCatList(){
-    const ul=document.getElementById('categoryList');ul.innerHTML='';
-    categories.forEach((c,i)=>{
-        const li=document.createElement('li');
-        li.style.cssText='flex-direction:column;align-items:stretch;gap:2px;';
-        li.innerHTML=`<div style="display:flex;align-items:center;gap:4px;width:100%"><span class="sl-cat-row"><span class="sl-cat-dot" style="background:${COLORS[i%COLORS.length]}"></span>${c}</span><button class="cat-del" data-i="${i}"><span class="material-symbols-outlined">close</span></button></div><div class="cat-budget-input-wrap"><span class="cat-budget-lbl">Presup. S/</span><input type="number" class="cat-budget-inp" data-cat="${c}" placeholder="—" step="0.01" min="0" value="${budgets[c]||''}"></div>`;
+    const ul = document.getElementById('categoryList');
+    ul.replaceChildren();
+    categories.forEach((category, index) => {
+        const li = document.createElement('li');
+        li.className = 'category-manager-row';
+        li.innerHTML = `<div class="sl-cat-row"><span class="sl-cat-dot"></span><span class="category-name"></span></div>
+            <div class="cat-budget-input-wrap"><label class="cat-budget-lbl">Presup. S/</label><input type="number" class="cat-budget-inp" placeholder="—" step="0.01" min="0" inputmode="decimal"></div>
+            <div class="category-actions"><button type="button" class="category-action category-rename"><span class="material-symbols-outlined" aria-hidden="true">edit</span>Renombrar</button><button type="button" class="category-action category-delete"><span class="material-symbols-outlined" aria-hidden="true">delete</span>Eliminar</button></div>
+            <form class="category-editor" hidden><label>Nombre del rubro<input class="category-name-input" type="text" required></label><p class="category-error" role="alert"></p><div class="category-actions"><button type="submit" class="category-action category-save">Guardar</button><button type="button" class="category-action category-cancel">Cancelar</button></div></form>`;
+        li.querySelector('.category-name').textContent = category;
+        li.querySelector('.sl-cat-dot').style.background = COLORS[index % COLORS.length];
+        const budgetInput = li.querySelector('.cat-budget-inp');
+        budgetInput.id = `category-budget-${index}`;
+        budgetInput.value = budgets[category] || '';
+        budgetInput.setAttribute('aria-label', `Presupuesto en soles para ${category}`);
+        li.querySelector('.cat-budget-lbl').htmlFor = budgetInput.id;
+        budgetInput.addEventListener('change', () => {
+            if (!currentUser) {
+                budgetInput.value = budgets[category] || '';
+                toast('Inicia sesión para realizar esta acción', 'err');
+                return;
+            }
+            const value = Number(budgetInput.value);
+            if (!Number.isFinite(value) || value < 0) {
+                budgetInput.value = budgets[category] || '';
+                toast('Ingresa un presupuesto válido', 'err');
+                return;
+            }
+            if (value === 0) delete budgets[category];
+            else Object.defineProperty(budgets, category, { value, writable: true, enumerable: true, configurable: true });
+            persist(); renderCatBreakdown();
+        });
+        const editor = li.querySelector('.category-editor');
+        const nameInput = li.querySelector('.category-name-input');
+        const actions = li.querySelector('.category-actions');
+        const renameButton = li.querySelector('.category-rename');
+        renameButton.setAttribute('aria-label', `Renombrar ${category}`);
+        renameButton.addEventListener('click', requireAuth(() => {
+            nameInput.value = category;
+            editor.hidden = false;
+            actions.hidden = true;
+            nameInput.focus();
+            nameInput.select();
+        }));
+        const cancel = () => {
+            editor.hidden = true;
+            actions.hidden = false;
+            li.querySelector('.category-error').textContent = '';
+            renameButton.focus();
+        };
+        li.querySelector('.category-cancel').addEventListener('click', cancel);
+        editor.addEventListener('keydown', event => {
+            if (event.key === 'Escape') { event.stopPropagation(); cancel(); }
+        });
+        editor.addEventListener('submit', event => {
+            event.preventDefault();
+            requireAuth(() => {
+                const error = renameCategory(category, nameInput.value);
+                if (error) { li.querySelector('.category-error').textContent = error; nameInput.focus(); return; }
+                persist(); renderAll(); toast('Rubro renombrado');
+                document.querySelectorAll('.category-rename')[index]?.focus();
+            })();
+        });
+        const deleteButton = li.querySelector('.category-delete');
+        deleteButton.setAttribute('aria-label', `Eliminar ${category}`);
+        deleteButton.addEventListener('click', requireAuth(() => {
+            document.getElementById('sidebarOverlay').click();
+            confirm_('Eliminar rubro', `¿Eliminar “${category}” de la lista? Sus gastos históricos se conservarán con ese nombre.`, requireAuth(() => {
+                categories = categories.filter(name => name !== category);
+                delete budgets[category];
+                persist(); renderAll(); toast('Rubro eliminado. Sus movimientos se conservaron.');
+            }));
+        }));
         ul.appendChild(li);
-    });
-    ul.querySelectorAll('.cat-del').forEach(b=>{
-        b.addEventListener('click',()=>{
-            const idx=+b.dataset.i,nm=categories[idx],used=expenses.some(e=>e.category===nm);
-            const doIt=()=>{categories.splice(idx,1);delete budgets[nm];persist();renderAll();toast(`Rubro "${nm}" eliminado`);};
-            if(used)confirm_('Eliminar Rubro',`"${nm}" tiene gastos. ¿Eliminar?`,doIt);else doIt();
-        });
-    });
-    ul.querySelectorAll('.cat-budget-inp').forEach(inp=>{
-        inp.addEventListener('change',()=>{
-            const v=parseFloat(inp.value);
-            if(isNaN(v)||v<=0)delete budgets[inp.dataset.cat];
-            else budgets[inp.dataset.cat]=v;
-            persist();renderCatBreakdown();
-        });
     });
 }
 function populateCatSelect(){
@@ -1296,10 +1360,17 @@ document.getElementById('sidebarOverlay').addEventListener('click',()=>{
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('active');
 });
+document.getElementById('sidebarClose').addEventListener('click', () => {
+    document.getElementById('sidebarOverlay').click();
+    const trigger = window.matchMedia('(max-width: 768px)').matches
+        ? document.getElementById('bnavMenu') : document.getElementById('sidebarToggle');
+    trigger?.focus();
+});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){
     document.querySelectorAll('.modal-bg.active').forEach(m=>closeM(m.id));
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('active');
+    document.body.style.overflow = '';
 }});
 
 // ====== CLOCK ======

@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="receipt-scan.css?v=3">
     <link rel="stylesheet" href="mobile-calendar.css?v=98">
     <link rel="stylesheet" href="distribution.css?v=1">
+    <link rel="stylesheet" href="sidebar.css?v=2">
     <style>
         /* ===== SPLASH SCREEN (rápido y profesional, ~0.6s total) ===== */
         #splash {
@@ -200,8 +201,17 @@
     <div class="layout">
         <!-- LEFT SIDEBAR -->
         <aside class="sidebar-left" id="sidebar">
+            <div class="sidebar-toolbar">
+                <span>Mi resumen</span>
+                <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Cerrar panel">
+                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                </button>
+            </div>
             <section class="sl-block cycle-summary" aria-labelledby="cycleSummaryTitle">
-                <h2 id="cycleSummaryTitle" class="summary-title">Resumen del ciclo</h2>
+                <div class="annual-heading">
+                    <h2 id="cycleSummaryTitle" class="summary-title">Resumen anual</h2>
+                    <select id="summaryYear" aria-label="Año del resumen"></select>
+                </div>
                 <div class="summary-ledger">
                     <div class="summary-row">
                         <span>Ingresos</span>
@@ -212,9 +222,13 @@
                         <span>Gastos</span>
                         <strong id="totalExpenses">S/ 0.00</strong>
                     </div>
+                    <div class="summary-row annual-net">
+                        <span>Saldo neto</span>
+                        <strong id="annualNet">S/ 0.00</strong>
+                    </div>
                 </div>
                 <div class="summary-result">
-                    <span class="summary-label">Neto del ciclo</span>
+                    <span class="summary-label">Total movido en el año</span>
                     <strong class="summary-value" id="cycleNet">S/ 0.00</strong>
                     <div class="kpi-delta" id="cycleNetSub"></div>
                 </div>
@@ -227,8 +241,8 @@
             <div class="sl-block">
                 <div class="sl-heading"><span class="material-symbols-outlined">label</span> Administrar Rubros</div>
                 <div class="sl-add">
-                    <input type="text" id="newCategoryInput" placeholder="Nuevo rubro..." class="sl-input">
-                    <button id="addCategoryBtn" class="sl-btn-add"><span
+                    <input type="text" id="newCategoryInput" placeholder="Nuevo rubro..." class="sl-input" aria-label="Nombre del nuevo rubro">
+                    <button id="addCategoryBtn" class="sl-btn-add" aria-label="Añadir rubro"><span
                             class="material-symbols-outlined">add</span></button>
                 </div>
                 <ul id="categoryList" class="sl-list"></ul>
@@ -884,7 +898,7 @@
     <script src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="escenas.js?v=72"></script>
-    <script src="app.js?v=86"></script>
+    <script src="app.js?v=88"></script>
     <script src="distribution.js?v=1"></script>
     <script src="receipt-scan.js?v=6"></script>
     <script src="ui-controls.js"></script>
