@@ -26,8 +26,10 @@
     <link rel="stylesheet" href="styles.css?v=87">
     <link rel="stylesheet" href="receipt-scan.css?v=3">
     <link rel="stylesheet" href="mobile-calendar.css?v=98">
-    <link rel="stylesheet" href="distribution.css?v=1">
-    <link rel="stylesheet" href="sidebar.css?v=2">
+    <link rel="stylesheet" href="distribution.css?v=4">
+    <link rel="stylesheet" href="deposit-orbit.css?v=2">
+    <link rel="stylesheet" href="record-detail.css?v=1">
+    <link rel="stylesheet" href="sidebar.css?v=3">
     <style>
         /* ===== SPLASH SCREEN (rápido y profesional, ~0.6s total) ===== */
         #splash {
@@ -335,6 +337,7 @@
                 <div class="chart-card distribution-card">
                     <div class="cashflow-heading">
                         <div><h2>Distribución por rubro</h2><button type="button" id="distributionCycle" class="dist-cycle">Elegir ciclo <span aria-hidden="true">⌄</span></button></div>
+                        <div class="dist-spent" aria-live="polite"><span>Gastado</span><strong id="distributionSpent">S/ 0.00</strong></div>
                     </div>
                     <div class="dist-controls">
                         <div class="dist-segment" role="group" aria-label="Mostrar distribución como"><button type="button" data-dist-unit="percent" aria-pressed="true">%</button><button type="button" data-dist-unit="money" aria-pressed="false">S/</button></div>
@@ -458,26 +461,16 @@
                     <div class="cal-grid cal-days cal-days-sync"></div>
                 </div>
             </div>
-            <!-- ÚLTIMO DEPÓSITO + GASTOS MÁS FUERTES -->
-            <section class="sr-block deposit-panel" aria-labelledby="lastDepositTitle">
-                <h2 class="insight-title" id="lastDepositTitle">Último depósito <span class="material-symbols-outlined" aria-hidden="true">south_west</span></h2>
-                <div id="lastDepositCard"></div>
+            <!-- ÓRBITA: último depósito como cheque, con los rubros más
+                 fuertes del ciclo girando alrededor (deposit-orbit.js) -->
+            <section class="sr-block orbit-card" aria-labelledby="orbitTitle">
+                <div class="orbit-head">
+                    <h2 class="insight-title" id="orbitTitle">Último depósito</h2>
+                    <span id="orbitWhen" class="orbit-when"></span>
+                </div>
+                <div id="depositOrbit" class="orbit-stage"></div>
+                <p id="orbitHint" class="orbit-hint" aria-live="polite"></p>
             </section>
-            <section class="sr-block activity-summary" aria-labelledby="topExpensesTitle">
-                <h2 class="insight-title" id="topExpensesTitle">Mayores gastos</h2>
-                <p class="insight-subtitle">En este ciclo</p>
-                <div id="topExpenses" class="topx-list"></div>
-            </section>
-
-            <!-- REMINDERS -->
-            <div class="sr-block">
-                <div class="sr-heading"><span class="material-symbols-outlined">notifications_active</span>
-                    Recordatorios</div>
-                <div id="remindersDeck"></div>
-                <div id="remindersList" class="reminders-list"></div>
-                <button id="addReminderBtn" class="rem-add-btn"><span class="material-symbols-outlined">add</span>
-                    Agregar recordatorio</button>
-            </div>
         </aside>
     </div>
 
@@ -897,9 +890,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="escenas.js?v=72"></script>
-    <script src="app.js?v=88"></script>
-    <script src="distribution.js?v=1"></script>
+    <script src="escenas.js?v=73"></script>
+    <script src="app.js?v=90"></script>
+    <script src="distribution.js?v=4"></script>
+    <script src="deposit-orbit.js?v=2"></script>
+    <script src="record-detail.js?v=1"></script>
     <script src="receipt-scan.js?v=6"></script>
     <script src="ui-controls.js"></script>
     <script src="mobile-shell.js?v=84"></script>

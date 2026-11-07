@@ -136,3 +136,50 @@
 @media (prefers-reduced-transparency: reduce) {
     .sidebar-left { background: var(--drawer-surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
+
+/* ---- Compact rubro list: one line per rubro ----
+   Dot, name, a small budget field and icon actions that appear on hover
+   (always visible on touch). Renaming swaps the line for an inline editor. */
+.sidebar-left .sl-add { margin-bottom: 10px; }
+.sidebar-left .sl-input { min-height: 40px; padding: 9px 14px; border-radius: 12px; font-size: 14px; }
+.sidebar-left .sl-btn-add { width: 40px; height: 40px; }
+.sidebar-left .sl-list { border-radius: 16px; }
+.sidebar-left .sl-list .category-manager-row { padding: 0 6px 0 14px; gap: 0; }
+.sidebar-left .sl-list li + li::before { left: 32px; }
+.cat-line { display: flex; align-items: center; gap: 10px; min-height: 46px; }
+.cat-line .category-name { flex: 1; min-width: 0; font-size: 13.5px; color: var(--drawer-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-left .cat-line .cat-budget-input-wrap {
+    flex: none; display: flex; align-items: center; gap: 3px; margin: 0;
+    height: 28px; padding: 0 8px; border-radius: 8px; background: var(--drawer-surface);
+    transition: box-shadow .15s ease;
+}
+.sidebar-left .cat-line .cat-budget-input-wrap:focus-within { box-shadow: 0 0 0 2px var(--drawer-accent); }
+.sidebar-left .cat-line .cat-budget-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.cat-budget-cur { color: var(--drawer-muted); font-size: 11px; }
+.sidebar-left .cat-line .cat-budget-inp {
+    width: 46px; height: 28px; padding: 0; border-radius: 0; background: transparent;
+    font-size: 12.5px; text-align: right; -moz-appearance: textfield; appearance: textfield;
+}
+.sidebar-left .cat-line .cat-budget-inp:focus-visible { outline: none; }
+.sidebar-left .cat-line .cat-budget-inp::placeholder { color: var(--drawer-muted); }
+.cat-line .cat-budget-inp::-webkit-outer-spin-button,
+.cat-line .cat-budget-inp::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.sidebar-left .cat-line .category-actions { flex: none; margin: 0; gap: 0; flex-wrap: nowrap; }
+.sidebar-left .cat-line .category-action {
+    width: 30px; height: 30px; min-height: 30px; padding: 0; border-radius: 8px;
+    background: transparent; color: var(--drawer-muted);
+}
+.cat-line .category-action .material-symbols-outlined { font-size: 18px; }
+.sidebar-left .cat-line .category-rename:hover { background: var(--drawer-surface); color: var(--drawer-accent); }
+.sidebar-left .cat-line .category-delete:hover { background: rgba(184, 50, 38, .08); color: #b83226; }
+@media (hover: hover) and (pointer: fine) {
+    .sidebar-left .cat-line .category-actions { width: 0; opacity: 0; overflow: hidden; transition: width .18s ease, opacity .15s ease; }
+    .sidebar-left .category-manager-row:hover .category-actions,
+    .sidebar-left .category-manager-row:focus-within .category-actions { width: 60px; opacity: 1; }
+}
+.sidebar-left .category-manager-row.is-editing .cat-line { display: none; }
+.sidebar-left .category-manager-row .category-editor { margin: 0; padding: 12px 8px 12px 0; }
+.sidebar-left .category-editor label { font-size: 12px; }
+.sidebar-left .category-name-input { min-height: 38px; padding: 8px 10px; font-size: 14px; }
+.category-editor-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+.sidebar-left .category-editor-actions .category-action { min-height: 32px; padding: 0 12px; border-radius: 8px; font-size: 13px; }

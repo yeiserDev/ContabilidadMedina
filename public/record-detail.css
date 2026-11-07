@@ -1,0 +1,59 @@
+/* Record detail polish: the receipt fits the height of the details column
+   (no empty gap under the buttons), long receipts can be scanned on hover,
+   receipts "print" in when loaded, and the scene follows the pointer. */
+@media (min-width: 768px) {
+    /* contain: size takes the receipt column out of the row's height, so the
+       row is as tall as the details column and the receipt fills exactly that. */
+    #viewRecordModal .modal--detail.vr-has-photos .vr-side { contain: size; min-height: 380px; }
+    #viewRecordModal .modal--detail.vr-has-photos .vr-photos { flex: 1 1 auto; min-height: 0; align-items: stretch; padding-bottom: 0; }
+    #viewRecordModal .modal--detail.vr-has-photos .vr-photo {
+        height: 100%;
+        max-height: none;
+        object-fit: contain;
+        object-position: 50% 0%;
+    }
+    /* Tall receipts (Yape, long tickets): fill the frame from the top and
+       glide down to the end while the pointer rests on them. */
+    #viewRecordModal .modal--detail.vr-has-photos .vr-photo.is-tall {
+        object-fit: cover;
+        transition: object-position .7s cubic-bezier(.4, 0, .2, 1), box-shadow .2s ease;
+    }
+    #viewRecordModal .modal--detail.vr-has-photos .vr-photo.is-tall:hover {
+        transform: none;
+        object-position: 50% 100%;
+        transition: object-position var(--scan, 4s) cubic-bezier(.45, 0, .25, 1), box-shadow .2s ease;
+    }
+}
+
+/* Receipt reveal: a soft skeleton while loading, then it prints top-down. */
+#viewRecordModal .vr-photo--loading {
+    min-height: 240px;
+    background-color: rgba(20, 20, 19, 0.03);
+    background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.7) 50%, transparent 70%);
+    background-size: 220% 100%;
+    animation: vrSkeleton 1.3s ease-in-out infinite;
+}
+[data-theme="dark"] #viewRecordModal .vr-photo--loading {
+    background-color: rgba(255, 255, 255, 0.04);
+    background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.07) 50%, transparent 70%);
+}
+@keyframes vrSkeleton { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+#viewRecordModal .vr-photo--loaded { animation: vrPrint .85s cubic-bezier(.2, .8, .2, 1) backwards; }
+@keyframes vrPrint {
+    from { clip-path: inset(0 0 100% 0 round 14px); opacity: .3; filter: blur(6px); transform: translateY(-6px); }
+    55% { filter: blur(0); }
+    to { clip-path: inset(0 0 0 0 round 14px); opacity: 1; transform: none; }
+}
+
+/* Scene parallax: the illustration drifts a few pixels toward the pointer. */
+#viewRecordModal .vr-scene .es {
+    transform: scale(1.045) translate(var(--vr-px, 0px), var(--vr-py, 0px));
+    transition: transform .6s cubic-bezier(.2, .8, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #viewRecordModal .vr-photo--loaded,
+    #viewRecordModal .vr-photo--loading { animation: none; }
+    #viewRecordModal .vr-scene .es { transform: none; transition: none; }
+    #viewRecordModal .modal--detail.vr-has-photos .vr-photo.is-tall:hover { object-position: 50% 0%; }
+}

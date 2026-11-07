@@ -706,10 +706,12 @@ function renderCatList(){
     categories.forEach((category, index) => {
         const li = document.createElement('li');
         li.className = 'category-manager-row';
-        li.innerHTML = `<div class="sl-cat-row"><span class="sl-cat-dot"></span><span class="category-name"></span></div>
-            <div class="cat-budget-input-wrap"><label class="cat-budget-lbl">Presup. S/</label><input type="number" class="cat-budget-inp" placeholder="—" step="0.01" min="0" inputmode="decimal"></div>
-            <div class="category-actions"><button type="button" class="category-action category-rename"><span class="material-symbols-outlined" aria-hidden="true">edit</span>Renombrar</button><button type="button" class="category-action category-delete"><span class="material-symbols-outlined" aria-hidden="true">delete</span>Eliminar</button></div>
-            <form class="category-editor" hidden><label>Nombre del rubro<input class="category-name-input" type="text" required></label><p class="category-error" role="alert"></p><div class="category-actions"><button type="submit" class="category-action category-save">Guardar</button><button type="button" class="category-action category-cancel">Cancelar</button></div></form>`;
+        // One compact line per rubro: color, name, budget and icon actions.
+        li.innerHTML = `<div class="cat-line"><span class="sl-cat-dot"></span><span class="category-name"></span>
+            <div class="cat-budget-input-wrap"><label class="cat-budget-lbl">Presupuesto</label><span class="cat-budget-cur" aria-hidden="true">S/</span><input type="number" class="cat-budget-inp" placeholder="—" step="0.01" min="0" inputmode="decimal"></div>
+            <div class="category-actions"><button type="button" class="category-action category-rename" title="Renombrar"><span class="material-symbols-outlined" aria-hidden="true">edit</span></button><button type="button" class="category-action category-delete" title="Eliminar"><span class="material-symbols-outlined" aria-hidden="true">delete</span></button></div></div>
+            <form class="category-editor" hidden><label>Nombre del rubro<input class="category-name-input" type="text" required></label><p class="category-error" role="alert"></p><div class="category-editor-actions"><button type="button" class="category-action category-cancel">Cancelar</button><button type="submit" class="category-action category-save">Guardar</button></div></form>`;
+        li.querySelector('.category-name').title = category;
         li.querySelector('.category-name').textContent = category;
         li.querySelector('.sl-cat-dot').style.background = COLORS[index % COLORS.length];
         const budgetInput = li.querySelector('.cat-budget-inp');
@@ -735,19 +737,18 @@ function renderCatList(){
         });
         const editor = li.querySelector('.category-editor');
         const nameInput = li.querySelector('.category-name-input');
-        const actions = li.querySelector('.category-actions');
         const renameButton = li.querySelector('.category-rename');
         renameButton.setAttribute('aria-label', `Renombrar ${category}`);
         renameButton.addEventListener('click', requireAuth(() => {
             nameInput.value = category;
             editor.hidden = false;
-            actions.hidden = true;
+            li.classList.add('is-editing');
             nameInput.focus();
             nameInput.select();
         }));
         const cancel = () => {
             editor.hidden = true;
-            actions.hidden = false;
+            li.classList.remove('is-editing');
             li.querySelector('.category-error').textContent = '';
             renameButton.focus();
         };
@@ -1340,7 +1341,7 @@ document.getElementById('monthFilter').addEventListener('change',(e)=>{
     try{localStorage.setItem('ct_selected_cycle',e.target.value);}catch{}
     const mobSel = document.getElementById('mobileMonthFilter');
     if(mobSel) mobSel.value = e.target.value;
-    renderDaily(); renderKPIs(); renderCharts(); renderCatBreakdown(); renderCalendar();
+    renderDaily(); renderKPIs(); renderCharts(); renderCatBreakdown(); renderCalendar(); renderSidebarInsights();
 });
 const mobSel = document.getElementById('mobileMonthFilter');
 if(mobSel) mobSel.addEventListener('change',(e)=>{ 
@@ -1460,45 +1461,9 @@ window.scrollToDate = function(dt) {
 const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio',
     'julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
-// ====== PANEL DERECHO: último depósito + gastos más fuertes ======
+// ====== PANEL DERECHO: órbita del último depósito (deposit-orbit.js) ======
 function renderSidebarInsights(){
-    const cardEl = document.getElementById('lastDepositCard');
-    const listEl = document.getElementById('topExpenses');
-    if(!cardEl || !listEl) return;
-
-    // --- Último depósito ---
-    const ult = [...deposits].sort((a,b)=>d2(b.date)-d2(a.date))[0];
-    if(!ult){
-        cardEl.innerHTML = `<div class="sr-empty">Todavía no hay depósitos registrados</div>`;
-    }else{
-        const hoy = new Date(); hoy.setHours(12,0,0,0);
-        const dias = Math.round((hoy - d2(ult.date)) / 86400000);
-        const cuando = dias<=0 ? 'Hoy' : dias===1 ? 'Ayer' : `Hace ${dias} días`;
-        cardEl.innerHTML = `<button type="button" class="deposit-summary" onclick="viewRecord('deposit','${ult.id}')" title="Ver detalle del depósito">
-            <span class="deposit-amount">+${money(ult.amount)}</span>
-            <span class="deposit-label">Depósito ${ult.type||''}</span>
-            <span class="deposit-meta">${dayNum(ult.date)} ${monShort(ult.date)} · ${cuando}</span>
-            <span class="deposit-link">Ver movimiento <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></span>
-        </button>`;
-    }
-
-    // --- Gastos más fuertes del ciclo actual ---
-    const cycles = typeof getCycles!=='undefined' ? getCycles() : [];
-    const c = cycles[0];
-    const enCiclo = c ? expenses.filter(e=>{const d=d2(e.date);return d>=c.start&&d<=c.end;}) : expenses.slice();
-    const top = [...enCiclo].sort((a,b)=>(+b.amount)-(+a.amount)).slice(0,5);
-
-    if(!top.length){
-        listEl.innerHTML = `<div class="sr-empty">Sin gastos en este ciclo</div>`;
-        return;
-    }
-    listEl.innerHTML = top.map(e=>{
-        return `<button type="button" class="expense-summary" onclick="viewRecord('expense','${e.id}')" title="Ver detalle del gasto">
-            <span class="expense-summary-desc">${e.description||e.category}</span>
-            <span class="expense-summary-meta">${e.category} · ${dayNum(e.date)} ${monShort(e.date)}</span>
-            <span class="expense-summary-amount">${money(e.amount)} <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></span>
-        </button>`;
-    }).join('');
+    if (typeof window.renderDepositOrbit === 'function') window.renderDepositOrbit();
 }
 
 function renderReminders(){
@@ -1571,7 +1536,7 @@ function renderReminders(){
     });
 }
 window.deleteReminder=requireAuth(function(id){confirm_('Eliminar Recordatorio','¿Eliminar este recordatorio?',()=>{reminders=reminders.filter(r=>r.id!==id);persist();renderReminders();toast('Recordatorio eliminado');});});
-document.getElementById('addReminderBtn').addEventListener('click',requireAuth(()=>{document.getElementById('reminderModalTitle').textContent='Nuevo Recordatorio';document.getElementById('reminderDesc').value='';document.getElementById('reminderDay').value='';document.getElementById('reminderAmount').value='';document.getElementById('reminderRepeat').value='mensual';openM('reminderModal');setTimeout(()=>document.getElementById('reminderDesc').focus(),120);}));
+document.getElementById('addReminderBtn')?.addEventListener('click',requireAuth(()=>{document.getElementById('reminderModalTitle').textContent='Nuevo Recordatorio';document.getElementById('reminderDesc').value='';document.getElementById('reminderDay').value='';document.getElementById('reminderAmount').value='';document.getElementById('reminderRepeat').value='mensual';openM('reminderModal');setTimeout(()=>document.getElementById('reminderDesc').focus(),120);}));
 document.getElementById('saveReminder').addEventListener('click',()=>{
     const desc=document.getElementById('reminderDesc').value.trim();const day=parseInt(document.getElementById('reminderDay').value);const repeat=document.getElementById('reminderRepeat').value;
     if(!desc||isNaN(day)||day<1||day>31){toast('Completa correctamente','err');return;}

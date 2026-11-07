@@ -362,4 +362,5 @@
     };
 
     window.escenaMovimiento.familias = Object.keys(ESCENAS);
+    window.escenaMovimiento.familia = familia;
 })();
