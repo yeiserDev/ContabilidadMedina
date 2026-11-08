@@ -1,0 +1,261 @@
+/* Balance gauge: a quiet instrument-cluster dial for the share of the last
+   deposit still left, and a ranked breakdown of where the rest went. Same
+   hairlines, tokens and type as the rest of the dashboard. */
+.gauge-card { padding-bottom: 14px; }
+.gauge-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; }
+.gauge-head .insight-title { margin: 0; white-space: nowrap; }
+.gauge-when { flex: none; font-size: 11px; color: var(--slate-gray); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ---- Dial ---- */
+.bg-gauge {
+    --tone: #16a34a;
+    display: block;
+    width: 100%;
+    max-width: 250px;
+    margin: 6px auto 0;
+    padding: 0;
+    border: 0;
+    border-radius: 14px;
+    background: none;
+    color: var(--ink-black);
+    font-family: inherit;
+    cursor: pointer;
+}
+.bg-gauge.is-mid { --tone: #d97706; }
+.bg-gauge.is-low { --tone: #dc2626; }
+.bg-gauge:focus-visible { outline: 2px solid var(--link-blue); outline-offset: 2px; }
+.bg-dial { display: block; width: 100%; height: auto; overflow: visible; }
+.bg-track, .bg-reserve, .bg-value { fill: none; stroke-linecap: round; }
+.bg-track { stroke: var(--line); stroke-width: 9; }
+/* Reserve zone (last 20 %) marked faintly in red, like a fuel gauge. */
+.bg-reserve { stroke: rgba(220, 38, 38, 0.16); stroke-width: 9; stroke-linecap: butt; }
+.bg-value { stroke: var(--tone); stroke-width: 9; transition: stroke .4s ease; }
+.bg-ticks line { stroke: var(--slate-gray); stroke-width: 1; opacity: .45; }
+.bg-ticks line.is-major { stroke-width: 1.6; opacity: .85; }
+.bg-num { fill: var(--slate-gray); font-size: 8.5px; font-weight: 600; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
+.bg-needle path { fill: var(--ink-black); }
+.bg-hub { fill: var(--white); stroke: var(--ink-black); stroke-width: 2; }
+.bg-hub-dot { fill: var(--tone); transition: fill .4s ease; }
+.bg-pct { fill: var(--ink-black); font-size: 22px; font-weight: 700; letter-spacing: -.03em; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.bg-sub { fill: var(--slate-gray); font-size: 8.5px; font-weight: 500; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.bg-gauge:not(.is-static):hover .bg-pct { fill: var(--tone); }
+.bg-gauge.is-static { cursor: default; }
+
+/* ---- Breakdown ---- */
+.bg-break { margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+.bg-break-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; color: var(--slate-gray); font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.bg-break-total { letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; }
+.bg-bar { display: flex; gap: 2px; height: 10px; overflow: hidden; border-radius: 5px; background: var(--line-faint); }
+.bg-seg {
+    flex: 0 0 var(--w);
+    min-width: 3px;
+    background: var(--c);
+    transform-origin: left;
+    animation: bg-grow .9s cubic-bezier(.2, .8, .2, 1) backwards;
+    transition: opacity .2s ease;
+}
+.bg-seg:nth-child(2) { animation-delay: .06s; }
+.bg-seg:nth-child(3) { animation-delay: .12s; }
+.bg-seg:nth-child(4) { animation-delay: .18s; }
+.bg-seg:nth-child(5) { animation-delay: .24s; }
+.bg-seg--left { flex: 1 1 var(--w); background: repeating-linear-gradient(135deg, var(--line) 0 3px, transparent 3px 6px); }
+.bg-bar.has-hot .bg-seg:not(.is-hot) { opacity: .28; }
+@keyframes bg-grow { from { transform: scaleX(0); } }
+
+.bg-list { margin: 8px 0 0; padding: 0; list-style: none; }
+.bg-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 5px;
+    width: 100%;
+    padding: 7px 6px;
+    border: 0;
+    border-radius: 9px;
+    background: none;
+    color: var(--ink-black);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+.bg-row:hover, .bg-row:focus-visible { background: var(--line-faint); outline: none; }
+.bg-row:focus-visible { box-shadow: inset 0 0 0 2px var(--link-blue); }
+.bg-row.is-static { cursor: default; }
+.bg-name { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 12px; font-weight: 550; }
+.bg-rank {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--c) 14%, transparent);
+    color: var(--c);
+    font-size: 9.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+.bg-label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.bg-amt { display: flex; align-items: baseline; gap: 6px; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bg-amt strong { font-weight: 650; }
+.bg-share { min-width: 26px; color: var(--slate-gray); font-size: 10.5px; text-align: right; }
+.bg-meter { grid-column: 1 / -1; height: 3px; margin-left: 23px; border-radius: 2px; background: var(--line-faint); overflow: hidden; }
+.bg-meter span { display: block; width: var(--fill); height: 100%; border-radius: inherit; background: var(--c); transform-origin: left; animation: bg-grow .9s cubic-bezier(.2, .8, .2, 1) .15s backwards; }
+.bg-empty { margin: 6px 0 0; padding: 10px 0; text-align: center; color: var(--slate-gray); font-size: 12px; }
+
+/* ---- Phone carousel card ----
+   Desktop shows the gauge in the right panel; on phones it is a carousel
+   card next to Distribución, and replaces Ingresos vs gastos there. */
+.gauge-mcard { display: none; }
+@media (max-width: 768px) {
+    #chartsSection > .chart-card.cashflow-card { display: none; }
+    #chartsSection > .chart-card.gauge-mcard { display: flex; flex-direction: column; padding: 14px 16px 12px; }
+    .gauge-mcard { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; }
+    .gauge-mcard .gauge-head .insight-title { font-size: 17px; font-weight: 650; letter-spacing: -.02em; }
+    .gauge-mstage { flex: 1; min-height: 0; display: flex; }
+    .gauge-mstage > .bg-empty { margin: auto; }
+}
+
+/* iOS-style phone layout: dial and "Te queda" on top, capsule bar and glass
+   chips at the bottom; the two halves spread to fill the card's height. */
+.gm { --fill: rgba(120, 120, 128, 0.1); display: flex; flex: 1; flex-direction: column; justify-content: space-between; gap: 10px; min-width: 0; }
+.gm-top { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); align-items: center; gap: 8px; margin-top: 4px; }
+.gm-dial { max-width: none; margin: 0; }
+.gm-dial .bg-track { stroke: var(--fill); stroke-width: 11; }
+.gm-dial .bg-reserve, .gm-dial .bg-value { stroke-width: 11; }
+.gm-dial .bg-value { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--tone) 45%, transparent)); }
+.gm-dial .bg-pct { font-size: 26px; letter-spacing: -.04em; }
+.gm-stats { --tone: #16a34a; display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.gm-stats.is-mid { --tone: #d97706; }
+.gm-stats.is-low { --tone: #dc2626; }
+.gm-label { color: var(--slate-gray); font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.gm-amount { max-width: 100%; margin-top: 1px; overflow: hidden; color: var(--ink-black); font-size: 25px; font-weight: 700; letter-spacing: -.04em; line-height: 1.1; white-space: nowrap; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.gm-of { margin-top: 2px; color: var(--slate-gray); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+/* State of the balance: a quiet icon + label in the tone colour, no pill. */
+.gm-status { display: inline-flex; align-items: center; gap: 4px; margin-top: 9px; color: var(--tone); font-size: 12px; font-weight: 650; letter-spacing: -.01em; }
+.gm-status .material-symbols-outlined { font-size: 17px; font-variation-settings: 'FILL' 1, 'wght' 500; }
+
+.gm-foot { display: flex; flex-direction: column; gap: 8px; }
+.gm-foot-head { display: flex; justify-content: space-between; gap: 8px; color: var(--slate-gray); font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.gm-spent { letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; }
+.gm-bar { display: flex; gap: 3px; height: 12px; padding: 2px; border-radius: 999px; background: var(--fill); }
+.gm-seg { flex: 0 0 var(--w); min-width: 6px; border-radius: 999px; background: var(--c); transform-origin: left; animation: bg-grow .9s cubic-bezier(.2, .8, .2, 1) backwards; transition: opacity .2s ease; }
+.gm-seg--left { flex: 1 1 var(--w); background: repeating-linear-gradient(135deg, rgba(120, 120, 128, 0.28) 0 3px, transparent 3px 6px); }
+.gm-bar.has-hot .gm-seg:not(.is-hot) { opacity: .25; }
+.gm-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.gm-chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    min-height: 46px;
+    padding: 6px 8px 6px 7px;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.45));
+    box-shadow: inset 0 0 0 0.5px rgba(60, 60, 67, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 8px -4px rgba(20, 20, 19, 0.15);
+    color: var(--ink-black);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform .2s cubic-bezier(.2, .8, .2, 1);
+}
+.gm-chip:active { transform: scale(.96); }
+.gm-chip.is-static { cursor: default; }
+.gm-chip:focus-visible { outline: 2px solid var(--link-blue); outline-offset: 2px; }
+.gm-chip-ic { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: color-mix(in srgb, var(--c) 15%, transparent); color: var(--c); }
+.gm-chip-ic .material-symbols-outlined { font-size: 16px; font-variation-settings: 'FILL' 1, 'wght' 500; }
+.gm-chip-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.gm-chip-name { overflow: hidden; color: var(--slate-gray); font-size: 10.5px; font-weight: 550; white-space: nowrap; text-overflow: ellipsis; }
+.gm-chip-amt { font-size: 13px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+[data-theme="dark"] .gm { --fill: rgba(120, 120, 128, 0.24); }
+[data-theme="dark"] .gm-chip { background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04)); box-shadow: inset 0 0 0 0.5px rgba(235, 235, 245, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+@media (prefers-reduced-motion: reduce) {
+    .gm-seg { animation: none; }
+    .gm-chip { transition: none; }
+}
+
+/* ---- Resumen anual (left drawer) ---- */
+.sidebar-left .annual-gauge { order: 1; margin-top: 14px; }
+.ar { --fill: rgba(120, 120, 128, 0.08); }
+.ar-ring { position: relative; width: 168px; aspect-ratio: 1; margin: 0 auto; }
+.ar-ring svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ar-track { fill: none; stroke: var(--fill); stroke-width: 12; }
+.ar-seg {
+    fill: none;
+    stroke: var(--c);
+    stroke-width: 12;
+    stroke-linecap: round;
+    cursor: pointer;
+    transition: opacity .25s ease, stroke-width .25s cubic-bezier(.2, .8, .2, 1);
+}
+.ar.has-hot .ar-seg:not(.is-hot) { opacity: .22; }
+.ar-seg.is-hot { stroke-width: 15; }
+/* Glass centre, lightly tinted by the hovered category. */
+.ar-centre {
+    position: absolute;
+    inset: 27px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    border-radius: 50%;
+    background:
+        radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.9), transparent 60%),
+        color-mix(in srgb, var(--c, #8e8e93) 7%, var(--drawer-card, #fff));
+    box-shadow: inset 0 0 0 0.5px rgba(60, 60, 67, 0.12), 0 6px 18px -8px rgba(20, 25, 40, 0.18);
+    text-align: center;
+    pointer-events: none;
+    transition: background .3s ease;
+}
+.ar-c-label { max-width: 86px; overflow: hidden; color: var(--drawer-muted, var(--slate-gray)); font-size: 10.5px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.ar-c-value { color: var(--drawer-ink, var(--ink-black)); font-size: 21px; font-weight: 700; letter-spacing: -.03em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.ar-c-sub { color: var(--c, var(--drawer-muted)); font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; transition: color .3s ease; }
+
+/* Inset grouped list, iOS Settings style. */
+.ar-list { margin: 16px 0 0; padding: 0; list-style: none; border-radius: 14px; background: var(--fill); overflow: hidden; }
+.ar-list li + li .ar-row::before { content: ''; position: absolute; top: 0; left: 30px; right: 0; height: 0.5px; background: var(--drawer-line, var(--line)); }
+.ar-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto 34px;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 0;
+    background: none;
+    color: var(--drawer-ink, var(--ink-black));
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+.ar-row.is-hot, .ar-row:focus-visible { background: rgba(120, 120, 128, 0.12); outline: none; }
+.ar-row.is-static { cursor: default; }
+.ar-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 18%, transparent); }
+.ar-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 500; }
+.ar-amt { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ar-pct { color: var(--drawer-muted, var(--slate-gray)); font-size: 11.5px; text-align: right; font-variant-numeric: tabular-nums; }
+
+[data-theme="dark"] .ar { --fill: rgba(120, 120, 128, 0.2); }
+[data-theme="dark"] .ar-centre {
+    background: radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.08), transparent 60%),
+        color-mix(in srgb, var(--c, #8e8e93) 10%, var(--drawer-card, #2c2c2e));
+    box-shadow: inset 0 0 0 0.5px rgba(235, 235, 245, 0.12), 0 6px 18px -8px rgba(0, 0, 0, 0.5);
+}
+@media (prefers-reduced-motion: reduce) {
+    .ar-seg, .ar-centre, .ar-c-sub { transition: none; }
+}
+.sidebar-left .summary-row--moved { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--drawer-line); }
+
+[data-theme="dark"] .bg-reserve { stroke: rgba(248, 113, 113, 0.2); }
+
+@media (prefers-reduced-motion: reduce) {
+    .bg-seg, .bg-meter span { animation: none; }
+    .bg-value, .bg-hub-dot { transition: none; }
+}

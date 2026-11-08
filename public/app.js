@@ -331,11 +331,10 @@ function renderAnnualSummary() {
         element.dataset.rawVal = value;
     }
     document.getElementById('annualNet').classList.toggle('is-neg', totals.net < 0);
-    document.getElementById('cycleNetSub').textContent = 'Ingresos + gastos · enero a diciembre';
-    document.getElementById('cycleNetSub').className = 'kpi-delta annual-note';
     document.getElementById('totalDays').textContent = totals.days;
     document.getElementById('depositsSub').textContent = `${totals.count} ${totals.count === 1 ? 'movimiento' : 'movimientos'}`;
     document.getElementById('incomeDelta').textContent = '';
+    window.renderAnnualGauge?.(selected);
 }
 document.getElementById('summaryYear').addEventListener('change', renderAnnualSummary);
 
@@ -1461,9 +1460,9 @@ window.scrollToDate = function(dt) {
 const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio',
     'julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
-// ====== PANEL DERECHO: órbita del último depósito (deposit-orbit.js) ======
+// ====== PANEL DERECHO: velocímetro del saldo (balance-gauge.js) ======
 function renderSidebarInsights(){
-    if (typeof window.renderDepositOrbit === 'function') window.renderDepositOrbit();
+    if (typeof window.renderBalanceGauge === 'function') window.renderBalanceGauge();
 }
 
 function renderReminders(){

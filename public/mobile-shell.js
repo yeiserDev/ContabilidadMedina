@@ -112,7 +112,7 @@
                 for (var i = 0; i < n; i++) {
                     var dot=document.createElement('button');
                     dot.type='button';dot.className='mdot';
-                    dot.setAttribute('aria-label',deck.id==='chartsSection'?(i===0?'Ingresos vs gastos':'Distribución por rubro'):'Tarjeta '+(i+1));
+                    var titulo=tarjetas()[i].querySelector('h2');dot.setAttribute('aria-label',titulo?titulo.textContent.trim():'Tarjeta '+(i+1));
                     puntos.appendChild(dot);
                 }
             }

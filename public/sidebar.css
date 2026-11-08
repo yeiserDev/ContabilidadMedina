@@ -47,10 +47,11 @@
 .sidebar-left .summary-label { font-size: 13px; color: var(--drawer-muted); }
 .sidebar-left .summary-value { font-size: 34px; letter-spacing: -.035em; font-weight: 700; color: var(--drawer-ink); }
 .sidebar-left .summary-value.is-neg { color: #c44216; }
-.sidebar-left .summary-ledger { order: 2; margin: 22px 0 0; padding-top: 16px; border-top: 1px solid var(--drawer-line); }
+.sidebar-left .summary-ledger { order: 2; margin: 14px 0 0; padding-top: 14px; border-top: 1px solid var(--drawer-line); }
+.sidebar-left .summary-ledger .summary-row + .summary-row { margin-top: 10px; }
 .sidebar-left .summary-row { font-size: 14px; color: var(--drawer-muted); }
-.sidebar-left .summary-row strong { font-size: 16px; color: var(--drawer-ink); }
-.sidebar-left .summary-row--expense { margin-top: 16px; }
+.sidebar-left .summary-row strong { font-size: 15px; color: var(--drawer-ink); }
+.sidebar-left .summary-row--expense { margin-top: 10px; }
 .sidebar-left .kpi-delta { font-size: 12px; }
 .sidebar-left .kpi-delta.up { color: #18733b; }
 .sidebar-left .summary-activity {
