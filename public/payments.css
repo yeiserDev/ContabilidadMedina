@@ -1,0 +1,6 @@
+/* Payment method dropdown: brand logos and group labels (payments.js). */
+.xsel-group { padding: 10px 12px 4px; color: var(--slate-gray); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.xsel-group:first-child { padding-top: 4px; }
+.xsel-opt--icon { display: flex; align-items: center; gap: 4px; }
+.xsel-opt--icon .wallet-icon, .xsel-val .wallet-icon { margin-right: 8px !important; }
+.xsel-val:has(.wallet-icon) { display: inline-flex; align-items: center; min-width: 0; }

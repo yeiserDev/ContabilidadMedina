@@ -298,7 +298,7 @@
             figure.appendChild(icon(recordIcon(r)));
             const copy = el('span', 'ad-record-copy');
             copy.appendChild(el('strong', '', r.description || (isIncome ? 'Depósito' : r.category || 'Gasto')));
-            const subtitle = isIncome ? `Depósito ${r.type || ''}`.trim() : `${r.category || 'Sin rubro'} · ${r.wallet === 'bcp' ? 'BCP' : r.wallet === 'yape' ? 'Yape' : 'Efectivo'}`;
+            const subtitle = isIncome ? `Depósito ${r.type || ''}`.trim() : `${r.category || 'Sin rubro'} · ${window.getWalletName ? window.getWalletName(r.wallet) : 'Efectivo'}`;
             copy.appendChild(el('span', '', subtitle));
             const photos = (r.imageUrls || (r.imageUrl ? [r.imageUrl] : [])).length;
             if (photos) {

@@ -3,6 +3,9 @@ import { verifyEmailUser } from "@/lib/verifyToken";
 import { corsHeaders } from "@/lib/cors";
 import { randomUUID } from "node:crypto";
 
+// Payment methods the app knows (public/payments.js).
+const WALLETS = ["yape", "plin", "bcp", "interbank", "bbva", "scotiabank", "nacion", "banbif", "pichincha", "mibanco", "cajahuancayo", "cajaarequipa", "efectivo"];
+
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
@@ -49,7 +52,7 @@ export async function POST(req: NextRequest) {
     const properties = {
       amount: { type: ["number", "null"] }, date: { type: ["string", "null"] },
       description: { type: "string" }, category: { type: ["string", "null"] },
-      wallet: { type: ["string", "null"], enum: ["bcp", "yape", "efectivo", null] },
+      wallet: { type: ["string", "null"], enum: [...WALLETS, null] },
       currency: { type: ["string", "null"] }, isExpense: { type: "boolean" },
       needsReview: { type: "boolean" }, note: { type: "string" },
     };
@@ -86,7 +89,7 @@ export async function POST(req: NextRequest) {
       && Number.isFinite(Date.parse(raw.date)) && new Date(raw.date).toISOString().slice(0, 10) === raw.date ? raw.date : null;
     const amount = typeof raw.amount === "number" && Number.isFinite(raw.amount) && raw.amount > 0 && raw.amount < 1e9 ? Math.round(raw.amount * 100) / 100 : null;
     const category = categories.includes(raw.category) ? raw.category : null;
-    const wallet = ["bcp", "yape", "efectivo"].includes(raw.wallet) ? raw.wallet : null;
+    const wallet = WALLETS.includes(raw.wallet) ? raw.wallet : null;
     const description = typeof raw.description === "string" ? raw.description.slice(0, 250) : "";
     const currency = typeof raw.currency === "string" ? raw.currency.slice(0, 8).toUpperCase() : null;
     return NextResponse.json({ amount, date, category, wallet, description, currency,

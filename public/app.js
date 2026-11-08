@@ -1000,8 +1000,8 @@ window.toggleDay = function(dt) {
 };
 
 // ====== EDIT / DELETE ======
-window.editDeposit=requireAuth(function(id){const dep=deposits.find(d=>d.id===id);if(!dep)return;editDepositId=id;document.getElementById('depositModalTitle').textContent='Editar Depósito';document.getElementById('depositDate').value=dep.date;document.getElementById('depositType').value=dep.type;document.getElementById('depositAmount').value=dep.amount;document.getElementById('depositDescription').value=dep.description||'';document.getElementById('depositCycleStart').checked=!!dep.isCycleStart;openM('depositModal');});
-window.editExpense=requireAuth(function(id){const exp=expenses.find(e=>e.id===id);if(!exp)return;editExpenseId=id;document.getElementById('expenseModalTitle').textContent='Editar Gasto';document.getElementById('expenseDate').value=exp.date;populateCatSelect();document.getElementById('expenseCategory').value=exp.category;document.getElementById('expenseDescription').value=exp.description||'';document.getElementById('expenseAmount').value=exp.amount;document.getElementById('expenseWallet').value=exp.wallet||'efectivo';resetImageUI();const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);if(imgs.length){pendingImagesData=[...imgs];renderPendingImages();document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent='Adjuntar fotos';}openM('expenseModal');});
+window.editDeposit=requireAuth(function(id){const dep=deposits.find(d=>d.id===id);if(!dep)return;editDepositId=id;document.getElementById('depositModalTitle').textContent='Editar Depósito';document.getElementById('depositDate').value=dep.date;document.getElementById('depositType').value=dep.type;document.getElementById('depositAmount').value=formatMoneyInput(dep.amount);document.getElementById('depositDescription').value=dep.description||'';document.getElementById('depositCycleStart').checked=!!dep.isCycleStart;openM('depositModal');});
+window.editExpense=requireAuth(function(id){const exp=expenses.find(e=>e.id===id);if(!exp)return;editExpenseId=id;document.getElementById('expenseModalTitle').textContent='Editar Gasto';document.getElementById('expenseDate').value=exp.date;populateCatSelect();document.getElementById('expenseCategory').value=exp.category;document.getElementById('expenseDescription').value=exp.description||'';document.getElementById('expenseAmount').value=formatMoneyInput(exp.amount);document.getElementById('expenseWallet').value=exp.wallet||'efectivo';resetImageUI();const imgs=exp.imageUrls||(exp.imageUrl?[exp.imageUrl]:[]);if(imgs.length){pendingImagesData=[...imgs];renderPendingImages();document.getElementById('imgUploadBtn').querySelector('span:last-child').textContent='Adjuntar fotos';}openM('expenseModal');});
 window.deleteDeposit=requireAuth(function(id){confirm_('Eliminar Depósito','¿Estás seguro?',()=>{deposits=deposits.filter(d=>d.id!==id);persist();renderAll();toast('Depósito eliminado');});});
 // Borra en Google Drive los comprobantes cuyas URLs apuntan a nuestro backend.
 // Las URLs viejas de ImgBB (no coinciden con el patrón) se ignoran.
@@ -1026,7 +1026,7 @@ window.editLoan=requireAuth(function(id){
     document.getElementById('loanDate').value=loan.date;
     populateLenderSelect();
     document.getElementById('loanPerson').value=loan.person;
-    document.getElementById('loanAmount').value=loan.amount;
+    document.getElementById('loanAmount').value=formatMoneyInput(loan.amount);
     document.getElementById('loanDesc').value=loan.description||'';
     openM('loanModal');
     setTimeout(()=>document.getElementById('loanAmount').focus(),120);
@@ -1187,7 +1187,7 @@ function renderAll(){renderMonthFilter();renderKPIs();renderCharts();renderLineC
 // ====== EVENTS: DEPOSIT ======
 document.getElementById('openDepositModal').addEventListener('click',requireAuth(()=>{editDepositId=null;document.getElementById('depositModalTitle').textContent='Nuevo Depósito';document.getElementById('depositDate').value=today();document.getElementById('depositAmount').value='';document.getElementById('depositDescription').value='';document.getElementById('depositType').value='quincenal';document.getElementById('depositCycleStart').checked=false;openM('depositModal');setTimeout(()=>document.getElementById('depositAmount').focus(),120);}));
 document.getElementById('saveDeposit').addEventListener('click',()=>{
-    const date=document.getElementById('depositDate').value,type=document.getElementById('depositType').value,amount=parseFloat(document.getElementById('depositAmount').value),description=document.getElementById('depositDescription').value.trim(),isCycleStart=document.getElementById('depositCycleStart').checked;
+    const date=document.getElementById('depositDate').value,type=document.getElementById('depositType').value,amount=parseMoney(document.getElementById('depositAmount').value),description=document.getElementById('depositDescription').value.trim(),isCycleStart=document.getElementById('depositCycleStart').checked;
     if(!date||isNaN(amount)||amount<=0){toast('Completa correctamente','err');return;}
     if(editDepositId){const dep=deposits.find(d=>d.id===editDepositId);if(dep){dep.date=date;dep.type=type;dep.amount=amount;dep.description=description;dep.isCycleStart=isCycleStart;}editDepositId=null;toast('Depósito actualizado');}
     else{deposits.push({id:uid(),date,type,amount,description,isCycleStart});toast(`Depósito de ${money(amount)} registrado`);}
@@ -1199,8 +1199,8 @@ document.getElementById('openExpenseModal').addEventListener('click',requireAuth
 async function saveExpense({ quiet = false } = {}) {
     if (!currentUser) { toast('Inicia sesión para guardar.', 'err'); return false; }
     if (document.getElementById('saveExpense').disabled || imagenesProcesando) return false;
-    const date=document.getElementById('expenseDate').value,category=document.getElementById('expenseCategory').value,description=document.getElementById('expenseDescription').value.trim(),amount=parseFloat(document.getElementById('expenseAmount').value),wallet=document.getElementById('expenseWallet').value;
-    if(!date||!category||!Number.isFinite(amount)||amount<=0||!['bcp','yape','efectivo'].includes(wallet)){toast('Completa correctamente','err');return false;}
+    const date=document.getElementById('expenseDate').value,category=document.getElementById('expenseCategory').value,description=document.getElementById('expenseDescription').value.trim(),amount=parseMoney(document.getElementById('expenseAmount').value),wallet=document.getElementById('expenseWallet').value;
+    if(!date||!category||!Number.isFinite(amount)||amount<=0||!(window.WALLET_IDS||['bcp','yape','efectivo']).includes(wallet)){toast('Completa correctamente','err');return false;}
     
     const btn = document.getElementById('saveExpense');
     const originalText = btn.textContent;
@@ -2278,7 +2278,7 @@ if (document.getElementById('saveLoan')) {
     document.getElementById('saveLoan').addEventListener('click', () => {
         const date        = document.getElementById('loanDate').value;
         const person      = document.getElementById('loanPerson').value.trim();
-        const amount      = parseFloat(document.getElementById('loanAmount').value);
+        const amount      = parseMoney(document.getElementById('loanAmount').value);
         const description = document.getElementById('loanDesc').value.trim();
         if (!date || !person || isNaN(amount) || amount <= 0) { toast('Completa correctamente', 'err'); return; }
         if (editLoanId) {

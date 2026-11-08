@@ -119,7 +119,7 @@
     function openDraft(data = {}) {
         editExpenseId = null;resetImageUI();populateCatSelect();
         get('expenseModalTitle').textContent = data.date ? 'Revisar gasto escaneado' : 'Completar gasto';
-        get('expenseDate').value = data.date || '';get('expenseAmount').value = data.amount || '';get('expenseDescription').value = data.description || '';get('expenseCategory').value = data.category || '';get('expenseWallet').value = data.wallet || '';
+        get('expenseDate').value = data.date || '';get('expenseAmount').value = formatMoneyInput(data.amount);get('expenseDescription').value = data.description || '';get('expenseCategory').value = data.category || '';get('expenseWallet').value = data.wallet || '';
         pendingImagesData = image ? [image] : [];pendingScanHash = hash;renderPendingImages();closeM('scanModal');openM('expenseModal');get('expenseDate').focus();
     }
     get('scanManual').addEventListener('click', () => { if (!busy && image) openDraft(); });
@@ -179,7 +179,7 @@
             }
             editExpenseId = null;resetImageUI();populateCatSelect();
             get('expenseModalTitle').textContent = 'Gasto escaneado';
-            get('expenseDate').value = data.date;get('expenseAmount').value = data.amount;get('expenseDescription').value = data.description;get('expenseCategory').value = data.category;get('expenseWallet').value = data.wallet;
+            get('expenseDate').value = data.date;get('expenseAmount').value = formatMoneyInput(data.amount);get('expenseDescription').value = data.description;get('expenseCategory').value = data.category;get('expenseWallet').value = data.wallet;
             pendingImagesData = [image];pendingScanHash = hash;renderPendingImages();
             setStage('saving', 'Guardando el comprobante en Drive y registrando el gasto.');setBusy(true);
             const result = await saveExpense({ quiet: true });

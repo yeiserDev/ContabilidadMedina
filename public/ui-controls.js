@@ -76,17 +76,35 @@
         function etiqueta() {
             var o = sel.selectedOptions && sel.selectedOptions[0];
             var t = o ? o.textContent.trim() : '';
-            btn.querySelector('.xsel-val').textContent = t || '—';
+            var val = btn.querySelector('.xsel-val');
+            val.textContent = t || '—';
+            /* Selects marcados con data-wallet llevan el logo del método. */
+            if (o && 'wallet' in sel.dataset && window.getWalletIcon) val.insertAdjacentHTML('afterbegin', window.getWalletIcon(o.value, 20));
             btn.classList.toggle('is-placeholder', !t);
         }
 
         function pintar() {
             panel.innerHTML = '';
+            var grupo = null;
             Array.prototype.forEach.call(sel.options, function (o, i) {
+                /* Los <optgroup> se pintan como un rótulo antes de su grupo. */
+                var g = o.parentNode.tagName === 'OPTGROUP' ? o.parentNode : null;
+                if (g && g !== grupo) {
+                    var rot = document.createElement('div');
+                    rot.className = 'xsel-group';
+                    rot.setAttribute('role', 'presentation');
+                    rot.textContent = g.label;
+                    panel.appendChild(rot);
+                }
+                grupo = g;
                 var it = document.createElement('div');
                 it.className = 'xsel-opt';
                 it.setAttribute('role', 'option');
                 it.textContent = o.textContent;
+                if ('wallet' in sel.dataset && window.getWalletIcon) {
+                    it.classList.add('xsel-opt--icon');
+                    it.insertAdjacentHTML('afterbegin', window.getWalletIcon(o.value, 22));
+                }
                 it.dataset.i = i;
                 if (o.disabled) it.classList.add('is-disabled');
                 if (i === sel.selectedIndex) {

@@ -75,10 +75,10 @@
             }
             const button = node('button', 'dist-record');button.type = 'button';
             button.dataset.recordId = record.id;
-            const icon = node('span', 'dist-record-icon material-symbols-outlined', record.wallet === 'bcp' ? 'account_balance' : record.wallet === 'yape' ? 'smartphone' : 'payments');
+            const icon = node('span', 'dist-record-icon material-symbols-outlined', !record.wallet || record.wallet === 'efectivo' ? 'payments' : ['yape', 'plin'].includes(record.wallet) ? 'smartphone' : 'account_balance');
             icon.setAttribute('aria-hidden', 'true');
             const copy = node('span', 'dist-record-copy');
-            const method = record.wallet === 'bcp' ? 'BCP' : record.wallet === 'yape' ? 'Yape' : record.wallet === 'efectivo' ? 'Efectivo' : '';
+            const method = record.wallet && window.getWalletName ? window.getWalletName(record.wallet) : '';
             const metadata = [recordOrder === 'amount' ? shortDate.format(d2(record.date)) : '', !selected ? record.category || 'Sin rubro' : '', method].filter(Boolean).join(' · ');
             copy.append(node('strong', '', record.description || record.category || 'Gasto'),
                 node('span', '', metadata || 'Ver movimiento'));

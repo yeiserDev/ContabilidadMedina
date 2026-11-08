@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="distribution.css?v=4">
     <link rel="stylesheet" href="deposit-orbit.css?v=2">
     <link rel="stylesheet" href="record-detail.css?v=1">
+    <link rel="stylesheet" href="payments.css?v=1">
     <link rel="stylesheet" href="sidebar.css?v=3">
     <style>
         /* ===== SPLASH SCREEN (rápido y profesional, ~0.6s total) ===== */
@@ -551,8 +552,7 @@
                         <option value="quincenal">Quincenal</option>
                         <option value="semanal">Semanal</option>
                     </select></label>
-                <label>Monto (S/)<input type="number" id="depositAmount" class="mi" placeholder="0.00" step="0.01"
-                        min="0"></label>
+                <label>Monto (S/)<input type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" data-money id="depositAmount" class="mi" placeholder="0.00"></label>
                 <label>Descripción <small>(opcional)</small><input type="text" id="depositDescription" class="mi"
                         placeholder="Ej: Pago de viáticos"></label>
                 <label style="display:flex; align-items:center; gap:8px; margin-top:16px; cursor:pointer; background: var(--canvas-cream); padding: 12px; border: 1px solid rgba(20,20,19,0.08); border-radius: var(--radius-lg);">
@@ -579,12 +579,30 @@
                 <label>Descripción<input type="text" id="expenseDescription" class="mi"
                         placeholder="¿En qué se gastó?"></label>
                 <div style="display:flex; gap:12px;">
-                    <label style="flex:1;">Monto (S/)<input type="number" id="expenseAmount" class="mi" placeholder="0.00" step="0.01" min="0"></label>
+                    <label style="flex:1;">Monto (S/)<input type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" data-money id="expenseAmount" class="mi" placeholder="0.00"></label>
                     <label style="flex:1;">Método
-                        <select id="expenseWallet" class="mi msel">
-                            <option value="bcp">BCP</option>
-                            <option value="yape">Yape</option>
-                            <option value="efectivo">Efectivo</option>
+                        <select id="expenseWallet" class="mi msel" data-wallet>
+                            <optgroup label="Billeteras">
+                                <option value="yape">Yape</option>
+                                <option value="plin">Plin</option>
+                            </optgroup>
+                            <optgroup label="Bancos">
+                                <option value="bcp">BCP</option>
+                                <option value="interbank">Interbank</option>
+                                <option value="bbva">BBVA</option>
+                                <option value="scotiabank">Scotiabank</option>
+                                <option value="nacion">Banco de la Nación</option>
+                                <option value="banbif">BanBif</option>
+                                <option value="pichincha">Banco Pichincha</option>
+                                <option value="mibanco">Mibanco</option>
+                            </optgroup>
+                            <optgroup label="Cajas">
+                                <option value="cajahuancayo">Caja Huancayo</option>
+                                <option value="cajaarequipa">Caja Arequipa</option>
+                            </optgroup>
+                            <optgroup label="Otros">
+                                <option value="efectivo">Efectivo</option>
+                            </optgroup>
                         </select>
                     </label>
                 </div>
@@ -664,7 +682,7 @@
             <div class="modal-bd">
                 <label>Fecha<input type="date" id="loanDate" class="mi"></label>
                 <label>¿Quién prestó?<select id="loanPerson" class="mi msel"></select></label>
-                <label>Monto (S/)<input type="number" id="loanAmount" class="mi" placeholder="0.00" step="0.01" min="0"></label>
+                <label>Monto (S/)<input type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" data-money id="loanAmount" class="mi" placeholder="0.00"></label>
                 <label>Descripción <small>(opcional)</small><input type="text" id="loanDesc" class="mi" placeholder="¿Para qué fue el préstamo?"></label>
             </div>
             <div class="modal-ft">
@@ -891,14 +909,15 @@
     <script src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="escenas.js?v=73"></script>
-    <script src="app.js?v=90"></script>
-    <script src="distribution.js?v=4"></script>
+    <script src="app.js?v=91"></script>
+    <script src="payments.js?v=1"></script>
+    <script src="distribution.js?v=5"></script>
     <script src="deposit-orbit.js?v=2"></script>
     <script src="record-detail.js?v=1"></script>
-    <script src="receipt-scan.js?v=6"></script>
-    <script src="ui-controls.js"></script>
+    <script src="receipt-scan.js?v=7"></script>
+    <script src="ui-controls.js?v=1"></script>
     <script src="mobile-shell.js?v=84"></script>
-    <script src="mobile-calendar.js?v=97"></script>
+    <script src="mobile-calendar.js?v=98"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
