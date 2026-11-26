@@ -57,3 +57,8 @@ npx vercel --prod   # despliega
 
 Tras desplegar, tu app y el backend viven en la misma URL de Vercel. Inicia sesión
 y sube un comprobante: debe aparecer en tu carpeta de Drive y verse en la app.
+
+## 4. Tarjeta de crédito (lectura de correos de Scotiabank)
+
+Ver [`docs/tarjeta-correos.md`](docs/tarjeta-correos.md): activar la API de Gmail, generar
+`GMAIL_REFRESH_TOKEN` con el scope `gmail.readonly` y definir `CARD_ALLOWED_EMAILS`.

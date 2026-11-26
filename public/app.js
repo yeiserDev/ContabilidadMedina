@@ -1,7 +1,7 @@
 /* ContaControl — App Logic with Firebase + Calendar & Reminders */
 
 // DATA KEYS (localStorage fallback)
-const KEYS = { d:'ct_deposits', e:'ct_expenses', c:'ct_categories', r:'ct_reminders', b:'ct_budgets', l:'ct_loans', p:'ct_lenders' };
+const KEYS = { d:'ct_deposits', e:'ct_expenses', c:'ct_categories', r:'ct_reminders', b:'ct_budgets', l:'ct_loans', p:'ct_lenders', cc:'ct_card', ct:'ct_card_txns', cs:'ct_card_sync' };
 const DEF_CATS    = ['Devolución Dinero Prestado','Gastos Diarios','Petróleo Eduardo','Viático Eduardo'];
 const DEF_LENDERS = ['Mirtha', 'Yeiser'];
 const COLORS = ['#2563eb','#16a34a','#dc2626','#0d9488','#ea580c','#7c3aed','#c026d3','#059669','#d97706','#4f46e5'];
@@ -37,6 +37,10 @@ let reminders = loadLocal(KEYS.r,DEF_REMINDERS);
 let budgets   = loadLocal(KEYS.b,{});
 let loans     = loadLocal(KEYS.l,[]);
 let lenders   = loadLocal(KEYS.p, DEF_LENDERS);
+// Tarjeta de crédito (card.js): ajustes, movimientos y estado de la lectura de correos.
+let card      = loadLocal(KEYS.cc, {});
+let cardTxns  = loadLocal(KEYS.ct, []);
+let cardSync  = loadLocal(KEYS.cs, {});
 let searchQuery = '';
 
 // Backend de comprobantes. Como la app y el backend están en el MISMO proyecto
@@ -66,6 +70,12 @@ function startDbListener() {
             budgets    = data.budgets     || {};
             loans      = data.loans      || [];
             lenders    = data.lenders    || DEF_LENDERS;
+            card       = data.card       || {};
+            cardTxns   = data.cardTxns   || [];
+            cardSync   = data.cardSync   || {};
+            saveLocal(KEYS.cc, card);
+            saveLocal(KEYS.ct, cardTxns);
+            saveLocal(KEYS.cs, cardSync);
             saveLocal(KEYS.d, deposits);
             saveLocal(KEYS.e, expenses);
             saveLocal(KEYS.c, categories);
@@ -117,6 +127,7 @@ function initFirebase() {
             currentUser = user.isAnonymous ? null : user; // solo email = acceso de escritura
             updateAuthUI(user);
             startDbListener();
+            if (!user.isAnonymous && window.cardAutoSync) window.cardAutoSync();
             console.log(user.isAnonymous ? '👁 Modo lectura (anónimo)' : `🔐 Sesión activa: ${user.email}`);
         });
 
@@ -180,6 +191,9 @@ function persist() {
         saveLocal(KEYS.b, budgets);
         saveLocal(KEYS.l, loans);
         saveLocal(KEYS.p, lenders);
+        saveLocal(KEYS.cc, card);
+        saveLocal(KEYS.ct, cardTxns);
+        saveLocal(KEYS.cs, cardSync);
     } catch(e) {
         console.error('Error guardando en localStorage:', e);
     }
@@ -193,6 +207,9 @@ function persist() {
             budgets,
             loans,
             lenders,
+            card,
+            cardTxns,
+            cardSync,
             lastUpdated: new Date().toISOString()
         }).then(() => {
             _isSaving = false;
@@ -1181,7 +1198,7 @@ window.openLightboxFromView = function() {
     }
 };
 
-function renderAll(){renderMonthFilter();renderKPIs();renderCharts();renderLineChart();renderCatBreakdown();renderCatList();populateCatSelect();renderDaily();renderCalendar();renderSidebarInsights();renderReminders();renderLoans();}
+function renderAll(){renderMonthFilter();renderKPIs();renderCharts();renderLineChart();renderCatBreakdown();renderCatList();populateCatSelect();renderDaily();renderCalendar();renderSidebarInsights();renderReminders();renderLoans();if(window.renderCard)window.renderCard();}
 
 // ====== EVENTS: DEPOSIT ======
 document.getElementById('openDepositModal').addEventListener('click',requireAuth(()=>{editDepositId=null;document.getElementById('depositModalTitle').textContent='Nuevo Depósito';document.getElementById('depositDate').value=today();document.getElementById('depositAmount').value='';document.getElementById('depositDescription').value='';document.getElementById('depositType').value='quincenal';document.getElementById('depositCycleStart').checked=false;openM('depositModal');setTimeout(()=>document.getElementById('depositAmount').focus(),120);}));
@@ -1551,7 +1568,7 @@ document.getElementById('saveReminder').addEventListener('click',()=>{
 
 // ====== EXPORT / IMPORT ======
 document.getElementById('exportBtn').addEventListener('click', () => {
-    const data = { version:1, exportedAt:new Date().toISOString(), deposits, expenses, categories, reminders, loans, lenders };
+    const data = { version:1, exportedAt:new Date().toISOString(), deposits, expenses, categories, reminders, loans, lenders, card, cardTxns };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');a.href = url;
@@ -1581,6 +1598,8 @@ document.getElementById('importFile').addEventListener('change', (e) => {
                 reminders = Array.isArray(data.reminders) ? data.reminders : reminders;
                 loans   = Array.isArray(data.loans)   ? data.loans   : [];
                 lenders = Array.isArray(data.lenders) ? data.lenders : DEF_LENDERS;
+                if (Array.isArray(data.cardTxns)) cardTxns = data.cardTxns;
+                if (data.card && typeof data.card === 'object') card = data.card;
                 persist();
                 renderAll();
                 toast(`Importados: ${deposits.length} depósitos, ${expenses.length} gastos`);

@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="record-detail.css?v=1">
     <link rel="stylesheet" href="payments.css?v=1">
     <link rel="stylesheet" href="sidebar.css?v=4">
+    <link rel="stylesheet" href="card.css?v=1">
     <style>
         /* ===== SPLASH SCREEN (rápido y profesional, ~0.6s total) ===== */
         #splash {
@@ -273,6 +274,17 @@
 
         <!-- CENTER CONTENT -->
         <main class="center">
+            <!-- Switch Cuenta / Tarjeta (card.js). En modo tarjeta se ocultan
+                 las secciones de la cuenta y se muestra #cardView. -->
+            <div class="acct-switch" id="acctSwitch" role="tablist" aria-label="Qué quieres ver">
+                <button type="button" role="tab" data-mode="cuenta" class="on" aria-selected="true">
+                    <span class="material-symbols-outlined" aria-hidden="true">account_balance_wallet</span> Mi cuenta
+                </button>
+                <button type="button" role="tab" data-mode="tarjeta" aria-selected="false">
+                    <span class="material-symbols-outlined" aria-hidden="true">credit_card</span> Tarjeta
+                </button>
+            </div>
+            <section class="card-view" id="cardView" aria-label="Tarjeta de crédito" aria-live="polite"></section>
             <!-- ===== SHELL MÓVIL (<=768px) =====
                  Portada tipo app de banca: barra propia, tarjeta de saldo,
                  dos accesos rápidos y el resumen del ciclo como lista.
@@ -547,6 +559,64 @@
             <span class="bnav-label">Filtrar</span>
         </button>
     </nav>
+
+    <!-- MODAL: MOVIMIENTO DE TARJETA (card.js) -->
+    <div class="modal-bg" id="cardTxnModal">
+        <div class="modal">
+            <div class="modal-hd">
+                <h2><span class="material-symbols-outlined" style="color:#EC111A">credit_card</span> <span
+                        id="cardTxnTitle">Nuevo consumo</span></h2><button class="modal-x"
+                    data-close="cardTxnModal"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-bd">
+                <label>Tipo<select id="ctxKind" class="mi msel">
+                        <option value="consumo">Consumo</option>
+                        <option value="pago">Pago a la tarjeta</option>
+                        <option value="abono">Devolución / abono</option>
+                    </select></label>
+                <label>Fecha<input type="date" id="ctxDate" class="mi"></label>
+                <label>Comercio o concepto<input type="text" id="ctxMerchant" class="mi" maxlength="120" placeholder="Ej: Plaza Vea"></label>
+                <div style="display:flex; gap:12px;">
+                    <label style="flex:1;">Monto<input type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" data-money id="ctxAmount" class="mi" placeholder="0.00"></label>
+                    <label style="flex:1;">Moneda<select id="ctxCurrency" class="mi msel">
+                            <option value="PEN">Soles (S/)</option>
+                            <option value="USD">Dólares (US$)</option>
+                        </select></label>
+                </div>
+                <label id="ctxInstallmentsWrap">Cuotas <small>(opcional)</small><input type="number" id="ctxInstallments" class="mi" min="2" max="60" inputmode="numeric" placeholder="Sin cuotas"></label>
+            </div>
+            <div class="modal-ft">
+                <button class="mb mb--ghost cc-del" id="ctxDelete" style="display:none">Eliminar</button>
+                <button class="mb mb--ghost" data-close="cardTxnModal">Cancelar</button>
+                <button class="mb mb--blue" id="ctxSave">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AJUSTES DE TARJETA (card.js) -->
+    <div class="modal-bg" id="cardSettingsModal">
+        <div class="modal">
+            <div class="modal-hd">
+                <h2><span class="material-symbols-outlined" style="color:#EC111A">tune</span> Mi tarjeta</h2><button class="modal-x"
+                    data-close="cardSettingsModal"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-bd">
+                <div style="display:flex; gap:12px;">
+                    <label style="flex:2;">Nombre<input type="text" id="ccsName" class="mi" maxlength="40" placeholder="Scotiabank"></label>
+                    <label style="flex:1;">Últimos 4<input type="text" id="ccsLast4" class="mi" maxlength="4" inputmode="numeric" placeholder="1234"></label>
+                </div>
+                <label>Línea de crédito (S/)<input type="text" inputmode="decimal" autocomplete="off" data-money id="ccsLimit" class="mi" placeholder="0.00"></label>
+                <div style="display:flex; gap:12px;">
+                    <label style="flex:1;">Día de corte<input type="number" id="ccsClosing" class="mi" min="1" max="31" inputmode="numeric"></label>
+                    <label style="flex:1;">Día de pago<input type="number" id="ccsDue" class="mi" min="1" max="31" inputmode="numeric"></label>
+                </div>
+                <label>Tipo de cambio para la línea <small>(consumos en US$)</small><input type="number" id="ccsRate" class="mi" min="0.01" step="0.01" inputmode="decimal"></label>
+                <p class="cc-hint">Los encuentras en tu estado de cuenta de Scotiabank: “Fecha de cierre” y “Último día de pago”.</p>
+            </div>
+            <div class="modal-ft"><button class="mb mb--ghost" data-close="cardSettingsModal">Cancelar</button><button
+                    class="mb mb--blue" id="ccsSave">Guardar</button></div>
+        </div>
+    </div>
 
     <!-- MODAL: DEPÓSITO -->
     <div class="modal-bg" id="depositModal">
@@ -919,7 +989,7 @@
     <script src="firebase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="escenas.js?v=73"></script>
-    <script src="app.js?v=93"></script>
+    <script src="app.js?v=94"></script>
     <script src="payments.js?v=1"></script>
     <script src="distribution.js?v=5"></script>
     <script src="balance-gauge.js?v=6"></script>
@@ -928,6 +998,7 @@
     <script src="ui-controls.js?v=1"></script>
     <script src="mobile-shell.js?v=85"></script>
     <script src="mobile-calendar.js?v=98"></script>
+    <script src="card.js?v=1"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
