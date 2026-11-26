@@ -31,7 +31,7 @@
     <link rel="stylesheet" href="record-detail.css?v=1">
     <link rel="stylesheet" href="payments.css?v=1">
     <link rel="stylesheet" href="sidebar.css?v=4">
-    <link rel="stylesheet" href="card.css?v=2">
+    <link rel="stylesheet" href="card.css?v=3">
     <style>
         /* ===== SPLASH SCREEN (rápido y profesional, ~0.6s total) ===== */
         #splash {
@@ -284,7 +284,6 @@
                     <span class="material-symbols-outlined" aria-hidden="true">credit_card</span> Tarjeta
                 </button>
             </div>
-            <section class="card-view" id="cardView" aria-label="Tarjeta de crédito" aria-live="polite"></section>
             <!-- ===== SHELL MÓVIL (<=768px) =====
                  Portada tipo app de banca: barra propia, tarjeta de saldo,
                  dos accesos rápidos y el resumen del ciclo como lista.
@@ -297,10 +296,18 @@
             <section class="mshell" id="mshell" aria-label="Inicio">
                 <div class="mshell-top">
                     <div class="mshell-id">
-                        <span class="mshell-avatar"><img src="icon.svg" alt="" width="26" height="26"></span>
+                        <!-- Switch compacto en el lugar del logo (móvil). -->
+                        <span class="acct-mini" role="tablist" aria-label="Qué quieres ver">
+                            <button type="button" role="tab" data-mode="cuenta" class="on" aria-selected="true" aria-label="Mi cuenta">
+                                <span class="material-symbols-outlined" aria-hidden="true">account_balance_wallet</span>
+                            </button>
+                            <button type="button" role="tab" data-mode="tarjeta" aria-selected="false" aria-label="Tarjeta">
+                                <span class="material-symbols-outlined" aria-hidden="true">credit_card</span>
+                            </button>
+                        </span>
                         <span class="mshell-who">
-                            <span class="mshell-hi">Bienvenido</span>
-                            <span class="mshell-name">Conta Medina</span>
+                            <span class="mshell-hi" id="mshellHi">Bienvenido</span>
+                            <span class="mshell-name" id="mshellName">Conta Medina</span>
                         </span>
                     </div>
                     <div class="mshell-actions" id="mshellActions"></div>
@@ -331,6 +338,9 @@
             </section>
 
 
+
+            <!-- Vista de tarjeta: va después del shell móvil para quedar bajo su barra. -->
+            <section class="card-view" id="cardView" aria-label="Tarjeta de crédito" aria-live="polite"></section>
 
             <!-- CHARTS -->
             <section class="charts-section" id="chartsSection">
@@ -1005,7 +1015,7 @@
     <script src="ui-controls.js?v=1"></script>
     <script src="mobile-shell.js?v=85"></script>
     <script src="mobile-calendar.js?v=98"></script>
-    <script src="card.js?v=2"></script>
+    <script src="card.js?v=3"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

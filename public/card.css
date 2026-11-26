@@ -33,7 +33,42 @@
 
 /* En modo tarjeta solo se ven el switch y la tarjeta. */
 body:not(.card-mode) .card-view { display: none; }
-body.card-mode .center > :not(.acct-switch):not(.card-view) { display: none !important; }
+body.card-mode .center > :not(.acct-switch):not(.card-view):not(.mshell) { display: none !important; }
+/* En móvil se conserva la barra superior del shell (con el switch compacto). */
+body.card-mode .mshell > :not(.mshell-top) { display: none !important; }
+
+/* ---------- Switch compacto (móvil, en el lugar del logo) ---------- */
+.acct-mini { display: none; }
+@media (max-width: 768px) {
+    .acct-switch { display: none; }
+    .acct-mini {
+        display: inline-flex;
+        flex-shrink: 0;
+        gap: 2px;
+        padding: 3px;
+        border-radius: var(--radius-pill);
+        background: var(--white);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow-flat);
+    }
+    .acct-mini button {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--slate-gray);
+        cursor: pointer;
+        transition: background .2s ease, color .2s ease;
+    }
+    .acct-mini button .material-symbols-outlined { font-size: 19px; }
+    .acct-mini button.on { background: var(--ink-black); color: var(--white); }
+    .acct-mini button[data-mode="tarjeta"].on { background: #D10F17; color: #fff; }
+    .acct-mini button:focus-visible { outline: 2px solid var(--signal-orange); outline-offset: 2px; }
+    [data-theme="dark"] .acct-mini { border-color: rgba(255, 255, 255, 0.08); }
+}
 body.card-mode .bottom-nav,
 body.card-mode .sidebar-right { display: none !important; }
 
@@ -202,8 +237,6 @@ body.card-mode .sidebar-right { display: none !important; }
 [data-theme="dark"] .cc-row--credit .cc-row-amt { color: #4ade80; }
 
 @media (max-width: 768px) {
-    .acct-switch { margin-top: 4px; margin-bottom: 12px; }
-    .acct-switch button { padding: 0 14px; font-size: 13.5px; }
     .cc-amount { font-size: 30px; }
     .cc-actions { grid-template-columns: 1fr 1fr 1fr; }
     .cc-act--main { grid-column: 1 / -1; }

@@ -106,6 +106,7 @@
     /* ---------- Interfaz ---------- */
     const DEFAULTS = { name: 'Scotiabank', last4: '', lineCurrency: 'USD', limit: 850, closingDay: 20, dueDay: 5, fxRate: 3.75 };
     const MODE_KEY = 'ct_mode';
+    const SWITCHES = '#acctSwitch [data-mode], .acct-mini [data-mode]';
     const SYNC_EVERY_MS = 2 * 3600_000;
     const $ = id => document.getElementById(id);
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -131,11 +132,14 @@
     function setMode(mode) {
         const isCard = mode === 'tarjeta';
         document.body.classList.toggle('card-mode', isCard);
-        document.querySelectorAll('#acctSwitch [data-mode]').forEach(b => {
+        document.querySelectorAll(SWITCHES).forEach(b => {
             const on = b.dataset.mode === mode;
             b.classList.toggle('on', on);
             b.setAttribute('aria-selected', on ? 'true' : 'false');
         });
+        // En móvil el saludo de la barra dice qué se está viendo.
+        if ($('mshellHi')) $('mshellHi').textContent = isCard ? 'Tarjeta' : 'Bienvenido';
+        if ($('mshellName')) $('mshellName').textContent = isCard ? settings().name : 'Conta Medina';
         try { localStorage.setItem(MODE_KEY, mode); } catch { /* modo privado */ }
         if (isCard) {
             renderCard();
@@ -384,7 +388,7 @@
     }
 
     /* ---------- Eventos ---------- */
-    document.querySelectorAll('#acctSwitch [data-mode]').forEach(b => b.addEventListener('click', () => { cycleOffset = 0; setMode(b.dataset.mode); }));
+    document.querySelectorAll(SWITCHES).forEach(b => b.addEventListener('click', () => { cycleOffset = 0; setMode(b.dataset.mode); }));
     $('cardView').addEventListener('click', e => {
         const b = e.target.closest('[data-cc]');
         if (!b || b.disabled) return;
