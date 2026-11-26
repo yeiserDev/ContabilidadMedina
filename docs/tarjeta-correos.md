@@ -3,7 +3,11 @@
 Arriba de la app hay un switch **Mi cuenta / Tarjeta**. La vista de tarjeta lleva
 sus propios movimientos (no cambian el saldo de la cuenta) con:
 
-- Deuda actual, línea usada y disponible (los consumos en US$ se convierten con el tipo de cambio de Ajustes).
+- Deuda actual, línea usada y disponible en la moneda de la línea (por defecto **US$ 850**, editable en Ajustes).
+- Consumos en soles o en dólares: los que no están en la moneda de la línea se convierten con el
+  **tipo de cambio del banco**. Cada movimiento guarda su propio tipo de cambio: el que trae el correo
+  si lo menciona, o el de Ajustes en ese momento. Cambiar el tipo de cambio de hoy no altera consumos anteriores.
+- El monto a pagar se muestra por moneda (como en el estado de cuenta bimoneda) y su equivalente total.
 - Ciclo actual según el **día de corte**, y cuánto falta pagar del último corte antes del **día de pago**.
   Las compras en cuotas se facturan de a una cuota por corte.
 - **Leer correos**: busca en Gmail las notificaciones de Scotiabank, Gemini las interpreta y se agregan solas.

@@ -57,6 +57,21 @@ test('statement bills installments one per closing and subtracts later payments'
     assert.equal(M.closingsBetween('2026-09-10', '2026-11-20', 20), 3);
 });
 
+test('a dollar line converts soles purchases with the rate frozen on each movement', () => {
+    const s = { lineCurrency: 'USD', fxRate: 4 };
+    assert.equal(M.toLine(375, 'PEN', s, 3.75), 100);
+    assert.equal(M.toLine(400, 'PEN', s), 100); // sin TC propio usa el de Ajustes
+    assert.equal(M.toLine(12.5, 'USD', s), 12.5);
+    assert.equal(M.toLine(10, 'USD', { lineCurrency: 'PEN', fxRate: 3.8 }), 38);
+    const used = M.usedInLine([
+        { kind: 'consumo', amount: 375, currency: 'PEN', fxRate: 3.75 },
+        { kind: 'consumo', amount: 50, currency: 'USD' },
+        { kind: 'pago', amount: 20, currency: 'USD' },
+        { kind: 'consumo', amount: 999, currency: 'USD', status: 'review' },
+    ], s);
+    assert.equal(used, 130);
+});
+
 // ---------- Lectura de correos (lib/cardEmails.ts y la ruta) ----------
 function load(file, requireMock) {
     const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), {
@@ -85,7 +100,9 @@ test('email html becomes readable text and bodies are found in nested parts', ()
 test('model output is validated before it reaches the app', () => {
     const email = { id: 'm1', subject: '', from: '', receivedDate: '2026-11-20', text: '' };
     const ok = { kind: 'consumo', amount: 45.904, currency: 'PEN', date: '2026-11-19', merchant: 'PLAZA VEA', last4: '1234', installments: null, needsReview: false, note: '' };
-    assert.deepEqual(plain(lib.normalizeMovement(ok, email, '2026-11-26')), { emailId: 'm1', kind: 'consumo', amount: 45.9, currency: 'PEN', date: '2026-11-19', merchant: 'PLAZA VEA', last4: '1234', installments: null, needsReview: false, note: '' });
+    assert.deepEqual(plain(lib.normalizeMovement(ok, email, '2026-11-26')), { emailId: 'm1', kind: 'consumo', amount: 45.9, currency: 'PEN', date: '2026-11-19', merchant: 'PLAZA VEA', last4: '1234', installments: null, exchangeRate: null, needsReview: false, note: '' });
+    assert.equal(lib.normalizeMovement({ ...ok, exchangeRate: 3.7512 }, email, '2026-11-26').exchangeRate, 3.7512);
+    assert.equal(lib.normalizeMovement({ ...ok, exchangeRate: 375 }, email, '2026-11-26').exchangeRate, null);
     assert.equal(lib.normalizeMovement({ ...ok, kind: 'ninguno' }, email, '2026-11-26'), null);
     assert.equal(lib.normalizeMovement({ ...ok, amount: -3 }, email, '2026-11-26'), null);
     const future = lib.normalizeMovement({ ...ok, date: '2027-01-01' }, email, '2026-11-26');

@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
       merchant: { type: "string" },
       last4: { type: ["string", "null"] },
       installments: { type: ["integer", "null"] },
+      exchangeRate: { type: ["number", "null"] },
       needsReview: { type: "boolean" },
       note: { type: "string" },
     },
@@ -101,6 +102,7 @@ export async function POST(req: NextRequest) {
     + "Cualquier otra cosa es kind=ninguno: tarjeta de débito o cuenta de ahorros, transferencias, promociones, estados de cuenta, códigos de verificación, operaciones rechazadas o denegadas. "
     + "amount es el importe de la operación (nunca la línea disponible ni el saldo). currency PEN para soles o USD para dólares. date es la fecha de la operación YYYY-MM-DD o null si no aparece; no uses la fecha actual. "
     + "merchant es el comercio o concepto, breve. last4 son los últimos 4 dígitos de la tarjeta si aparecen. installments es el número de cuotas si la compra fue en cuotas, si no null. "
+    + "exchangeRate es el tipo de cambio en soles por dólar si el correo lo menciona o muestra el monto en ambas monedas (sol entre dólar); si no, null. "
     + "needsReview=true si dudas de algo (por ejemplo si no es claro que sea tarjeta de crédito). note explica en pocas palabras qué revisar, sin datos sensibles. Devuelve un elemento por correo con su mismo id.";
   let movements: CardMovement[] = [];
   let waiting = true;

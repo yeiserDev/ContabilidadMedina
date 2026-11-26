@@ -21,6 +21,7 @@ export interface CardMovement {
   merchant: string;
   last4: string | null;
   installments: number | null;
+  exchangeRate: number | null; // S/ por US$ si el correo lo indica
   needsReview: boolean;
   note: string;
 }
@@ -134,6 +135,9 @@ export function normalizeMovement(raw: unknown, email: EmailForParsing, today: s
   const last4 = typeof r.last4 === "string" && /^\d{4}$/.test(r.last4) ? r.last4 : null;
   const installments = typeof r.installments === "number" && Number.isInteger(r.installments)
     && r.installments > 1 && r.installments <= 60 ? r.installments : null;
+  // Tipo de cambio S/ por US$: fuera de un rango razonable se ignora.
+  const exchangeRate = typeof r.exchangeRate === "number" && r.exchangeRate > 1 && r.exchangeRate < 10
+    ? Math.round(r.exchangeRate * 10000) / 10000 : null;
   return {
     emailId: email.id,
     kind,
@@ -143,6 +147,7 @@ export function normalizeMovement(raw: unknown, email: EmailForParsing, today: s
     merchant: merchant || (kind === "pago" ? "Pago de tarjeta" : "Movimiento con tarjeta"),
     last4,
     installments,
+    exchangeRate,
     needsReview: r.needsReview !== false || !dateOk || !merchant || (currencyRaw !== "PEN" && currencyRaw !== "USD"),
     note: typeof r.note === "string" ? r.note.slice(0, 200) : "",
   };

@@ -31,7 +31,7 @@
     <link rel="stylesheet" href="record-detail.css?v=1">
     <link rel="stylesheet" href="payments.css?v=1">
     <link rel="stylesheet" href="sidebar.css?v=4">
-    <link rel="stylesheet" href="card.css?v=1">
+    <link rel="stylesheet" href="card.css?v=2">
     <style>
         /* ===== SPLASH SCREEN (rápido y profesional, ~0.6s total) ===== */
         #splash {
@@ -583,6 +583,7 @@
                             <option value="USD">Dólares (US$)</option>
                         </select></label>
                 </div>
+                <label id="ctxRateWrap">Tipo de cambio del banco <small>(S/ por US$)</small><input type="number" id="ctxRate" class="mi" min="0.01" step="0.001" inputmode="decimal"></label>
                 <label id="ctxInstallmentsWrap">Cuotas <small>(opcional)</small><input type="number" id="ctxInstallments" class="mi" min="2" max="60" inputmode="numeric" placeholder="Sin cuotas"></label>
             </div>
             <div class="modal-ft">
@@ -605,12 +606,18 @@
                     <label style="flex:2;">Nombre<input type="text" id="ccsName" class="mi" maxlength="40" placeholder="Scotiabank"></label>
                     <label style="flex:1;">Últimos 4<input type="text" id="ccsLast4" class="mi" maxlength="4" inputmode="numeric" placeholder="1234"></label>
                 </div>
-                <label>Línea de crédito (S/)<input type="text" inputmode="decimal" autocomplete="off" data-money id="ccsLimit" class="mi" placeholder="0.00"></label>
+                <div style="display:flex; gap:12px;">
+                    <label style="flex:2;">Línea de crédito<input type="text" inputmode="decimal" autocomplete="off" data-money id="ccsLimit" class="mi" placeholder="0.00"></label>
+                    <label style="flex:1;">Moneda<select id="ccsLineCur" class="mi msel">
+                            <option value="USD">US$</option>
+                            <option value="PEN">S/</option>
+                        </select></label>
+                </div>
                 <div style="display:flex; gap:12px;">
                     <label style="flex:1;">Día de corte<input type="number" id="ccsClosing" class="mi" min="1" max="31" inputmode="numeric"></label>
                     <label style="flex:1;">Día de pago<input type="number" id="ccsDue" class="mi" min="1" max="31" inputmode="numeric"></label>
                 </div>
-                <label>Tipo de cambio para la línea <small>(consumos en US$)</small><input type="number" id="ccsRate" class="mi" min="0.01" step="0.01" inputmode="decimal"></label>
+                <label>Tipo de cambio Scotiabank <small>(S/ por US$, se usa para los nuevos consumos)</small><input type="number" id="ccsRate" class="mi" min="0.01" step="0.001" inputmode="decimal"></label>
                 <p class="cc-hint">Los encuentras en tu estado de cuenta de Scotiabank: “Fecha de cierre” y “Último día de pago”.</p>
             </div>
             <div class="modal-ft"><button class="mb mb--ghost" data-close="cardSettingsModal">Cancelar</button><button
@@ -998,7 +1005,7 @@
     <script src="ui-controls.js?v=1"></script>
     <script src="mobile-shell.js?v=85"></script>
     <script src="mobile-calendar.js?v=98"></script>
-    <script src="card.js?v=1"></script>
+    <script src="card.js?v=2"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
