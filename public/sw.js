@@ -1,5 +1,5 @@
 // v83 — Nuevo logo corporativo integrado: transporte & contabilidad
-const CACHE_NAME = 'contamedina-v115';
+const CACHE_NAME = 'contamedina-v116';
 
 // All app shell files to pre-cache on install
 const SHELL = [
@@ -127,6 +127,25 @@ self.addEventListener('fetch', (e) => {
                 }
                 return res;
             }).catch(() => caches.match(request))
+        );
+        return;
+    }
+
+    // 2.8 Páginas (index.html) — Network-First: con internet siempre llega la
+    // versión publicada; sin internet (o si la red tarda más de 4 s) se usa la
+    // copia guardada. Los JS/CSS llevan ?v= y pueden seguir en Cache-First.
+    if (request.mode === 'navigate') {
+        e.respondWith(
+            caches.open(CACHE_NAME).then(async (cache) => {
+                try {
+                    const res = await fetch(request, { signal: AbortSignal.timeout(4000) });
+                    if (res && res.ok) cache.put('./index.html', res.clone());
+                    return res;
+                } catch (err) {
+                    return (await cache.match(request)) || (await cache.match('./index.html'))
+                        || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+                }
+            })
         );
         return;
     }

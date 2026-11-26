@@ -1022,7 +1022,17 @@
                         .catch(err => console.warn('No se pudo desactivar el SW local:', err));
                     return;
                 }
-                navigator.serviceWorker.register('./sw.js')
+                // Cuando se instala una versión nueva, recargar una vez para mostrarla
+                // (solo si ya había una versión anterior controlando la página).
+                if (navigator.serviceWorker.controller) {
+                    let reloaded = false;
+                    navigator.serviceWorker.addEventListener('controllerchange', () => {
+                        if (reloaded) return;
+                        reloaded = true;
+                        location.reload();
+                    });
+                }
+                navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
                     .then(() => console.log('✅ Service Worker registrado'))
                     .catch((err) => console.warn('SW no disponible:', err));
             });
