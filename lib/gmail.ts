@@ -1,6 +1,8 @@
 // Lectura de Gmail con OAuth2 de TU cuenta (solo lectura).
-// Usa GMAIL_REFRESH_TOKEN si existe; si no, el mismo GOOGLE_REFRESH_TOKEN de
-// Drive (sirve solo si al generarlo también se marcó el scope de Gmail).
+// Si existe GMAIL_CLIENT_ID, Gmail usa su propio cliente OAuth
+// (GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET + GMAIL_REFRESH_TOKEN), separado del de Drive.
+// Si no, usa el cliente de Drive (GOOGLE_CLIENT_ID/SECRET) con GMAIL_REFRESH_TOKEN,
+// o el mismo GOOGLE_REFRESH_TOKEN (sirve solo si al generarlo se marcó el scope de Gmail).
 import { google } from "googleapis";
 import { extractBody, limaDate, type EmailForParsing } from "./cardEmails";
 
@@ -12,12 +14,19 @@ let cached: ReturnType<typeof google.gmail> | null = null;
 
 function getGmail() {
   if (cached) return cached;
-  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
-  const refreshToken = process.env.GMAIL_REFRESH_TOKEN || process.env.GOOGLE_REFRESH_TOKEN;
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !refreshToken) {
+  const env = process.env;
+  // Un refresh token solo sirve con el cliente que lo generó: con cliente propio
+  // de Gmail no se recurre al token de Drive.
+  const ownClient = !!env.GMAIL_CLIENT_ID;
+  const clientId = ownClient ? env.GMAIL_CLIENT_ID : env.GOOGLE_CLIENT_ID;
+  const clientSecret = ownClient ? env.GMAIL_CLIENT_SECRET : env.GOOGLE_CLIENT_SECRET;
+  const refreshToken = ownClient
+    ? env.GMAIL_REFRESH_TOKEN
+    : env.GMAIL_REFRESH_TOKEN || env.GOOGLE_REFRESH_TOKEN;
+  if (!clientId || !clientSecret || !refreshToken) {
     throw new GmailConfigError("Credenciales de Gmail no configuradas");
   }
-  const client = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+  const client = new google.auth.OAuth2(clientId, clientSecret);
   client.setCredentials({ refresh_token: refreshToken });
   cached = google.gmail({ version: "v1", auth: client });
   return cached;

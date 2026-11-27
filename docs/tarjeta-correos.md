@@ -29,12 +29,16 @@ Cada correo se procesa una sola vez (se recuerda su id), así que borrar o desca
 3. Variables en `.env.local` y en Vercel:
 
 ```
-GMAIL_REFRESH_TOKEN=el_token_nuevo          # si falta, se usa GOOGLE_REFRESH_TOKEN
+GMAIL_CLIENT_ID=id_del_cliente_de_gmail     # opcional: cliente OAuth propio (proyecto contabilidadmedina2026)
+GMAIL_CLIENT_SECRET=secret_de_ese_cliente   # obligatorio si hay GMAIL_CLIENT_ID
+GMAIL_REFRESH_TOKEN=el_token_nuevo          # generado con ese cliente; sin GMAIL_CLIENT_ID, si falta se usa GOOGLE_REFRESH_TOKEN
 CARD_ALLOWED_EMAILS=tu_correo_de_login      # recomendado: solo estas cuentas pueden leer los correos
 CARD_EMAIL_SENDER=scotiabank.com.pe         # opcional: remitente a buscar
 ```
 
-También se usan `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GEMINI_API_KEY`, que ya existen.
+Con `GMAIL_CLIENT_ID`, Gmail usa su propio cliente OAuth y la API de Gmail se activa en el proyecto
+de ese cliente. Sin él, usa `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` (los de Drive).
+También se usa `GEMINI_API_KEY`, que ya existe.
 
 > Si la pantalla de consentimiento de OAuth está en modo **Prueba**, Google vence los refresh
 > tokens a los 7 días. Para que no caduque, pásala a **En producción** (para uso propio no hace
