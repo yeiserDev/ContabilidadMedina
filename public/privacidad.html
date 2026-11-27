@@ -34,8 +34,11 @@
 
   <h2>Qué se guarda</h2>
   <ul>
-    <li>Del correo se guarda únicamente el movimiento (fecha, comercio, monto y moneda)
-        y el identificador del correo, para no procesarlo dos veces.</li>
+    <li>Del correo se guarda únicamente el movimiento (fecha, comercio, monto, moneda,
+        tipo de cambio, cuotas y últimos 4 dígitos de la tarjeta si aparecen) y el
+        identificador del correo, para no procesarlo dos veces. El correo completo no se guarda.</li>
+    <li>Los movimientos y las cuentas de la aplicación se guardan en una base de datos
+        Firebase (Google) del dueño.</li>
     <li>El texto del correo se procesa con Google Gemini solo para extraer esos datos.</li>
     <li>Los comprobantes que sube el dueño se guardan en su propio Google Drive.</li>
   </ul>
