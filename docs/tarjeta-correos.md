@@ -10,7 +10,11 @@ sus propios movimientos (no cambian el saldo de la cuenta) con:
 - El monto a pagar se muestra por moneda (como en el estado de cuenta bimoneda) y su equivalente total.
 - Ciclo actual según el **día de corte**, y cuánto falta pagar del último corte antes del **día de pago**.
   Las compras en cuotas se facturan de a una cuota por corte.
-- **Leer correos**: busca en Gmail las notificaciones de Scotiabank, Gemini las interpreta y se agregan solas.
+- **Leer correos**: busca en Gmail las constancias de Scotiabank y las interpreta por su formato fijo
+  (`lib/scotiabankParser.ts`, sin IA ni costo). Toma los **pagos a la tarjeta** y los **pagos de servicios o con QR
+  hechos con la tarjeta de crédito**; descarta Plin, Yape, transferencias, débito y avisos. Si se indicaron los
+  últimos 4 dígitos, solo acepta esa tarjeta. Un aviso de consumo con un formato desconocido entra a *Por revisar*.
+  Scotiabank **no envía por correo los consumos** con la tarjeta: esos se registran a mano o se cuadran con el banco.
   Las dudosas (por ejemplo, si no queda claro que sea tarjeta de crédito) quedan en **Por revisar**.
 - Consumos y pagos manuales, editables tocando cada movimiento.
 
@@ -47,7 +51,7 @@ También se usa `GEMINI_API_KEY`, que ya existe.
 ## Privacidad
 
 - El servidor solo lee (scope `gmail.readonly`), solo correos del remitente configurado y como máximo de los últimos 180 días.
-- Los correos sin montos (promociones) se descartan sin enviarse a Gemini. Del resto se envían asunto y texto (máx. 4000 caracteres).
+- Los correos se leen en el servidor y no se envían a ningún servicio de IA. Gmail ni siquiera devuelve los Plin ni las transferencias (se excluyen en la búsqueda).
 - No se guardan los correos: solo monto, fecha, comercio, cuotas y últimos 4 dígitos.
 - Los movimientos se guardan en el mismo nodo `contacontrol` de Firebase que el resto de la app.
 
@@ -55,6 +59,6 @@ También se usa `GEMINI_API_KEY`, que ya existe.
 
 En Vercel → Logs busca `card_emails`. Códigos: `GMAIL_CONFIG` (faltan variables), `GMAIL_AUTH`
 (token vencido o revocado), `GMAIL_SCOPE` (falta el scope o la API no está activada),
-`GMAIL_QUOTA`, `PROVIDER_*` (Gemini).
+`GMAIL_QUOTA`.
 
 Pruebas: `npm test`.

@@ -92,11 +92,6 @@ export function extractBody(payload: GmailPart | null | undefined): string {
   return normalizeSpace(plain);
 }
 
-/** Descarta rápido correos sin montos (promociones, avisos) antes de pagar por leerlos. */
-export function looksLikeMovement(text: string): boolean {
-  return /(S\/\.?|US\$|\$|PEN|USD|soles|d[oó]lares)\s*\d/i.test(text);
-}
-
 /** Fecha YYYY-MM-DD en hora de Lima (UTC-5, sin horario de verano). */
 export function limaDate(ms: number): string {
   return new Date(ms - 5 * 3600_000).toISOString().slice(0, 10);
@@ -115,7 +110,7 @@ export function buildQuery(sender: string, since: string): string {
 }
 
 /**
- * Valida lo que devolvió el modelo. Todo lo dudoso se marca para revisión;
+ * Valida un movimiento leído de un correo. Todo lo dudoso se marca para revisión;
  * lo que no es un movimiento de tarjeta (o no tiene monto) se descarta.
  */
 export function normalizeMovement(raw: unknown, email: EmailForParsing, today: string): CardMovement | null {

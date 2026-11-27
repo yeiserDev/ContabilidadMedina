@@ -423,7 +423,7 @@
                 const res = await fetch(`${BACKEND_URL}/api/card-emails`, {
                     method: 'POST', signal: AbortSignal.timeout(65_000),
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                    body: JSON.stringify({ since, skip: [...seen] }),
+                    body: JSON.stringify({ since, skip: [...seen], last4: settings().last4 || undefined }),
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) { error = data.error || 'No se pudieron leer los correos.'; break; }

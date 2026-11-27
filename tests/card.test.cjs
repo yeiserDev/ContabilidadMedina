@@ -131,13 +131,11 @@ test('email html becomes readable text and bodies are found in nested parts', ()
     const b64 = s => Buffer.from(s).toString('base64url');
     const payload = { mimeType: 'multipart/alternative', parts: [{ mimeType: 'text/plain', body: { data: b64('plano') } }, { mimeType: 'text/html', body: { data: b64('<b>Consumo S/ 10</b>') } }] };
     assert.equal(lib.extractBody(payload), 'Consumo S/ 10');
-    assert.equal(lib.looksLikeMovement('Monto: US$ 12.00'), true);
-    assert.equal(lib.looksLikeMovement('Conoce nuestras promociones'), false);
     assert.equal(lib.buildQuery('scotiabank.com.pe', '2026-10-01'), 'from:(scotiabank.com.pe) after:2026/10/01');
     assert.equal(lib.limaDate(Date.parse('2026-11-27T03:00:00Z')), '2026-11-26');
 });
 
-test('model output is validated before it reaches the app', () => {
+test('parsed movements are validated before they reach the app', () => {
     const email = { id: 'm1', subject: '', from: '', receivedDate: '2026-11-20', text: '' };
     const ok = { kind: 'consumo', amount: 45.904, currency: 'PEN', date: '2026-11-19', merchant: 'PLAZA VEA', last4: '1234', installments: null, needsReview: false, note: '' };
     assert.deepEqual(plain(lib.normalizeMovement(ok, email, '2026-11-26')), { emailId: 'm1', kind: 'consumo', amount: 45.9, currency: 'PEN', date: '2026-11-19', merchant: 'PLAZA VEA', last4: '1234', installments: null, exchangeRate: null, needsReview: false, note: '' });
@@ -151,21 +149,111 @@ test('model output is validated before it reaches the app', () => {
     assert.equal(lib.normalizeMovement({ ...ok, last4: '12ab', installments: 1 }, email, '2026-11-26').last4, null);
 });
 
-async function sync({ authorized = true, email = 'yo@example.com', allowed = '', key = 'k', messages = [], modelOut = null, gmailError = null, body = {} } = {}) {
+// Copias INVENTADAS con el formato de las constancias de Scotiabank (otros montos,
+// comercio, números de operación y dígitos): el repositorio es público.
+const parser = load('lib/scotiabankParser.ts', id => id === './cardEmails' ? lib : require(id));
+const mail = (id, text, receivedDate = '2026-11-23') => ({ id, subject: 'Constancia de operación', from: 'bancadigital@scotiabank.com.pe', receivedDate, text });
+const PAGO = `Hola CLIENTE,
+Esta es la constancia de tu pago de Tarjeta de Crédito:
+23 nov., 11:28 am
+Pago de Tarjeta de Crédito
+Número de operación 111.222.333.4444
+Pagado con:
+Cta. Free
+*** ***9999
+Monto pagado:
+S/ 1,250.50
+Tarjeta pagada
+:
+Mastercard Clásica
+**** **** **** 1234
+Muchas gracias.`;
+const SERVICIO = (payer) => `Hola CLIENTE,
+Esta es la
+constancia de tu pago de servicio
+:
+23 nov., 07:07 pm
+Pago de servicio
+Número de operación 111.222.333.5555
+Fecha de efectividad:
+23 nov.
+Pagado con:
+${payer}
+Monto pagado:
+S/ 199.90
+Empresa o institución:
+Colegio Ejemplo Sac
+Servicio:
+Pension Soles
+Dni/Ruc/Codigo:
+[OCULTO]
+N° Recibo:
+ABC-123
+Muchas gracias.`;
+const PLIN = `Hola CLIENTE,
+Esta es la constancia de tu transferencia Plin:
+26 nov., 07:00 am
+Transferencia Plin
+Cuenta de origen:
+Cta. Free
+*** ***9999
+Monto enviado:
+S/ 50.00
+Destino:
+Yape`;
+const QR = (payer) => `Hola CLIENTE,
+Esta es la constancia de tu operación:
+21 nov., 06:16 pm
+Pago con QR
+Pagaste con:
+${payer}
+Monto:
+S/ 12.00
+Pagaste a:
+TIENDA EJEMPLO SAC
+Muchas gracias.`;
+const parse = (text, last4 = '1234', receivedDate) => plain(parser.parseScotiabankEmail(mail('x', text, receivedDate), last4));
+
+test('reader takes card payments and card-paid services without any model', () => {
+    assert.deepEqual(parse(PAGO), { status: 'movement', movement: { installments: null, exchangeRate: null, note: '', kind: 'pago', amount: 1250.5, currency: 'PEN', date: '2026-11-23', merchant: 'Pago a la tarjeta', last4: '1234', needsReview: false } });
+    const service = parse(SERVICIO('Mastercard Clásica\n**** **** **** 1234'));
+    assert.equal(service.status, 'movement');
+    assert.deepEqual([service.movement.kind, service.movement.amount, service.movement.merchant, service.movement.date, service.movement.needsReview], ['consumo', 199.9, 'Colegio Ejemplo Sac', '2026-11-23', false]);
+    // Las tablas del correo pueden llegar como "Etiqueta: | valor" en una sola línea.
+    assert.equal(parse('Esta es la constancia de tu pago de Tarjeta de Crédito: | 23 nov., 11:28 am | Monto pagado: | S/ 80.00 | Tarjeta pagada | : | Mastercard Clásica | **** **** **** 1234').movement.amount, 80);
+});
+
+test('reader ignores Plin, transfers, debit, account-paid services and other cards', () => {
+    assert.equal(parse(PLIN).status, 'ignored');
+    assert.equal(parse(SERVICIO('Cta. Free\n*** ***9999')).reason, 'pago de servicio desde la cuenta');
+    assert.equal(parse(QR('Débito Mastercard\n**** **** **** 5555')).status, 'ignored');
+    assert.equal(parse(PAGO, '9876').reason, 'pago de otra tarjeta');
+    assert.equal(parse('Has realizado la visualización de la información de tu Tarjeta de Crédito Mastercard **** 1234').status, 'ignored');
+    // Con la tarjeta de crédito, el pago con QR sí es un consumo.
+    const qr = parse(QR('Mastercard Clásica\n**** **** **** 1234'));
+    assert.deepEqual([qr.status, qr.movement.merchant, qr.movement.amount], ['movement', 'TIENDA EJEMPLO SAC', 12]);
+});
+
+test('unknown credit card alerts come in for review and dates infer the year', () => {
+    const unknown = parse('Realizaste un consumo con tu Tarjeta de Crédito **** 1234 Comercio: DON EJEMPLO Monto: US$ 9.99 Fecha: 02 dic 2026');
+    assert.deepEqual([unknown.movement.kind, unknown.movement.currency, unknown.movement.amount, unknown.movement.merchant, unknown.movement.needsReview], ['consumo', 'USD', 9.99, 'DON EJEMPLO', true]);
+    assert.equal(parser.operationDate('30 dic., 10:00 pm', '2027-01-02'), '2026-12-30');
+    assert.equal(parser.operationDate('23 nov., 11:28 am', '2026-11-23'), '2026-11-23');
+});
+
+async function sync({ authorized = true, email = 'yo@example.com', allowed = '', messages = [], gmailError = null, body = {} } = {}) {
     const saved = { ...process.env }, originalFetch = global.fetch, originalWarn = console.warn;
-    Object.assign(process.env, { GEMINI_API_KEY: key, CARD_ALLOWED_EMAILS: allowed });
-    let geminiCalls = 0, query = null, sentToModel = null;
+    Object.assign(process.env, { CARD_ALLOWED_EMAILS: allowed });
+    delete process.env.GEMINI_API_KEY;
+    let fetchCalls = 0, query = null;
     console.warn = () => {};
-    global.fetch = async (url, options) => {
-        geminiCalls++;
-        sentToModel = JSON.parse(JSON.parse(options.body).contents[0].parts[0].text);
-        return new Response(JSON.stringify({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: JSON.stringify(modelOut || { movements: [] }) }] } }] }));
-    };
+    global.fetch = async () => { fetchCalls++; throw new Error('no network'); };
     try {
         const route = load('app/api/card-emails/route.ts', id => {
             if (id === '@/lib/verifyToken') return { verifyEmailUser: async () => authorized ? { sub: 'u', email } : null };
             if (id === '@/lib/cors') return { corsHeaders: () => ({}) };
             if (id === '@/lib/cardEmails') return lib;
+            if (id === '@/lib/scotiabankParser') return parser;
             if (id === '@/lib/gmail') return {
                 GmailConfigError: class extends Error {},
                 listMessageIds: async q => { query = q; if (gmailError) throw gmailError; return messages.map(m => m.id); },
@@ -174,42 +262,31 @@ async function sync({ authorized = true, email = 'yo@example.com', allowed = '',
             return require(id);
         });
         const res = await route.POST(new Request('http://localhost/api/card-emails', { method: 'POST', body: JSON.stringify(body), headers: { authorization: 'Bearer t' } }));
-        return { status: res.status, data: await res.json(), geminiCalls, query, sentToModel };
+        return { status: res.status, data: await res.json(), fetchCalls, query };
     } finally {
         process.env = saved; global.fetch = originalFetch; console.warn = originalWarn;
     }
 }
-const mail = (id, text) => ({ id, subject: 'Consumo', from: 'alertas@scotiabank.com.pe', receivedDate: '2026-11-20', text });
 
-test('card email sync requires a session, the allow-list and the reading key', async () => {
+test('card email sync requires a session and the allow-list, but no AI key', async () => {
     assert.equal((await sync({ authorized: false })).status, 401);
     assert.equal((await sync({ allowed: 'otro@example.com' })).status, 403);
     assert.equal((await sync({ allowed: 'YO@example.com' })).status, 200);
-    assert.equal((await sync({ key: '' })).status, 503);
 });
 
-test('only emails with amounts reach the model, skipped ids are not re-read and invented ids are dropped', async () => {
-    const messages = [mail('a', 'Consumo S/ 45.90 en PLAZA VEA'), mail('b', 'Promoción del mes'), mail('c', 'Pago US$ 10')];
-    const modelOut = { movements: [
-        { id: 'a', kind: 'consumo', amount: 45.9, currency: 'PEN', date: '2026-11-19', merchant: 'PLAZA VEA', last4: null, installments: null, needsReview: false, note: '' },
-        { id: 'zzz', kind: 'consumo', amount: 1, currency: 'PEN', date: '2026-11-19', merchant: 'X', last4: null, installments: null, needsReview: false, note: '' },
-        { id: 'a', kind: 'consumo', amount: 45.9, currency: 'PEN', date: '2026-11-19', merchant: 'PLAZA VEA', last4: null, installments: null, needsReview: false, note: '' },
-    ] };
-    const r = await sync({ messages, modelOut, body: { since: '2026-11-01', skip: ['c'] } });
-    assert.equal(r.status, 200);
-    assert.equal(r.query, 'from:(scotiabank.com.pe) after:2026/11/01');
-    assert.deepEqual(r.sentToModel.map(e => e.id), ['a']);
-    assert.deepEqual(plain(r.data.processed), ['a', 'b']);
-    assert.deepEqual(r.data.movements.map(m => m.emailId), ['a']);
+test('sync reads only card movements, skips seen ids and never calls an external model', async () => {
+    const messages = [mail('a', PAGO), mail('b', PLIN), mail('c', SERVICIO('Mastercard Clásica **** 1234')), mail('d', SERVICIO('Cta. Free *** ***9999'))];
+    const r = await sync({ messages, body: { since: '2026-11-01', skip: ['d'], last4: '1234' } });
+    assert.equal(r.status, 200);assert.equal(r.fetchCalls, 0);
+    assert.match(r.query, /^from:\(scotiabank\.com\.pe\) after:2026\/11\/01 -subject:Plin/);
+    assert.deepEqual(plain(r.data.processed), ['a', 'b', 'c']);
+    assert.deepEqual(r.data.movements.map(m => [m.emailId, m.kind, m.amount]), [['a', 'pago', 1250.5], ['c', 'consumo', 199.9]]);
+    assert.equal(r.data.ignored['no es un movimiento de la tarjeta'], 1);
 });
 
-test('no model call when nothing looks like a movement, and Gmail failures are explained', async () => {
-    const quiet = await sync({ messages: [mail('b', 'Promoción')] });
-    assert.equal(quiet.geminiCalls, 0);assert.deepEqual(plain(quiet.data.processed), ['b']);
-    const expired = await sync({ gmailError: new Error('invalid_grant') });
-    assert.equal(expired.status, 502);assert.equal(expired.data.code, 'GMAIL_AUTH');
+test('Gmail failures are explained', async () => {
+    assert.equal((await sync({ gmailError: new Error('invalid_grant') })).data.code, 'GMAIL_AUTH');
     const badClient = await sync({ gmailError: Object.assign(new Error('invalid_client'), { response: { status: 401, data: { error: 'invalid_client' } } }) });
     assert.equal(badClient.data.code, 'GMAIL_CLIENT');
-    const scope = await sync({ gmailError: Object.assign(new Error('Insufficient Permission'), { code: 403 }) });
-    assert.equal(scope.data.code, 'GMAIL_SCOPE');
+    assert.equal((await sync({ gmailError: Object.assign(new Error('Insufficient Permission'), { code: 403 }) })).data.code, 'GMAIL_SCOPE');
 });
