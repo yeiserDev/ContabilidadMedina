@@ -106,7 +106,7 @@
     /* ---------- Interfaz ---------- */
     // Valores de la tarjeta Mastercard Clásica de Scotiabank (carta de bienvenida):
     // línea US$ 850, ciclo de facturación el 4 y último día de pago el 1.
-    const DEFAULTS = { name: 'Scotiabank', last4: '', lineCurrency: 'USD', limit: 850, closingDay: 4, dueDay: 1, fxRate: 3.75, openedOn: '' };
+    const DEFAULTS = { name: 'Scotiabank', last4: '', lineCurrency: 'USD', limit: 850, closingDay: 4, dueDay: 1, fxRate: 3.75, openedOn: '2026-10-06' };
     const MODE_KEY = 'ct_mode';
     const SWITCHES = '#acctSwitch [data-mode], .acct-mini [data-mode]';
     const SYNC_EVERY_MS = 2 * 3600_000;
@@ -303,7 +303,7 @@
                 </button>
                 <button type="button" class="cc-act" data-cc="add"><span class="material-symbols-outlined">add</span><span>Consumo</span></button>
                 <button type="button" class="cc-act" data-cc="pay"><span class="material-symbols-outlined">payments</span><span>Pago</span></button>
-                <button type="button" class="cc-act" data-cc="settings" aria-label="Ajustes de la tarjeta"><span class="material-symbols-outlined">tune</span></button>
+                <button type="button" class="cc-act" data-cc="settings"><span class="material-symbols-outlined">tune</span><span>Ajustes</span></button>
             </div>
             ${syncPanel(last)}
             ${reviewBlock(txns.filter(t => t.status === 'review'))}
@@ -338,9 +338,11 @@
         // quedó a medias se sigue desde el mismo punto (los ya leídos se saltan).
         // v2: las lecturas anteriores marcaban "última lectura" aunque quedaran a
         // medias, así que esas se vuelven a revisar desde el inicio.
-        const done = cardSync.v === 2 && cardSync.lastSync;
+        const openedOn = settings().openedOn || '';
+        // Completa = terminó y empezó en (o antes de) la apertura de la tarjeta.
+        const done = cardSync.v === 2 && cardSync.lastSync && (!openedOn || (cardSync.from && cardSync.from <= openedOn));
         // Sin lectura completa: desde la apertura de la tarjeta (si se indicó) o los últimos 45 días.
-        const opened = settings().openedOn || '';
+        const opened = openedOn;
         const pending = cardSync.pendingSince || '';
         const since = done ? addDays(cardSync.lastSync.slice(0, 10), -3)
             : ([opened, pending].filter(Boolean).sort()[0] || undefined);
@@ -380,7 +382,10 @@
                 persist();
                 renderCard();
             } while (more && rounds < 40);
-            if (!error && !more) { cardSync.lastSync = new Date().toISOString(); cardSync.v = 2; delete cardSync.pendingSince; }
+            if (!error && !more) {
+                if (!done) cardSync.from = cardSync.pendingSince || since || '';
+                cardSync.lastSync = new Date().toISOString(); cardSync.v = 2; delete cardSync.pendingSince;
+            }
             if (!error && more) error = 'Quedaron correos sin leer. Toca Reintentar para seguir donde quedó.';
         } catch (e) {
             error = e && e.name === 'TimeoutError' ? 'La lectura tardó demasiado.' : 'Sin conexión con el servidor.';
