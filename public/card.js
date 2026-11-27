@@ -45,40 +45,55 @@
 
     const active = t => t && t.status !== 'review';
     const sign = t => (t.kind === 'consumo' ? 1 : -1);
+    const cur = t => (t.currency === 'USD' ? 'USD' : 'PEN');
+    const round2 = n => Math.round(n * 100) / 100;
 
-    /** Línea usada por moneda: consumos menos pagos y abonos (montos completos). */
-    function usedByCurrency(txns) {
-        const out = { PEN: 0, USD: 0 };
-        txns.filter(active).forEach(t => { out[t.currency === 'USD' ? 'USD' : 'PEN'] += sign(t) * (+t.amount || 0); });
-        out.PEN = Math.round(out.PEN * 100) / 100; out.USD = Math.round(out.USD * 100) / 100;
-        return out;
-    }
+    /* Cuadre con el banco: `anchor` = { date, PEN, USD } es la deuda total que
+       mostraba el banco ese día. Desde ahí, la deuda es ese saldo más los
+       movimientos posteriores; los anteriores quedan como historial y no se
+       vuelven a sumar (así confirmar un correo viejo no duplica la deuda). */
+    const anchorOf = (s, until) => {
+        const a = s && s.anchor;
+        return a && /^\d{4}-\d{2}-\d{2}$/.test(a.date) && a.date <= until ? a : null;
+    };
 
-    /** Lo facturado hasta un corte: las compras en cuotas entran de a una por corte. */
-    function billedUntil(txns, until, closingDay) {
-        const out = { PEN: 0, USD: 0 };
-        txns.filter(t => active(t) && t.date <= until).forEach(t => {
-            const cur = t.currency === 'USD' ? 'USD' : 'PEN';
+    /** Saldo por moneda al final de `until`; con `closingDay`, las cuotas entran de a una por corte. */
+    function balanceAt(txns, s, until, closingDay) {
+        const a = anchorOf(s, until);
+        const out = { PEN: a ? +a.PEN || 0 : 0, USD: a ? +a.USD || 0 : 0 };
+        txns.filter(t => active(t) && (t.date || '') <= until && (!a || t.date > a.date)).forEach(t => {
             let amount = +t.amount || 0;
-            if (t.kind === 'consumo' && t.installments > 1) {
+            if (closingDay && t.kind === 'consumo' && t.installments > 1) {
                 amount = amount * Math.min(t.installments, closingsBetween(t.date, until, closingDay)) / t.installments;
             }
-            out[cur] += sign(t) * amount;
+            out[cur(t)] += sign(t) * amount;
         });
+        out.PEN = round2(out.PEN); out.USD = round2(out.USD);
         return out;
     }
+
+    /** Línea usada por moneda: consumos menos pagos y abonos (montos completos). */
+    const usedByCurrency = (txns, s) => balanceAt(txns, s, '9999-12-31');
+    /** Lo facturado hasta un corte. */
+    const billedUntil = (txns, until, closingDay, s) => balanceAt(txns, s, until, closingDay);
 
     /** Estado del último corte: cuánto se facturó, cuánto se pagó después y cuánto falta. */
     function statement(txns, settings, todayStr) {
         const current = cycleFor(todayStr, settings.closingDay);
         const prev = cycleFor(todayStr, settings.closingDay, -1);
-        const billed = billedUntil(txns, prev.end, settings.closingDay);
+        const billed = billedUntil(txns, prev.end, settings.closingDay, settings);
+        // Si se copió del banco el "Pago total del mes" de este corte, manda ese
+        // monto; solo se descuentan los pagos posteriores a la fecha en que se copió.
+        const o = settings.statementOverride;
+        const useOverride = o && o.closing === prev.end;
+        const since = useOverride ? (o.asOf || prev.end) : prev.end;
         const paidAfter = { PEN: 0, USD: 0 };
-        txns.filter(t => active(t) && t.kind !== 'consumo' && t.date > prev.end)
-            .forEach(t => { paidAfter[t.currency === 'USD' ? 'USD' : 'PEN'] += +t.amount || 0; });
+        txns.filter(t => active(t) && t.kind !== 'consumo' && t.date > since)
+            .forEach(t => { paidAfter[cur(t)] += +t.amount || 0; });
+        const base = useOverride ? { PEN: +o.PEN || 0, USD: +o.USD || 0 } : billed;
         const due = {};
-        for (const cur of ['PEN', 'USD']) due[cur] = Math.max(0, Math.round((Math.max(0, billed[cur]) - paidAfter[cur]) * 100) / 100);
-        return { current, prev, billed, paidAfter, due, dueDate: dueDateFor(prev.end, settings.dueDay) };
+        for (const c of ['PEN', 'USD']) due[c] = Math.max(0, round2(Math.max(0, base[c]) - paidAfter[c]));
+        return { current, prev, billed: base, paidAfter, due, dueDate: dueDateFor(prev.end, settings.dueDay), fromBank: !!useOverride };
     }
 
     /* Línea en una moneda (la de Scotiabank: dólares) y consumos en ambas.
@@ -86,7 +101,6 @@
        convirtió (el del correo del banco o el de Ajustes ese día), así cambiar
        el tipo de cambio de hoy no altera los consumos de ayer. */
     const lineCur = s => (s.lineCurrency === 'PEN' ? 'PEN' : 'USD');
-    const round2 = n => Math.round(n * 100) / 100;
     function toLine(amount, currency, s, rate) {
         const line = lineCur(s);
         if ((currency === 'USD' ? 'USD' : 'PEN') === line) return +amount || 0;
@@ -97,10 +111,12 @@
     const txnInLine = (t, s) => toLine(t.amount, t.currency, s, t.fxRate);
     /** Deuda total expresada en la moneda de la línea. */
     function usedInLine(txns, s) {
-        return round2(txns.filter(active).reduce((sum, t) => sum + sign(t) * txnInLine(t, s), 0));
+        const a = anchorOf(s, '9999-12-31');
+        const base = a ? toLine(a.PEN, 'PEN', s) + toLine(a.USD, 'USD', s) : 0;
+        return round2(txns.filter(t => active(t) && (!a || t.date > a.date)).reduce((sum, t) => sum + sign(t) * txnInLine(t, s), base));
     }
 
-    window.CardMath = { cycleFor, dueDateFor, closingsBetween, usedByCurrency, billedUntil, statement, addDays, toLine, txnInLine, usedInLine };
+    window.CardMath = { cycleFor, dueDateFor, closingsBetween, balanceAt, usedByCurrency, billedUntil, statement, addDays, toLine, txnInLine, usedInLine };
     if (typeof document === 'undefined' || !document.getElementById('cardView')) return;
 
     /* ---------- Interfaz ---------- */
@@ -182,8 +198,14 @@
             </div>
             <div class="cc-line-txt"><span>Disponible ${fmt(Math.min(limit, Math.max(0, limit - usedLine)), line)}</span><span>Línea ${fmt(limit, line)}</span></div>`
             : `<button type="button" class="cc-setup" data-cc="settings">Configura tu línea, corte y día de pago</button>`}
-            ${usedLine < 0 ? '<p class="cc-gap">Hay pagos sin sus consumos anteriores. Carga tu estado de cuenta para que la deuda cuadre.</p>' : ''}
-            <button type="button" class="cc-fx" data-cc="settings" aria-label="Cambiar tipo de cambio">TC banco S/ ${(+s.fxRate).toFixed(3)} por US$</button>
+            ${!s.anchor && usedLine < 0 ? '<p class="cc-gap">Faltan consumos anteriores: toca “Cuadrar con el banco” y copia tu deuda de la App Scotiabank.</p>' : ''}
+            <div class="cc-pills">
+                <button type="button" class="cc-fx" data-cc="settings" aria-label="Cambiar tipo de cambio">TC S/ ${(+s.fxRate).toFixed(3)}</button>
+                <button type="button" class="cc-fx ${s.anchor ? '' : 'cc-fx--cta'}" data-cc="reconcile">
+                    <span class="material-symbols-outlined" aria-hidden="true">${s.anchor ? 'verified' : 'balance'}</span>
+                    ${s.anchor ? `Cuadrado el ${short(s.anchor.date)}` : 'Cuadrar con el banco'}
+                </button>
+            </div>
         </article>
         <div class="cc-facts">
             <div class="cc-fact">
@@ -194,7 +216,7 @@
             <div class="cc-fact ${toPay <= 3 && owes ? 'cc-fact--warn' : ''}">
                 <span class="cc-fact-k">Pagar hasta el ${short(st.dueDate)}</span>
                 <strong>${owes ? both(st.due.PEN, st.due.USD) : 'Nada pendiente'}</strong>
-                <span class="cc-fact-sub">${owes ? `${st.due.PEN && st.due.USD ? `≈ ${fmt(dueLine, line)} · ` : ''}${toPay < 0 ? 'Vencido' : toPay === 0 ? 'Vence hoy' : `Faltan ${toPay} día${toPay === 1 ? '' : 's'}`}` : `Corte del ${short(st.prev.end)}`}</span>
+                <span class="cc-fact-sub">${st.fromBank ? 'Según el banco · ' : ''}${owes ? `${st.due.PEN && st.due.USD ? `≈ ${fmt(dueLine, line)} · ` : ''}${toPay < 0 ? 'Vencido' : toPay === 0 ? 'Vence hoy' : `Faltan ${toPay} día${toPay === 1 ? '' : 's'}`}` : `Corte del ${short(st.prev.end)}`}</span>
             </div>
         </div>`;
     }
@@ -284,7 +306,7 @@
         const txns = Array.isArray(cardTxns) ? cardTxns : [];
         const now = today();
         const st = statement(txns, s, now);
-        const used = usedByCurrency(txns);
+        const used = usedByCurrency(txns, s);
         const cyc = cycleFor(now, s.closingDay, cycleOffset);
         const inCycle = txns.filter(t => active(t) && t.date >= cyc.start && t.date <= cyc.end)
             .sort((a, b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
@@ -464,11 +486,39 @@
         const openedOn = $('ccsOpened').value;
         if (openedOn && (!/^\d{4}-\d{2}-\d{2}$/.test(openedOn) || openedOn > today())) { toast('Revisa la fecha de apertura', 'err'); return; }
         const prevOpened = settings().openedOn || '';
-        card = { v: 2, name: $('ccsName').value.trim().slice(0, 40) || DEFAULTS.name, last4, lineCurrency, limit, closingDay, dueDay, fxRate, openedOn };
+        card = { ...(card || {}), v: 2, name: $('ccsName').value.trim().slice(0, 40) || DEFAULTS.name, last4, lineCurrency, limit, closingDay, dueDay, fxRate, openedOn };
         // Si la apertura es anterior a lo ya leído, la próxima lectura vuelve a
         // revisar desde esa fecha (los correos ya procesados se saltan).
         if (openedOn && openedOn !== prevOpened) { cardSync = cardSync || {}; delete cardSync.v; cardSync.pendingSince = openedOn; }
         persist(); closeM('cardSettingsModal'); renderCard(); toast('Tarjeta actualizada');
+    }
+
+    /* ---------- Cuadre con el banco ---------- */
+    function openReconcile() {
+        const s = settings(), a = s.anchor, o = s.statementOverride;
+        const val = n => (n || n === 0) && a ? formatMoneyInput(n) : '';
+        $('ccrPen').value = a ? val(a.PEN) : ''; $('ccrUsd').value = a ? val(a.USD) : '';
+        $('ccrDuePen').value = o ? formatMoneyInput(o.PEN || 0) : ''; $('ccrDueUsd').value = o ? formatMoneyInput(o.USD || 0) : '';
+        $('ccrDate').value = a ? a.date : today();
+        $('ccrClear').style.display = a ? '' : 'none';
+        openM('cardReconcileModal');
+    }
+
+    function saveReconcile() {
+        const num = id => { const v = $(id).value.trim(); return v ? parseMoney(v) : 0; };
+        const PEN = num('ccrPen'), USD = num('ccrUsd'), duePEN = num('ccrDuePen'), dueUSD = num('ccrDueUsd');
+        const date = $('ccrDate').value;
+        if (!$('ccrPen').value.trim() && !$('ccrUsd').value.trim()) { toast('Copia la deuda total del banco', 'err'); return; }
+        if (![PEN, USD, duePEN, dueUSD].every(n => Number.isFinite(n) && n >= 0) || !/^\d{4}-\d{2}-\d{2}$/.test(date) || date > today()) {
+            toast('Revisa los montos y la fecha', 'err'); return;
+        }
+        const s = settings();
+        const closing = cycleFor(date, s.closingDay, -1).end;
+        const dueGiven = $('ccrDuePen').value.trim() || $('ccrDueUsd').value.trim();
+        card = { ...(card || {}), v: 2,
+            anchor: { date, PEN: round2(PEN), USD: round2(USD) },
+            statementOverride: dueGiven ? { closing, asOf: date, PEN: round2(duePEN), USD: round2(dueUSD) } : null };
+        persist(); closeM('cardReconcileModal'); renderCard();
     }
 
     /* ---------- Eventos ---------- */
@@ -485,6 +535,7 @@
         else if (act === 'add') openTxn('consumo');
         else if (act === 'pay') openTxn('pago');
         else if (act === 'settings') openSettings();
+        else if (act === 'reconcile') openReconcile();
         else if (act === 'edit' && t) openTxn(t.kind, t);
         else if (act === 'confirm' && t) { t.status = 'ok'; persist(); renderCard(); }
         else if (act === 'confirm-all') { cardTxns.forEach(x => { if (x.status === 'review') x.status = 'ok'; }); persist(); renderCard(); }
@@ -500,6 +551,11 @@
         });
     });
     $('ccsSave').addEventListener('click', saveSettings);
+    $('ccrSave').addEventListener('click', saveReconcile);
+    $('ccrClear').addEventListener('click', () => {
+        card = { ...(card || {}), anchor: null, statementOverride: null };
+        persist(); closeM('cardReconcileModal'); renderCard(); toast('Cuadre quitado');
+    });
 
     window.renderCard = renderCard;
     // app.js la llama al iniciar sesión: si la vista de tarjeta está abierta y

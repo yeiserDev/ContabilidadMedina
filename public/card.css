@@ -349,3 +349,10 @@ body.card-mode .sidebar-right { display: none !important; }
 }
 .cc-tip .material-symbols-outlined { font-size: 18px; color: #b45309; }
 [data-theme="dark"] .cc-tip .material-symbols-outlined { color: #fbbf24; }
+
+/* ---------- Cuadre con el banco ---------- */
+.cc-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.cc-pills .cc-fx { margin-top: 0; display: inline-flex; align-items: center; gap: 5px; }
+.cc-pills .cc-fx .material-symbols-outlined { font-size: 15px; }
+.cc-fx--cta { background: #fff; color: #B30C12; border-color: #fff; }
+.cc-step { margin: 12px 0 2px; font-size: 13px; line-height: 1.4; color: var(--ink-black); }

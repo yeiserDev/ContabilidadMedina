@@ -31,7 +31,7 @@
     <link rel="stylesheet" href="record-detail.css?v=1">
     <link rel="stylesheet" href="payments.css?v=1">
     <link rel="stylesheet" href="sidebar.css?v=4">
-    <link rel="stylesheet" href="card.css?v=5">
+    <link rel="stylesheet" href="card.css?v=7">
     <style>
         /* ===== SPLASH SCREEN (rápido y profesional, ~0.6s total) ===== */
         #splash {
@@ -604,6 +604,35 @@
         </div>
     </div>
 
+    <!-- MODAL: CUADRAR CON EL BANCO (card.js) -->
+    <div class="modal-bg" id="cardReconcileModal">
+        <div class="modal">
+            <div class="modal-hd">
+                <h2><span class="material-symbols-outlined" style="color:#EC111A">balance</span> Cuadrar con el banco</h2><button class="modal-x"
+                    data-close="cardReconcileModal"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="modal-bd">
+                <p class="cc-hint">Copia los montos de la App Scotiabank. Desde hoy la deuda parte de ese saldo y solo suman los movimientos nuevos.</p>
+                <p class="cc-step"><b>1.</b> En la App, toca <b>Pagar tarjeta → Total y Otros</b>: ahí sale <b>“Deuda total”</b>.</p>
+                <div style="display:flex; gap:12px;">
+                    <label style="flex:1;">Deuda total S/<input type="text" inputmode="decimal" autocomplete="off" data-money id="ccrPen" class="mi" placeholder="0.00"></label>
+                    <label style="flex:1;">Deuda total US$<input type="text" inputmode="decimal" autocomplete="off" data-money id="ccrUsd" class="mi" placeholder="0.00"></label>
+                </div>
+                <p class="cc-step"><b>2.</b> En la pantalla de tu tarjeta: <b>“Pago total del mes”</b>.</p>
+                <div style="display:flex; gap:12px;">
+                    <label style="flex:1;">Pago del mes S/<input type="text" inputmode="decimal" autocomplete="off" data-money id="ccrDuePen" class="mi" placeholder="0.00"></label>
+                    <label style="flex:1;">Pago del mes US$<input type="text" inputmode="decimal" autocomplete="off" data-money id="ccrDueUsd" class="mi" placeholder="0.00"></label>
+                </div>
+                <label>Fecha de esos montos<input type="date" id="ccrDate" class="mi"></label>
+            </div>
+            <div class="modal-ft">
+                <button class="mb mb--ghost cc-del" id="ccrClear" style="display:none">Quitar cuadre</button>
+                <button class="mb mb--ghost" data-close="cardReconcileModal">Cancelar</button>
+                <button class="mb mb--blue" id="ccrSave">Guardar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: AJUSTES DE TARJETA (card.js) -->
     <div class="modal-bg" id="cardSettingsModal">
         <div class="modal">
@@ -1016,7 +1045,7 @@
     <script src="ui-controls.js?v=1"></script>
     <script src="mobile-shell.js?v=85"></script>
     <script src="mobile-calendar.js?v=98"></script>
-    <script src="card.js?v=6"></script>
+    <script src="card.js?v=7"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

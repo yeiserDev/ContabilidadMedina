@@ -1,5 +1,5 @@
 // v83 — Nuevo logo corporativo integrado: transporte & contabilidad
-const CACHE_NAME = 'contamedina-v120';
+const CACHE_NAME = 'contamedina-v121';
 
 // All app shell files to pre-cache on install
 const SHELL = [
@@ -13,7 +13,7 @@ const SHELL = [
     './record-detail.css?v=1',
     './payments.css?v=1',
     './sidebar.css?v=4',
-    './card.css?v=5',
+    './card.css?v=7',
     './firebase-config.js',
     './escenas.js?v=73',
     './app.js?v=94',
@@ -25,7 +25,7 @@ const SHELL = [
     './ui-controls.js?v=1',
     './mobile-shell.js?v=85',
     './mobile-calendar.js?v=98',
-    './card.js?v=6',
+    './card.js?v=7',
     './icon.svg',
     './icon.png',
     './icon-192.png',

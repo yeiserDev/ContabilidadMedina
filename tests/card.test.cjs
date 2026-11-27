@@ -57,6 +57,34 @@ test('statement bills installments one per closing and subtracts later payments'
     assert.equal(M.closingsBetween('2026-09-10', '2026-11-20', 20), 3);
 });
 
+test('bank anchor replaces older history and only later movements change the debt', () => {
+    const s = { closingDay: 4, dueDay: 1, lineCurrency: 'USD', fxRate: 3.75, anchor: { date: '2026-11-26', PEN: 550.95, USD: 30.97 } };
+    const txns = [
+        { kind: 'consumo', amount: 540, currency: 'PEN', date: '2026-11-22' },        // ya está dentro del saldo del banco
+        { kind: 'pago', amount: 200, currency: 'PEN', date: '2026-11-10' },           // también
+        { kind: 'consumo', amount: 30, currency: 'PEN', date: '2026-11-27' },         // posterior: suma
+        { kind: 'pago', amount: 10.97, currency: 'USD', date: '2026-11-28' },         // posterior: resta
+        { kind: 'consumo', amount: 999, currency: 'PEN', date: '2026-11-29', status: 'review' },
+    ];
+    assert.deepEqual(plain(M.usedByCurrency(txns, s)), { PEN: 580.95, USD: 20 });
+    assert.equal(M.usedInLine(txns, s), Math.round((580.95 / 3.75 + 20) * 100) / 100);
+    // Sin cuadre, se suma todo el historial como antes.
+    assert.deepEqual(plain(M.usedByCurrency(txns, { ...s, anchor: null })), { PEN: 370, USD: -10.97 });
+});
+
+test('the copied monthly payment wins for its closing and later payments reduce it', () => {
+    const s = { closingDay: 4, dueDay: 1, anchor: { date: '2026-11-26', PEN: 550.95, USD: 30.97 },
+        statementOverride: { closing: '2026-11-04', PEN: 0, USD: 0.92, asOf: '2026-11-26' } };
+    const before = M.statement([{ kind: 'pago', amount: 0.5, currency: 'USD', date: '2026-11-20' }], s, '2026-11-27');
+    assert.deepEqual(plain(before.due), { PEN: 0, USD: 0.92 });
+    assert.equal(before.dueDate, '2026-12-01');assert.equal(before.fromBank, true);
+    const paid = M.statement([{ kind: 'pago', amount: 0.92, currency: 'USD', date: '2026-11-27' }], s, '2026-11-27');
+    assert.deepEqual(plain(paid.due), { PEN: 0, USD: 0 });
+    // En el siguiente ciclo ya no aplica: se calcula desde el saldo del banco.
+    const next = M.statement([{ kind: 'consumo', amount: 100, currency: 'PEN', date: '2026-11-30' }], s, '2026-12-10');
+    assert.equal(next.fromBank, false);assert.deepEqual(plain(next.due), { PEN: 650.95, USD: 30.97 });
+});
+
 test('a dollar line converts soles purchases with the rate frozen on each movement', () => {
     const s = { lineCurrency: 'USD', fxRate: 4 };
     assert.equal(M.toLine(375, 'PEN', s, 3.75), 100);
