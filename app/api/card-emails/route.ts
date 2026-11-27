@@ -80,9 +80,11 @@ export async function POST(req: NextRequest) {
   // 1. Gmail
   let emails: EmailForParsing[];
   let hasMore: boolean;
+  let remaining = 0;
   try {
-    const ids = (await listMessageIds(buildQuery(sender, since), 100)).filter((id) => !skip.has(id));
+    const ids = (await listMessageIds(buildQuery(sender, since), 1000)).filter((id) => !skip.has(id));
     hasMore = ids.length > BATCH;
+    remaining = Math.max(0, ids.length - BATCH);
     emails = await Promise.all(ids.slice(0, BATCH).map(getEmail));
   } catch (error) {
     const code = error instanceof GmailConfigError ? "GMAIL_CONFIG" : gmailErrorCode(error);
@@ -91,7 +93,7 @@ export async function POST(req: NextRequest) {
   }
   const processed = emails.map((e) => e.id);
   const candidates = emails.filter((e) => looksLikeMovement(e.text));
-  if (!candidates.length) return NextResponse.json({ movements: [], processed, hasMore, since }, { headers });
+  if (!candidates.length) return NextResponse.json({ movements: [], processed, hasMore, remaining, since }, { headers });
 
   // 2. Gemini interpreta todos los correos del lote en una sola llamada.
   const model = process.env.GEMINI_SCAN_MODEL?.trim() || "gemini-3.5-flash-lite";
@@ -160,5 +162,5 @@ export async function POST(req: NextRequest) {
     return reply("No se pudieron interpretar los correos.", 422, "UNREADABLE_EMAILS");
   }
   movements = movements.sort((a, b) => a.date.localeCompare(b.date));
-  return NextResponse.json({ movements, processed, hasMore, since }, { headers });
+  return NextResponse.json({ movements, processed, hasMore, remaining, since }, { headers });
 }

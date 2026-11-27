@@ -144,11 +144,12 @@ export function normalizeMovement(raw: unknown, email: EmailForParsing, today: s
     amount,
     currency,
     date,
-    merchant: merchant || (kind === "pago" ? "Pago de tarjeta" : "Movimiento con tarjeta"),
+    // En un pago el modelo suele poner el nombre de la tarjeta como "comercio".
+    merchant: kind === "pago" ? "Pago a la tarjeta" : merchant || "Movimiento con tarjeta",
     last4,
     installments,
     exchangeRate,
-    needsReview: r.needsReview !== false || !dateOk || !merchant || (currencyRaw !== "PEN" && currencyRaw !== "USD"),
+    needsReview: r.needsReview !== false || !dateOk || (kind !== "pago" && !merchant) || (currencyRaw !== "PEN" && currencyRaw !== "USD"),
     note: typeof r.note === "string" ? r.note.slice(0, 200) : "",
   };
 }

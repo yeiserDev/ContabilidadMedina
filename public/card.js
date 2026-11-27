@@ -127,6 +127,8 @@
 
     let cycleOffset = 0;
     let syncing = false;
+    // Estado del panel de lectura: { state: 'running'|'done'|'error', checked, added, review, left, message }
+    let syncStatus = null;
     let editId = null;
 
     function setMode(mode) {
@@ -174,8 +176,9 @@
             <div class="cc-line" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct.toFixed(0)}" aria-label="Línea usada">
                 <span style="width:${pct.toFixed(1)}%"></span>
             </div>
-            <div class="cc-line-txt"><span>Disponible ${fmt(Math.max(0, limit - usedLine), line)}</span><span>Línea ${fmt(limit, line)}</span></div>`
+            <div class="cc-line-txt"><span>Disponible ${fmt(Math.min(limit, Math.max(0, limit - usedLine)), line)}</span><span>Línea ${fmt(limit, line)}</span></div>`
             : `<button type="button" class="cc-setup" data-cc="settings">Configura tu línea, corte y día de pago</button>`}
+            ${usedLine < 0 ? '<p class="cc-gap">Hay pagos sin sus consumos anteriores. Carga tu estado de cuenta para que la deuda cuadre.</p>' : ''}
             <button type="button" class="cc-fx" data-cc="settings" aria-label="Cambiar tipo de cambio">TC banco S/ ${(+s.fxRate).toFixed(3)} por US$</button>
         </article>
         <div class="cc-facts">
@@ -201,7 +204,7 @@
         ].join('');
         return `<button type="button" class="cc-row ${credit ? 'cc-row--credit' : ''}" data-cc="edit" data-id="${esc(t.id)}">
             <span class="cc-row-ic material-symbols-outlined" aria-hidden="true">${icon}</span>
-            <span class="cc-row-main"><span class="cc-row-name">${esc(t.merchant)}</span><span class="cc-row-meta">${short(t.date)} ${badges}</span></span>
+            <span class="cc-row-main"><span class="cc-row-name">${esc(t.kind === 'pago' ? 'Pago a la tarjeta' : t.merchant)}</span><span class="cc-row-meta">${short(t.date)} ${badges}</span></span>
             <span class="cc-row-amt">${credit ? '+' : '−'}${fmt(t.amount, t.currency)}${(t.currency === 'USD' ? 'USD' : 'PEN') !== lineCur(settings()) ? `<small class="cc-row-conv">≈ ${fmt(txnInLine(t, settings()), lineCur(settings()))}${+t.fxRate > 0 ? ` · TC ${(+t.fxRate).toFixed(3)}` : ''}</small>` : ''}</span>
         </button>`;
     }
@@ -209,7 +212,10 @@
     function reviewBlock(pending) {
         if (!pending.length) return '';
         return `<section class="cc-block cc-review" aria-labelledby="ccReviewTitle">
-            <h3 id="ccReviewTitle"><span class="material-symbols-outlined">rule</span> Por revisar <span class="cc-count">${pending.length}</span></h3>
+            <div class="cc-review-hd">
+                <h3 id="ccReviewTitle"><span class="material-symbols-outlined">rule</span> Por revisar <span class="cc-count">${pending.length}</span></h3>
+                ${pending.length > 1 ? '<button type="button" class="cc-link" data-cc="confirm-all">Confirmar todos</button>' : ''}
+            </div>
             <p class="cc-hint">Estos correos no estaban claros. Confirma los que sean de tu tarjeta de crédito.</p>
             ${pending.map(t => `<div class="cc-review-item">
                 ${row(t)}
@@ -220,6 +226,51 @@
                 </div>
             </div>`).join('')}
         </section>`;
+    }
+
+    const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+    const lastTxt = last => last ? `Última lectura: ${last.toLocaleString('es-PE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : 'Aún no se leyeron correos del banco.';
+
+    /** Panel bajo los botones: progreso, resultado o error de la lectura de correos. */
+    function syncPanel(last) {
+        const st = syncStatus;
+        if (!st) return `<p class="cc-sync-txt">${lastTxt(last)}</p>`;
+        if (st.state === 'running') {
+            const total = st.checked + st.left;
+            const pct = total ? Math.round(st.checked / total * 100) : 8;
+            return `<div class="cc-sync cc-sync--run" role="status">
+                <span class="cc-sync-ic material-symbols-outlined cc-spin" aria-hidden="true">progress_activity</span>
+                <div class="cc-sync-body">
+                    <strong>Leyendo tus correos de ${esc(settings().name)}</strong>
+                    <span>${st.checked ? `${plural(st.checked, 'correo revisado', 'correos revisados')}${st.left ? ` · faltan ${st.left}` : ''}` : 'Buscando notificaciones…'}</span>
+                    <span class="cc-sync-bar"><span style="width:${Math.max(8, pct)}%"></span></span>
+                </div>
+            </div>`;
+        }
+        if (st.state === 'error') {
+            return `<div class="cc-sync cc-sync--err" role="alert">
+                <span class="cc-sync-ic material-symbols-outlined" aria-hidden="true">error</span>
+                <div class="cc-sync-body">
+                    <strong>No se pudo terminar la lectura</strong>
+                    <span>${esc(st.message)}</span>
+                    ${st.added || st.review ? `<span>Antes del error se guardaron ${plural(st.added + st.review, 'movimiento', 'movimientos')}.</span>` : ''}
+                </div>
+                <button type="button" class="cc-sync-btn" data-cc="sync">Reintentar</button>
+            </div>`;
+        }
+        const found = st.added + st.review;
+        return `<div class="cc-sync cc-sync--ok" role="status">
+            <span class="cc-sync-ic material-symbols-outlined" aria-hidden="true">${found ? 'mark_email_read' : 'done_all'}</span>
+            <div class="cc-sync-body">
+                <strong>${found ? plural(found, 'movimiento nuevo', 'movimientos nuevos') : 'Estás al día'}</strong>
+                <span>${[
+                    st.review ? `${st.review} por revisar abajo` : '',
+                    st.checked ? plural(st.checked, 'correo revisado', 'correos revisados') : 'Sin correos nuevos del banco',
+                ].filter(Boolean).join(' · ')}</span>
+                <span class="cc-sync-when">${lastTxt(last)}</span>
+            </div>
+            <button type="button" class="cc-sync-x" data-cc="sync-close" aria-label="Cerrar"><span class="material-symbols-outlined">close</span></button>
+        </div>`;
     }
 
     function renderCard() {
@@ -244,13 +295,13 @@
             <div class="cc-actions">
                 <button type="button" class="cc-act cc-act--main" data-cc="sync" ${syncing ? 'disabled' : ''}>
                     <span class="material-symbols-outlined ${syncing ? 'cc-spin' : ''}">${syncing ? 'progress_activity' : 'mail'}</span>
-                    <span>${syncing ? 'Leyendo correos…' : 'Leer correos'}</span>
+                    <span>${syncing ? 'Leyendo…' : 'Leer correos'}</span>
                 </button>
                 <button type="button" class="cc-act" data-cc="add"><span class="material-symbols-outlined">add</span><span>Consumo</span></button>
                 <button type="button" class="cc-act" data-cc="pay"><span class="material-symbols-outlined">payments</span><span>Pago</span></button>
                 <button type="button" class="cc-act" data-cc="settings" aria-label="Ajustes de la tarjeta"><span class="material-symbols-outlined">tune</span></button>
             </div>
-            <p class="cc-sync-txt">${last ? `Última lectura: ${last.toLocaleString('es-PE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : 'Aún no se leyeron correos del banco.'}</p>
+            ${syncPanel(last)}
             ${reviewBlock(txns.filter(t => t.status === 'review'))}
             <section class="cc-block" aria-labelledby="ccListTitle">
                 <div class="cc-cycle-nav">
@@ -275,13 +326,19 @@
     async function syncEmails({ silent = false } = {}) {
         if (syncing) return;
         if (!currentUser || !auth || !auth.currentUser) { if (!silent) toast('Inicia sesión para leer tus correos', 'err'); return; }
-        syncing = true; renderCard();
         cardSync = cardSync || {};
         const seen = new Set(Array.isArray(cardSync.seen) ? cardSync.seen : []);
         const known = new Set((cardTxns || []).map(t => t.emailId).filter(Boolean));
-        // Un margen de 3 días cubre correos que llegan con retraso.
-        const since = cardSync.lastSync ? addDays(cardSync.lastSync.slice(0, 10), -3) : undefined;
-        let added = 0, review = 0, rounds = 0, error = '', more = false;
+        // La fecha de inicio solo avanza cuando una lectura termina completa; si
+        // quedó a medias se sigue desde el mismo punto (los ya leídos se saltan).
+        // v2: las lecturas anteriores marcaban "última lectura" aunque quedaran a
+        // medias, así que esas se vuelven a revisar desde el inicio.
+        const done = cardSync.v === 2 && cardSync.lastSync;
+        const since = done ? addDays(cardSync.lastSync.slice(0, 10), -3) : (cardSync.pendingSince || undefined);
+        syncing = true;
+        syncStatus = { state: 'running', checked: 0, added: 0, review: 0, left: 0, message: '' };
+        renderCard();
+        let rounds = 0, more = false, error = '';
         try {
             do {
                 const token = await auth.currentUser.getIdToken();
@@ -291,7 +348,8 @@
                     body: JSON.stringify({ since, skip: [...seen] }),
                 });
                 const data = await res.json().catch(() => ({}));
-                if (!res.ok) { error = data.error || 'No se pudieron leer los correos'; break; }
+                if (!res.ok) { error = data.error || 'No se pudieron leer los correos.'; break; }
+                if (!done && data.since) cardSync.pendingSince = data.since;
                 for (const m of data.movements || []) {
                     if (known.has(m.emailId)) continue;
                     known.add(m.emailId);
@@ -301,25 +359,30 @@
                         installments: m.installments || null, note: m.note || '', status: m.needsReview ? 'review' : 'ok',
                         fxRate: m.exchangeRate || +settings().fxRate || null,
                     });
-                    if (m.needsReview) review++; else added++;
+                    if (m.needsReview) syncStatus.review++; else syncStatus.added++;
                 }
                 (data.processed || []).forEach(id => seen.add(id));
+                syncStatus.checked += (data.processed || []).length;
+                syncStatus.left = +data.remaining || 0;
                 more = !!data.hasMore;
                 rounds++;
-            } while (more && rounds < 5);
-            if (!error) cardSync.lastSync = new Date().toISOString();
+                // Se guarda en cada ronda: si se cierra la app no se pierde lo leído.
+                cardSync.seen = [...seen].slice(-3000);
+                persist();
+                renderCard();
+            } while (more && rounds < 40);
+            if (!error && !more) { cardSync.lastSync = new Date().toISOString(); cardSync.v = 2; delete cardSync.pendingSince; }
+            if (!error && more) error = 'Quedaron correos sin leer. Toca Reintentar para seguir donde quedó.';
         } catch (e) {
-            error = e && e.name === 'TimeoutError' ? 'La lectura tardó demasiado. Intenta de nuevo.' : 'Sin conexión con el servidor';
+            error = e && e.name === 'TimeoutError' ? 'La lectura tardó demasiado.' : 'Sin conexión con el servidor.';
         }
-        // Se guarda lo leído aunque una ronda posterior haya fallado.
-        cardSync.seen = [...seen].slice(-800);
         syncing = false;
+        if (error) Object.assign(syncStatus, { state: 'error', message: error });
+        else syncStatus.state = 'done';
+        // Una lectura automática sin novedades no deja el panel abierto.
+        if (silent && !error && !syncStatus.added && !syncStatus.review) syncStatus = null;
         persist();
         renderCard();
-        if (error) toast(error, 'err');
-        else if (added || review) toast(`${added} movimiento${added === 1 ? '' : 's'} nuevo${added === 1 ? '' : 's'}${review ? ` · ${review} por revisar` : ''}`);
-        else if (!silent) toast('No hay movimientos nuevos');
-        if (!error && more) toast('Quedan correos por leer: vuelve a tocar “Leer correos”');
     }
 
     /* ---------- Formularios ---------- */
@@ -394,6 +457,7 @@
         if (!b || b.disabled) return;
         const act = b.dataset.cc, t = b.dataset.id && cardTxns.find(x => x.id === b.dataset.id);
         if (act === 'sync') syncEmails();
+        else if (act === 'sync-close') { syncStatus = null; renderCard(); }
         else if (act === 'prev') { cycleOffset--; renderCard(); }
         else if (act === 'next') { cycleOffset = Math.min(0, cycleOffset + 1); renderCard(); }
         else if (!currentUser) toast('Inicia sesión para realizar esta acción', 'err');
@@ -401,8 +465,9 @@
         else if (act === 'pay') openTxn('pago');
         else if (act === 'settings') openSettings();
         else if (act === 'edit' && t) openTxn(t.kind, t);
-        else if (act === 'confirm' && t) { t.status = 'ok'; persist(); renderCard(); toast('Movimiento confirmado'); }
-        else if (act === 'discard' && t) { cardTxns = cardTxns.filter(x => x !== t); persist(); renderCard(); toast('Descartado'); }
+        else if (act === 'confirm' && t) { t.status = 'ok'; persist(); renderCard(); }
+        else if (act === 'confirm-all') { cardTxns.forEach(x => { if (x.status === 'review') x.status = 'ok'; }); persist(); renderCard(); }
+        else if (act === 'discard' && t) { cardTxns = cardTxns.filter(x => x !== t); persist(); renderCard(); }
     });
     $('ctxKind').addEventListener('change', syncKindFields);
     $('ctxCurrency').addEventListener('change', syncKindFields);

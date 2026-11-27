@@ -34,8 +34,15 @@ function getGmail() {
 
 /** Ids de los correos que cumplen la búsqueda, del más nuevo al más viejo. */
 export async function listMessageIds(query: string, max: number): Promise<string[]> {
-  const res = await getGmail().users.messages.list({ userId: "me", q: query, maxResults: max });
-  return (res.data.messages || []).map((m) => m.id).filter((id): id is string => !!id);
+  const ids: string[] = [];
+  let pageToken: string | undefined;
+  // Gmail entrega como máximo 500 por página: se pagina hasta `max`.
+  do {
+    const res = await getGmail().users.messages.list({ userId: "me", q: query, maxResults: Math.min(500, max - ids.length), pageToken });
+    for (const m of res.data.messages || []) if (m.id) ids.push(m.id);
+    pageToken = res.data.nextPageToken || undefined;
+  } while (pageToken && ids.length < max);
+  return ids;
 }
 
 export async function getEmail(id: string): Promise<EmailForParsing> {
