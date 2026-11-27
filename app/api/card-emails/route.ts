@@ -18,18 +18,31 @@ export async function OPTIONS(req: NextRequest) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
 }
 
+/** Error de OAuth que devuelve Google (invalid_client, invalid_grant…), sin datos sensibles. */
+function oauthError(error: unknown): string {
+  const e = error as { message?: string; response?: { data?: { error?: unknown } } };
+  const fromBody = e?.response?.data?.error;
+  if (typeof fromBody === "string") return fromBody;
+  const m = /\b(invalid_client|unauthorized_client|invalid_grant|invalid_scope)\b/.exec(String(e?.message || ""));
+  return m ? m[1] : "";
+}
+
 function gmailErrorCode(error: unknown): string {
-  const e = error as { message?: string; code?: number | string; status?: number; response?: { status?: number } };
+  const e = error as { code?: number | string; status?: number; response?: { status?: number } };
   const status = Number(e?.response?.status ?? e?.status ?? e?.code);
-  if (String(e?.message || "").includes("invalid_grant") || status === 401) return "GMAIL_AUTH";
-  if (status === 403) return "GMAIL_SCOPE";
+  const oauth = oauthError(error);
+  // El cliente (ID/secret) no coincide con el que generó el token, o el secret está inhabilitado.
+  if (oauth === "invalid_client" || oauth === "unauthorized_client") return "GMAIL_CLIENT";
+  if (oauth === "invalid_grant" || status === 401) return "GMAIL_AUTH";
+  if (status === 403 || oauth === "invalid_scope") return "GMAIL_SCOPE";
   if (status === 429) return "GMAIL_QUOTA";
   return "GMAIL_UNAVAILABLE";
 }
 
 const GMAIL_MESSAGES: Record<string, string> = {
   GMAIL_CONFIG: "Falta configurar el acceso a Gmail en el servidor.",
-  GMAIL_AUTH: "El permiso de Gmail venció o fue revocado. Genera un nuevo token.",
+  GMAIL_CLIENT: "Google rechazó el cliente de Gmail: GMAIL_CLIENT_ID o GMAIL_CLIENT_SECRET no coinciden con los que generaron el token (o el secret está inhabilitado).",
+  GMAIL_AUTH: "Google rechazó el token de Gmail: está incompleto, es de otro cliente o fue revocado. Genera uno nuevo.",
   GMAIL_SCOPE: "El token no tiene permiso para leer Gmail o la API de Gmail no está activada.",
   GMAIL_QUOTA: "Gmail limitó las consultas por un momento. Intenta en unos minutos.",
   GMAIL_UNAVAILABLE: "No se pudo leer Gmail en este momento.",
@@ -73,6 +86,7 @@ export async function POST(req: NextRequest) {
     emails = await Promise.all(ids.slice(0, BATCH).map(getEmail));
   } catch (error) {
     const code = error instanceof GmailConfigError ? "GMAIL_CONFIG" : gmailErrorCode(error);
+    console.warn("card_emails_gmail", { requestId, code, oauth: oauthError(error) });
     return reply(GMAIL_MESSAGES[code], code === "GMAIL_CONFIG" ? 503 : code === "GMAIL_QUOTA" ? 429 : 502, code);
   }
   const processed = emails.map((e) => e.id);

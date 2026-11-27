@@ -168,6 +168,8 @@ test('no model call when nothing looks like a movement, and Gmail failures are e
     assert.equal(quiet.geminiCalls, 0);assert.deepEqual(plain(quiet.data.processed), ['b']);
     const expired = await sync({ gmailError: new Error('invalid_grant') });
     assert.equal(expired.status, 502);assert.equal(expired.data.code, 'GMAIL_AUTH');
+    const badClient = await sync({ gmailError: Object.assign(new Error('invalid_client'), { response: { status: 401, data: { error: 'invalid_client' } } }) });
+    assert.equal(badClient.data.code, 'GMAIL_CLIENT');
     const scope = await sync({ gmailError: Object.assign(new Error('Insufficient Permission'), { code: 403 }) });
     assert.equal(scope.data.code, 'GMAIL_SCOPE');
 });
