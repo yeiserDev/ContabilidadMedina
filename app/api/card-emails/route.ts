@@ -48,7 +48,8 @@ export async function POST(req: NextRequest) {
   // Los correos del banco son privados: si se definió una lista, solo esas cuentas.
   const allowed = (process.env.CARD_ALLOWED_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   if (allowed.length && !allowed.includes(String(user.email || "").toLowerCase())) {
-    return reply("Tu usuario no tiene acceso a los correos de la tarjeta.", 403, "FORBIDDEN");
+    // Se muestra el correo de la propia sesión para saber qué poner en CARD_ALLOWED_EMAILS.
+    return reply(`Tu usuario (${user.email || "sin correo"}) no está en CARD_ALLOWED_EMAILS.`, 403, "FORBIDDEN");
   }
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) return reply("Falta configurar la clave de lectura en el servidor.", 503, "MISSING_API_KEY");
