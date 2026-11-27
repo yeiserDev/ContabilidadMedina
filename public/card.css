@@ -346,3 +346,48 @@ body.card-mode .sidebar-right { display: none !important; }
 .cc-pills .cc-fx .material-symbols-outlined { font-size: 15px; }
 .cc-fx--cta { background: #fff; color: #B30C12; border-color: #fff; }
 .cc-step { margin: 12px 0 2px; font-size: 13px; line-height: 1.4; color: var(--ink-black); }
+
+/* ---------- Gasto por día ---------- */
+.cc-daily { margin: 4px 0 10px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.cc-daily-hd { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.cc-daily-hd div { display: flex; flex-direction: column; gap: 1px; }
+.cc-daily-hd div:last-child:not(:first-child) { text-align: right; }
+.cc-daily-hd span { font-size: 12px; color: var(--slate-gray); }
+.cc-daily-hd strong { font-size: 17px; font-variant-numeric: tabular-nums; }
+.cc-bars { display: flex; align-items: flex-end; gap: 2px; height: 72px; }
+.cc-bar {
+    display: flex;
+    align-items: flex-end;
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+}
+.cc-bar span { display: block; width: 100%; border-radius: 3px 3px 1px 1px; background: rgba(209, 15, 23, .55); transition: height .4s ease; }
+.cc-bar--today span { background: #D10F17; }
+.cc-bar--zero { cursor: default; }
+.cc-bar--zero span { background: var(--line-strong); }
+.cc-bar:focus-visible { outline: 2px solid var(--signal-orange); outline-offset: 1px; border-radius: 3px; }
+.cc-bars-axis { display: flex; justify-content: space-between; margin-top: 5px; font-size: 11px; color: var(--slate-gray); }
+
+.cc-day + .cc-day { margin-top: 4px; }
+.cc-day-hd {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 4px 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--slate-gray);
+    text-transform: capitalize;
+    font-variant-numeric: tabular-nums;
+}
+.cc-day--flash { animation: ccFlash 1.2s ease; border-radius: var(--radius-md); }
+@keyframes ccFlash { 0%, 30% { background: rgba(209, 15, 23, .1); } 100% { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .cc-bar span { transition: none; } .cc-day--flash { animation: none; } }
+[data-theme="dark"] .cc-bar span { background: rgba(255, 99, 104, .55); }
+[data-theme="dark"] .cc-bar--today span { background: #ff5a5f; }
+[data-theme="dark"] .cc-bar--zero span { background: rgba(255, 255, 255, .12); }
+.cc-row-meta:empty { display: none; }

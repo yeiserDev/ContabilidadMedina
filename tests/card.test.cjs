@@ -85,6 +85,18 @@ test('the copied monthly payment wins for its closing and later payments reduce 
     assert.equal(next.fromBank, false);assert.deepEqual(plain(next.due), { PEN: 650.95, USD: 30.97 });
 });
 
+test('daily spending counts purchases in soles, converting dollars with their own rate', () => {
+    const d = M.dailySpend([
+        { kind: 'consumo', amount: 17.9, currency: 'PEN', date: '2026-11-24' },
+        { kind: 'consumo', amount: 10, currency: 'USD', fxRate: 3.7, date: '2026-11-24' },
+        { kind: 'pago', amount: 500, currency: 'PEN', date: '2026-11-24' },
+        { kind: 'consumo', amount: 4.9, currency: 'PEN', date: '2026-11-23' },
+        { kind: 'consumo', amount: 99, currency: 'PEN', date: '2026-11-25', status: 'review' },
+    ], { fxRate: 3.75 }, '2026-11-23', '2026-11-25');
+    assert.deepEqual(plain(d.days.map(x => [x.date, x.total, x.count])), [['2026-11-23', 4.9, 1], ['2026-11-24', 54.9, 2], ['2026-11-25', 0, 0]]);
+    assert.equal(d.total, 59.8);assert.equal(d.average, 19.93);
+});
+
 test('a dollar line converts soles purchases with the rate frozen on each movement', () => {
     const s = { lineCurrency: 'USD', fxRate: 4 };
     assert.equal(M.toLine(375, 'PEN', s, 3.75), 100);

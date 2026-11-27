@@ -116,7 +116,22 @@
         return round2(txns.filter(t => active(t) && (!a || t.date > a.date)).reduce((sum, t) => sum + sign(t) * txnInLine(t, s), base));
     }
 
-    window.CardMath = { cycleFor, dueDateFor, closingsBetween, balanceAt, usedByCurrency, billedUntil, statement, addDays, toLine, txnInLine, usedInLine };
+    /** Gasto por día en soles (los consumos en US$ se pasan con su tipo de cambio). Pagos y abonos no cuentan. */
+    function dailySpend(txns, s, start, end) {
+        const days = [];
+        for (let d = start; d <= end && days.length < 62; d = addDays(d, 1)) days.push({ date: d, total: 0, count: 0 });
+        const byDate = Object.fromEntries(days.map(x => [x.date, x]));
+        txns.filter(t => active(t) && t.kind === 'consumo' && byDate[t.date]).forEach(t => {
+            const r = +t.fxRate > 0 ? +t.fxRate : +s.fxRate || 0;
+            byDate[t.date].total += cur(t) === 'USD' ? (+t.amount || 0) * r : +t.amount || 0;
+            byDate[t.date].count++;
+        });
+        days.forEach(x => { x.total = round2(x.total); });
+        const total = round2(days.reduce((a, x) => a + x.total, 0));
+        return { days, total, average: days.length ? round2(total / days.length) : 0 };
+    }
+
+    window.CardMath = { dailySpend, cycleFor, dueDateFor, closingsBetween, balanceAt, usedByCurrency, billedUntil, statement, addDays, toLine, txnInLine, usedInLine };
     if (typeof document === 'undefined' || !document.getElementById('cardView')) return;
 
     /* ---------- Interfaz ---------- */
@@ -221,7 +236,7 @@
         </div>`;
     }
 
-    function row(t) {
+    function row(t, inDay = false) {
         const credit = t.kind !== 'consumo';
         const icon = t.kind === 'pago' ? 'payments' : t.kind === 'abono' ? 'undo' : 'shopping_bag';
         const badges = [
@@ -230,7 +245,7 @@
         ].join('');
         return `<button type="button" class="cc-row ${credit ? 'cc-row--credit' : ''}" data-cc="edit" data-id="${esc(t.id)}">
             <span class="cc-row-ic material-symbols-outlined" aria-hidden="true">${icon}</span>
-            <span class="cc-row-main"><span class="cc-row-name">${esc(t.kind === 'pago' ? 'Pago a la tarjeta' : t.merchant)}</span><span class="cc-row-meta">${short(t.date)} ${badges}</span></span>
+            <span class="cc-row-main"><span class="cc-row-name">${esc(t.kind === 'pago' ? 'Pago a la tarjeta' : t.merchant)}</span><span class="cc-row-meta">${inDay ? '' : short(t.date)} ${badges}</span></span>
             <span class="cc-row-amt">${credit ? '+' : '−'}${fmt(t.amount, t.currency)}${(t.currency === 'USD' ? 'USD' : 'PEN') !== lineCur(settings()) ? `<small class="cc-row-conv">≈ ${fmt(txnInLine(t, settings()), lineCur(settings()))}${+t.fxRate > 0 ? ` · TC ${(+t.fxRate).toFixed(3)}` : ''}</small>` : ''}</span>
         </button>`;
     }
@@ -291,6 +306,46 @@
         </p>`;
     }
 
+    const DOW = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const dayName = d => { const [y, m, dd] = parts(d); return `${DOW[new Date(Date.UTC(y, m - 1, dd)).getUTCDay()]} ${short(d)}`; };
+    const cycleUntil = (cyc, now) => (now < cyc.end ? now : cyc.end);
+
+    /** Barras del gasto diario del ciclo (hasta hoy) con promedio y gasto de hoy. */
+    function dailyBlock(txns, s, cyc, now) {
+        if (cyc.start > now) return '';
+        const d = dailySpend(txns, s, cyc.start, cycleUntil(cyc, now));
+        if (!d.total) return '';
+        const max = Math.max(...d.days.map(x => x.total)) || 1;
+        const todayRow = d.days.find(x => x.date === now);
+        return `<div class="cc-daily" aria-label="Gasto por día">
+            <div class="cc-daily-hd">
+                <div><span>Promedio por día</span><strong>${fmt(d.average, 'PEN')}</strong></div>
+                ${todayRow ? `<div><span>Hoy</span><strong>${fmt(todayRow.total, 'PEN')}</strong></div>` : ''}
+            </div>
+            <div class="cc-bars" role="list">
+                ${d.days.map(x => `<button type="button" role="listitem" class="cc-bar ${x.date === now ? 'cc-bar--today' : ''} ${x.total ? '' : 'cc-bar--zero'}"
+                    data-cc="day" data-day="${x.date}" aria-label="${dayName(x.date)}: ${fmt(x.total, 'PEN')}" title="${dayName(x.date)}: ${fmt(x.total, 'PEN')}">
+                    <span style="height:${x.total ? Math.max(8, Math.sqrt(x.total / max) * 100) : 3}%"></span>
+                </button>`).join('')}
+            </div>
+            <div class="cc-bars-axis"><span>${short(cyc.start)}</span><span>${short(cycleUntil(cyc, now))}</span></div>
+        </div>`;
+    }
+
+    /** Movimientos del ciclo agrupados por día, con el total gastado de cada día. */
+    function groupedList(inCycle, txns, s, cyc, now) {
+        const totals = Object.fromEntries(dailySpend(txns, s, cyc.start, cyc.end).days.map(x => [x.date, x.total]));
+        const groups = [];
+        inCycle.forEach(t => {
+            const g = groups[groups.length - 1];
+            if (g && g.date === t.date) g.items.push(t); else groups.push({ date: t.date, items: [t] });
+        });
+        return groups.map(g => `<div class="cc-day" id="ccd-${g.date}">
+            <div class="cc-day-hd"><span>${g.date === now ? 'Hoy' : dayName(g.date)}</span>${totals[g.date] ? `<span>${fmt(totals[g.date], 'PEN')}</span>` : ''}</div>
+            ${g.items.map(t => row(t, true)).join('')}
+        </div>`).join('');
+    }
+
     function renderCard() {
         const view = $('cardView');
         if (!view || !document.body.classList.contains('card-mode')) return;
@@ -334,7 +389,8 @@
                     <span>${inCycle.filter(t => t.kind === 'consumo').length} consumos</span>
                 </div>
                 ${cycleOffset === 0 && !inCycle.some(t => t.kind === 'consumo') ? `<p class="cc-tip"><span class="material-symbols-outlined" aria-hidden="true">tips_and_updates</span>Aún no hay consumos en este ciclo. Haz al menos uno antes del ${short(cyc.end)} para que no te cobren la membresía anual.</p>` : ''}
-                <div class="cc-list">${inCycle.length ? inCycle.map(row).join('') : '<p class="cc-empty">Sin movimientos en este ciclo.</p>'}</div>
+                ${dailyBlock(txns, s, cyc, now)}
+                <div class="cc-list">${inCycle.length ? groupedList(inCycle, txns, s, cyc, now) : '<p class="cc-empty">Sin movimientos en este ciclo.</p>'}</div>
             </section>`;
     }
 
@@ -521,6 +577,10 @@
         const act = b.dataset.cc, t = b.dataset.id && cardTxns.find(x => x.id === b.dataset.id);
         if (act === 'sync') syncEmails();
         else if (act === 'sync-close') { syncStatus = null; renderCard(); }
+        else if (act === 'day') {
+            const el = $('ccd-' + b.dataset.day);
+            if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.remove('cc-day--flash'); void el.offsetWidth; el.classList.add('cc-day--flash'); }
+        }
         else if (act === 'prev') { cycleOffset--; renderCard(); }
         else if (act === 'next') { cycleOffset = Math.min(0, cycleOffset + 1); renderCard(); }
         else if (!currentUser) toast('Inicia sesión para realizar esta acción', 'err');
