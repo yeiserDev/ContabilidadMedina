@@ -257,46 +257,38 @@
     const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
     const lastTxt = last => last ? `Última lectura: ${last.toLocaleString('es-PE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : 'Aún no se leyeron correos del banco.';
 
-    /** Panel bajo los botones: progreso, resultado o error de la lectura de correos. */
+    /** El botón muestra el progreso de la lectura llenándose como una barra. */
+    function syncButton() {
+        const st = syncStatus;
+        if (!syncing || !st) {
+            return `<button type="button" class="cc-act cc-act--main" data-cc="sync">
+                <span class="material-symbols-outlined">mail</span><span>Leer correos</span>
+            </button>`;
+        }
+        const total = st.checked + st.left;
+        const pct = total ? Math.max(6, Math.round(st.checked / total * 100)) : 6;
+        return `<button type="button" class="cc-act cc-act--main cc-act--busy" disabled style="--p:${pct}%" aria-busy="true">
+            <span class="material-symbols-outlined cc-spin" aria-hidden="true">progress_activity</span>
+            <span>${st.checked ? `Leyendo correos · ${st.checked}${total ? ` de ${total}` : ''}` : 'Buscando correos…'}</span>
+        </button>`;
+    }
+
+    /** Una línea bajo los botones: resultado (se va sola) o error con Reintentar. */
     function syncPanel(last) {
         const st = syncStatus;
-        if (!st) return `<p class="cc-sync-txt">${lastTxt(last)}</p>`;
-        if (st.state === 'running') {
-            const total = st.checked + st.left;
-            const pct = total ? Math.round(st.checked / total * 100) : 8;
-            return `<div class="cc-sync cc-sync--run" role="status">
-                <span class="cc-sync-ic material-symbols-outlined cc-spin" aria-hidden="true">progress_activity</span>
-                <div class="cc-sync-body">
-                    <strong>Leyendo tus correos de ${esc(settings().name)}</strong>
-                    <span>${st.checked ? `${plural(st.checked, 'correo revisado', 'correos revisados')}${st.left ? ` · faltan ${st.left}` : ''}` : 'Buscando notificaciones…'}</span>
-                    <span class="cc-sync-bar"><span style="width:${Math.max(8, pct)}%"></span></span>
-                </div>
-            </div>`;
-        }
+        if (!st || st.state === 'running') return `<p class="cc-sync-txt">${lastTxt(last)}</p>`;
         if (st.state === 'error') {
-            return `<div class="cc-sync cc-sync--err" role="alert">
-                <span class="cc-sync-ic material-symbols-outlined" aria-hidden="true">error</span>
-                <div class="cc-sync-body">
-                    <strong>No se pudo terminar la lectura</strong>
-                    <span>${esc(st.message)}</span>
-                    ${st.added || st.review ? `<span>Antes del error se guardaron ${plural(st.added + st.review, 'movimiento', 'movimientos')}.</span>` : ''}
-                </div>
-                <button type="button" class="cc-sync-btn" data-cc="sync">Reintentar</button>
-            </div>`;
+            return `<p class="cc-sync-line cc-sync-line--err" role="alert">
+                <span class="material-symbols-outlined" aria-hidden="true">error</span>
+                <span>${esc(st.message)}</span>
+                <button type="button" data-cc="sync">Reintentar</button>
+            </p>`;
         }
         const found = st.added + st.review;
-        return `<div class="cc-sync cc-sync--ok" role="status">
-            <span class="cc-sync-ic material-symbols-outlined" aria-hidden="true">${found ? 'mark_email_read' : 'done_all'}</span>
-            <div class="cc-sync-body">
-                <strong>${found ? plural(found, 'movimiento nuevo', 'movimientos nuevos') : 'Estás al día'}</strong>
-                <span>${[
-                    st.review ? `${st.review} por revisar abajo` : '',
-                    st.checked ? plural(st.checked, 'correo revisado', 'correos revisados') : 'Sin correos nuevos del banco',
-                ].filter(Boolean).join(' · ')}</span>
-                <span class="cc-sync-when">${lastTxt(last)}</span>
-            </div>
-            <button type="button" class="cc-sync-x" data-cc="sync-close" aria-label="Cerrar"><span class="material-symbols-outlined">close</span></button>
-        </div>`;
+        return `<p class="cc-sync-line" role="status">
+            <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+            <span>${found ? `${plural(found, 'movimiento nuevo', 'movimientos nuevos')}${st.review ? ` · ${st.review} por revisar` : ''}` : 'Estás al día'}</span>
+        </p>`;
     }
 
     function renderCard() {
@@ -319,10 +311,7 @@
         view.innerHTML = `
             ${hero(s, used, st)}
             <div class="cc-actions">
-                <button type="button" class="cc-act cc-act--main" data-cc="sync" ${syncing ? 'disabled' : ''}>
-                    <span class="material-symbols-outlined ${syncing ? 'cc-spin' : ''}">${syncing ? 'progress_activity' : 'mail'}</span>
-                    <span>${syncing ? 'Leyendo…' : 'Leer correos'}</span>
-                </button>
+                ${syncButton()}
                 <button type="button" class="cc-act" data-cc="add"><span class="material-symbols-outlined">add</span><span>Consumo</span></button>
                 <button type="button" class="cc-act" data-cc="pay"><span class="material-symbols-outlined">payments</span><span>Pago</span></button>
                 <button type="button" class="cc-act" data-cc="settings"><span class="material-symbols-outlined">tune</span><span>Ajustes</span></button>
@@ -419,6 +408,9 @@
         if (silent && !error && !syncStatus.added && !syncStatus.review) syncStatus = null;
         persist();
         renderCard();
+        // El resultado se muestra unos segundos y vuelve a "Última lectura".
+        const shown = syncStatus;
+        if (shown && shown.state === 'done') setTimeout(() => { if (syncStatus === shown) { syncStatus = null; renderCard(); } }, 6000);
     }
 
     /* ---------- Formularios ---------- */
