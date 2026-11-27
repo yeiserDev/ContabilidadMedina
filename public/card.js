@@ -104,7 +104,9 @@
     if (typeof document === 'undefined' || !document.getElementById('cardView')) return;
 
     /* ---------- Interfaz ---------- */
-    const DEFAULTS = { name: 'Scotiabank', last4: '', lineCurrency: 'USD', limit: 850, closingDay: 20, dueDay: 5, fxRate: 3.75 };
+    // Valores de la tarjeta Mastercard Clásica de Scotiabank (carta de bienvenida):
+    // línea US$ 850, ciclo de facturación el 4 y último día de pago el 1.
+    const DEFAULTS = { name: 'Scotiabank', last4: '', lineCurrency: 'USD', limit: 850, closingDay: 4, dueDay: 1, fxRate: 3.75, openedOn: '' };
     const MODE_KEY = 'ct_mode';
     const SWITCHES = '#acctSwitch [data-mode], .acct-mini [data-mode]';
     const SYNC_EVERY_MS = 2 * 3600_000;
@@ -121,6 +123,8 @@
         // Ajustes guardados antes de existir la línea en dólares.
         if (!(card && card.fxRate) && card && card.usdRate) s.fxRate = card.usdRate;
         if (card && !card.lineCurrency && card.limit) s.lineCurrency = 'PEN';
+        // 20 y 5 eran los valores de ejemplo anteriores, no los del banco.
+        if (card && !card.v && +card.closingDay === 20 && +card.dueDay === 5) { s.closingDay = DEFAULTS.closingDay; s.dueDay = DEFAULTS.dueDay; }
         return s;
     };
     const both = (pen, usd) => [pen ? fmt(pen, 'PEN') : '', usd ? fmt(usd, 'USD') : ''].filter(Boolean).join(' + ');
@@ -318,6 +322,7 @@
                     ${spent.PEN && spent.USD ? `<span>${both(spent.PEN, spent.USD)}</span>` : ''}
                     <span>${inCycle.filter(t => t.kind === 'consumo').length} consumos</span>
                 </div>
+                ${cycleOffset === 0 && !inCycle.some(t => t.kind === 'consumo') ? `<p class="cc-tip"><span class="material-symbols-outlined" aria-hidden="true">tips_and_updates</span>Aún no hay consumos en este ciclo. Haz al menos uno antes del ${short(cyc.end)} para que no te cobren la membresía anual.</p>` : ''}
                 <div class="cc-list">${inCycle.length ? inCycle.map(row).join('') : '<p class="cc-empty">Sin movimientos en este ciclo.</p>'}</div>
             </section>`;
     }
@@ -334,7 +339,11 @@
         // v2: las lecturas anteriores marcaban "última lectura" aunque quedaran a
         // medias, así que esas se vuelven a revisar desde el inicio.
         const done = cardSync.v === 2 && cardSync.lastSync;
-        const since = done ? addDays(cardSync.lastSync.slice(0, 10), -3) : (cardSync.pendingSince || undefined);
+        // Sin lectura completa: desde la apertura de la tarjeta (si se indicó) o los últimos 45 días.
+        const opened = settings().openedOn || '';
+        const pending = cardSync.pendingSince || '';
+        const since = done ? addDays(cardSync.lastSync.slice(0, 10), -3)
+            : ([opened, pending].filter(Boolean).sort()[0] || undefined);
         syncing = true;
         syncStatus = { state: 'running', checked: 0, added: 0, review: 0, left: 0, message: '' };
         renderCard();
@@ -433,6 +442,7 @@
         $('ccsLimit').value = s.limit ? formatMoneyInput(s.limit) : '';
         $('ccsClosing').value = s.closingDay; $('ccsDue').value = s.dueDay; $('ccsRate').value = s.fxRate;
         $('ccsLineCur').value = lineCur(s);
+        $('ccsOpened').value = s.openedOn || '';
         openM('cardSettingsModal');
     }
 
@@ -446,7 +456,13 @@
             || (last4 && !/^\d{4}$/.test(last4)) || !(fxRate > 0 && fxRate < 100)) {
             toast('Revisa los datos de la tarjeta', 'err'); return;
         }
-        card = { name: $('ccsName').value.trim().slice(0, 40) || DEFAULTS.name, last4, lineCurrency, limit, closingDay, dueDay, fxRate };
+        const openedOn = $('ccsOpened').value;
+        if (openedOn && (!/^\d{4}-\d{2}-\d{2}$/.test(openedOn) || openedOn > today())) { toast('Revisa la fecha de apertura', 'err'); return; }
+        const prevOpened = settings().openedOn || '';
+        card = { v: 2, name: $('ccsName').value.trim().slice(0, 40) || DEFAULTS.name, last4, lineCurrency, limit, closingDay, dueDay, fxRate, openedOn };
+        // Si la apertura es anterior a lo ya leído, la próxima lectura vuelve a
+        // revisar desde esa fecha (los correos ya procesados se saltan).
+        if (openedOn && openedOn !== prevOpened) { cardSync = cardSync || {}; delete cardSync.v; cardSync.pendingSince = openedOn; }
         persist(); closeM('cardSettingsModal'); renderCard(); toast('Tarjeta actualizada');
     }
 
