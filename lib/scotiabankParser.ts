@@ -7,6 +7,8 @@
 //  - "Constancia de tu pago de servicio" pagado con la tarjeta de crédito → consumo
 //  - "Pago con QR" pagado con la tarjeta de crédito → consumo
 //  - Un aviso de consumo con tarjeta de crédito que no conocemos → consumo por revisar
+// Y el correo que manda el atajo de iPhone al pagar con Apple Pay
+// (asunto "Conta Medina consumo", cuerpo "Monto: … Comercio: …") → consumo
 import type { EmailForParsing } from "./cardEmails";
 
 const MONTHS: Record<string, number> = {
@@ -35,6 +37,26 @@ export type ParseResult =
 const flatten = (text: string) => text.replace(/\s*\|\s*/g, " ").replace(/\s+/g, " ").trim();
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Marca del correo que envía el atajo de Apple Pay del iPhone. */
+export const SHORTCUT_SUBJECT = "Conta Medina consumo";
+
+/**
+ * Monto como lo escribe el iPhone según su idioma y región: "S/ 17.90", "S/17,90",
+ * "PEN 17.90", "17,90 PEN", "US$ 9.99", "USD 9.99" o "$9.99".
+ */
+export function parseShortcutAmount(text: string): { amount: number; currency: "PEN" | "USD" } | null {
+  const m = /(S\/\.?|PEN|US\$|USD|\$)?\s*(\d{1,3}(?:[.,\s]\d{3})*(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(PEN|USD|soles|d[oó]lares)?/i.exec(text.trim());
+  if (!m || (!m[1] && !m[3] && !/^\s*\d/.test(text))) return null;
+  let digits = m[2].replace(/\s/g, "");
+  // La última coma o punto seguida de 1 o 2 dígitos es el decimal; el resto son miles.
+  const dec = /[.,](\d{1,2})$/.exec(digits);
+  digits = dec ? digits.slice(0, -dec[0].length).replace(/[.,]/g, "") + "." + dec[1] : digits.replace(/[.,]/g, "");
+  const amount = Number(digits);
+  if (!Number.isFinite(amount) || amount <= 0 || amount >= 1e7) return null;
+  const tag = `${m[1] || ""}${m[3] || ""}`.toUpperCase();
+  return { amount, currency: /US|USD|D[OÓ]LAR|^\$$/.test(tag) ? "USD" : "PEN" };
+}
 
 /** Monto después de una etiqueta: "Monto pagado: S/ 2,000.00" o "US$ 12.50". */
 function amountAfter(flat: string, label: string): { amount: number; currency: "PEN" | "USD" } | null {
@@ -89,6 +111,21 @@ export function parseScotiabankEmail(email: EmailForParsing, last4?: string | nu
   const card = last4 && /^\d{4}$/.test(last4) ? last4 : null;
   const otherCard = (digits: string) => !!card && digits !== card;
   const base = { installments: null, exchangeRate: null, note: "" };
+
+  // 0. Correo del atajo de Apple Pay: una línea por dato.
+  if (email.subject.toLowerCase().includes(SHORTCUT_SUBJECT.toLowerCase())) {
+    // Cada dato va en su línea, pero también se acepta todo en una sola línea.
+    const line = (label: string) => new RegExp(`(?:^|\\s)${label}\\s*:\\s*(.+?)\\s*(?=\\b(?:Monto|Importe|Comercio|Nombre|Tarjeta)\\s*:|$)`, "im").exec(email.text)?.[1].trim() || "";
+    const money = parseShortcutAmount(line("Monto") || line("Importe"));
+    if (!money) return { status: "ignored", reason: "atajo sin monto" };
+    const merchant = (line("Comercio") || line("Nombre")).slice(0, 120);
+    const cardName = line("Tarjeta");
+    const digits = /(\d{4})\s*$/.exec(cardName)?.[1] || null;
+    if (digits && otherCard(digits)) return { status: "ignored", reason: "atajo de otra tarjeta" };
+    return { status: "movement", movement: { ...base, kind: "consumo", ...money, date: email.receivedDate,
+      merchant: merchant || "Consumo con Apple Pay", last4: digits || card, needsReview: !merchant,
+      note: merchant ? "" : "El atajo no envió el comercio." } };
+  }
 
   // 1. Pago a la tarjeta de crédito.
   if (/constancia de tu pago de tarjeta de cr[eé]dito/i.test(flat)) {

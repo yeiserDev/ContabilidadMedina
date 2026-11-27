@@ -241,6 +241,22 @@ test('unknown credit card alerts come in for review and dates infer the year', (
     assert.equal(parser.operationDate('23 nov., 11:28 am', '2026-11-23'), '2026-11-23');
 });
 
+test('Apple Pay shortcut emails become purchases, whatever the iPhone amount format', () => {
+    const short = (text) => plain(parser.parseScotiabankEmail({ id: 's', subject: 'Conta Medina consumo', from: 'yo@icloud.com', receivedDate: '2026-11-27', text }, '1234'));
+    const one = short('Monto: S/ 17.90\nComercio: DON EJEMPLO\nTarjeta: Scotiabank Mastercard 1234');
+    assert.deepEqual([one.status, one.movement.kind, one.movement.amount, one.movement.currency, one.movement.merchant, one.movement.date, one.movement.needsReview], ['movement', 'consumo', 17.9, 'PEN', 'DON EJEMPLO', '2026-11-27', false]);
+    assert.equal(short('Monto: S/ 1,234.50 Comercio: TIENDA').movement.amount, 1234.5);
+    assert.equal(short('Monto: PEN 17,90 Comercio: TIENDA').movement.amount, 17.9);
+    assert.equal(short('Monto: 1.234,50 PEN Comercio: TIENDA').movement.amount, 1234.5);
+    const usd = short('Monto: US$ 9.99\nComercio: APPLE.COM/BILL');
+    assert.deepEqual([usd.movement.currency, usd.movement.amount], ['USD', 9.99]);
+    assert.equal(short('Monto: $5.00\nComercio: X').movement.currency, 'USD');
+    assert.equal(short('Monto: S/ 10.00\nComercio: X\nTarjeta: Otra tarjeta 9876').reason, 'atajo de otra tarjeta');
+    assert.equal(short('Comercio: X').status, 'ignored');
+    assert.equal(short('Monto: S/ 8.00').movement.needsReview, true);
+    assert.equal(lib.buildQuery('scotiabank.com.pe', '2026-11-01', 'Conta Medina consumo'), '{from:(scotiabank.com.pe) subject:"Conta Medina consumo"} after:2026/11/01');
+});
+
 async function sync({ authorized = true, email = 'yo@example.com', allowed = '', messages = [], gmailError = null, body = {} } = {}) {
     const saved = { ...process.env }, originalFetch = global.fetch, originalWarn = console.warn;
     Object.assign(process.env, { CARD_ALLOWED_EMAILS: allowed });
@@ -278,7 +294,7 @@ test('sync reads only card movements, skips seen ids and never calls an external
     const messages = [mail('a', PAGO), mail('b', PLIN), mail('c', SERVICIO('Mastercard Clásica **** 1234')), mail('d', SERVICIO('Cta. Free *** ***9999'))];
     const r = await sync({ messages, body: { since: '2026-11-01', skip: ['d'], last4: '1234' } });
     assert.equal(r.status, 200);assert.equal(r.fetchCalls, 0);
-    assert.match(r.query, /^from:\(scotiabank\.com\.pe\) after:2026\/11\/01 -subject:Plin/);
+    assert.match(r.query, /^\{from:\(scotiabank\.com\.pe\) subject:"Conta Medina consumo"\} after:2026\/11\/01 -subject:Plin/);
     assert.deepEqual(plain(r.data.processed), ['a', 'b', 'c']);
     assert.deepEqual(r.data.movements.map(m => [m.emailId, m.kind, m.amount]), [['a', 'pago', 1250.5], ['c', 'consumo', 199.9]]);
     assert.equal(r.data.ignored['no es un movimiento de la tarjeta'], 1);

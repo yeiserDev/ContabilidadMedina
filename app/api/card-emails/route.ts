@@ -8,7 +8,7 @@ import { verifyEmailUser } from "@/lib/verifyToken";
 import { corsHeaders } from "@/lib/cors";
 import { listMessageIds, getEmail, GmailConfigError } from "@/lib/gmail";
 import { buildQuery, isValidDate, limaDate, normalizeMovement, type CardMovement, type EmailForParsing } from "@/lib/cardEmails";
-import { parseScotiabankEmail } from "@/lib/scotiabankParser";
+import { parseScotiabankEmail, SHORTCUT_SUBJECT } from "@/lib/scotiabankParser";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -79,7 +79,8 @@ export async function POST(req: NextRequest) {
   const last4 = typeof body.last4 === "string" && /^\d{4}$/.test(body.last4) ? body.last4 : null;
   // Los Plin, transferencias y avisos de visualización son la mayoría de los
   // correos del banco y nunca son de la tarjeta: Gmail ni los devuelve.
-  const query = `${buildQuery(sender, since)} -subject:Plin -subject:"Transferencia a otro banco" -subject:Visualización -subject:"Configuración de tarjetas"`;
+  // También entran los correos del atajo de Apple Pay del iPhone (por su asunto).
+  const query = `${buildQuery(sender, since, SHORTCUT_SUBJECT)} -subject:Plin -subject:"Transferencia a otro banco" -subject:Visualización -subject:"Configuración de tarjetas"`;
 
   // 1. Gmail
   let emails: EmailForParsing[];

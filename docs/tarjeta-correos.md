@@ -62,3 +62,15 @@ En Vercel → Logs busca `card_emails`. Códigos: `GMAIL_CONFIG` (faltan variabl
 `GMAIL_QUOTA`.
 
 Pruebas: `npm test`.
+
+## Consumos con Apple Pay (atajo del iPhone)
+
+Scotiabank no envía por correo los consumos. Con Apple Pay, la automatización **Transacción** de la app
+Atajos (iOS 17 o posterior) se activa al pagar y envía un correo a la cuenta de Gmail que lee la app:
+
+- Asunto: `Conta Medina consumo`
+- Cuerpo (una línea por dato): `Monto: <Importe>`, `Comercio: <Comercio>`, `Tarjeta: <Tarjeta o pase>`
+
+`lib/scotiabankParser.ts` lo toma como consumo con la fecha del correo. El monto se acepta en los formatos del
+iPhone (`S/ 17.90`, `PEN 17,90`, `US$ 9.99`…). Solo se activa con pagos sin contacto en tiendas; las compras
+por internet o con la tarjeta física no generan el correo.

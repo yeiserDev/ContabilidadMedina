@@ -104,9 +104,10 @@ export function isValidDate(value: unknown): value is string {
 }
 
 /** Búsqueda de Gmail: remitente configurable y correos desde una fecha. */
-export function buildQuery(sender: string, since: string): string {
+export function buildQuery(sender: string, since: string, extraSubject?: string): string {
   const [y, m, d] = since.split("-");
-  return `from:(${sender}) after:${y}/${m}/${d}`;
+  const from = extraSubject ? `{from:(${sender}) subject:"${extraSubject}"}` : `from:(${sender})`;
+  return `${from} after:${y}/${m}/${d}`;
 }
 
 /**
